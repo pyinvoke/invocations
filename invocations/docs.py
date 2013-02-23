@@ -35,7 +35,7 @@ def api_docs(target, output="api", exclude=""):
         lambda x: os.path.abspath(os.path.join(os.getcwd(), x)),
         exclude.split(',')
     )
-    run("sphinx-apidoc -o %s %s %s" % (output, target, ' '.join(exclude)))
+    run("sphinx-apidoc -f -o %s %s %s" % (output, target, ' '.join(exclude)))
 
 
 @task
