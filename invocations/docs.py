@@ -39,21 +39,10 @@ def api_docs(target, output="api", exclude=""):
 
 
 @task
-def docs(clean=False, browse=False, api_target=None, api_output=None,
-    api_exclude=None):
+def docs(clean=False, browse=False):
     """
     Build Sphinx docs, optionally ``clean``ing and/or ``browse``ing.
-
-    Can also build API docs by giving ``api_target`` and optionally
-    ``api_output`` and/or ``api_exclude``.
     """
-    if api_target:
-        kwargs = {'target': api_target}
-        if api_output:
-            kwargs['output'] = api_output
-        if api_exclude:
-            kwargs['exclude'] = api_exclude
-        api_docs.body(**kwargs)
     if clean:
         clean_docs.body()
     run("sphinx-build %s %s" % (docs_dir, build), pty=True)
