@@ -8,7 +8,8 @@ except ImportError:
 
 # Version info -- read without importing
 _locals = {}
-version_module = execfile('invocations/_version.py', _locals)
+with open('invocations/_version.py') as fp:
+    exec(fp.read(), None, _locals)
 version = _locals['__version__']
 
 setup(
