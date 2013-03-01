@@ -21,7 +21,7 @@ def browse_docs():
 @task
 def docs(clean=False, browse=False):
     if clean:
-        clean_docs.body()
+        clean_docs()
     run("sphinx-build %s %s" % (docs_dir, build), pty=True)
     if browse:
-        browse_docs.body()
+        browse_docs()
