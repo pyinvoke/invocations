@@ -9,19 +9,19 @@ build = os.path.join(docs_dir, '_build')
 
 
 @task
-def clean_docs():
+def clean():
     run("rm -rf %s" % build)
 
 
 @task
-def browse_docs():
+def browse():
     run("open %s" % os.path.join(build, 'index.html'))
 
 
-@task
-def docs(clean=False, browse=False):
+@task(default=True)
+def build(clean=False, browse=False):
     if clean:
-        clean_docs()
+        clean()
     run("sphinx-build %s %s" % (docs_dir, build), pty=True)
     if browse:
-        browse_docs()
+        browse()
