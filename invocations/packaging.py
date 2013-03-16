@@ -1,6 +1,6 @@
 from glob import glob
 import os
-from shutil import rmtree, copy
+from shutil import rmtree, copy, copytree
 from tempfile import mkdtemp
 
 from invoke import task, run
@@ -12,8 +12,8 @@ def unpack(tmp, package, version, git_url=None):
 
     Return ``(real_version, source)`` where ``real_version`` is the "actual"
     version downloaded (e.g. if a Git master was indicated, it will be the SHA
-    of master HEAD) and ``source`` is the source directory to import into
-    ``<project>/vendor``.
+    of master HEAD) and ``source`` is the source directory (relative to
+    unpacked source) to import into ``<project>/vendor``.
     """
     real_version = version[:]
     source = None
@@ -33,10 +33,10 @@ def unpack(tmp, package, version, git_url=None):
             # Nab from index
             flags = "--download-cache= --download=. --build=build"
             cmd = "pip install %s %s==%s" % (flags, package, version)
-            print(cmd)
             run(cmd)
             # Identify basename
-            source = os.path.splitext(os.path.basename(glob("*.zip")[0]))[0]
+            zipfile = os.path.basename(glob("*.zip")[0])
+            source = os.path.splitext(zipfile)[0]
             # Unzip
             run("unzip *.zip")
         finally:
@@ -73,27 +73,30 @@ def vendorize(distribution, version, vendor_dir, package=None, git_url=None,
     checkout/download (relative to its root.)
     """
     tmp = mkdtemp()
-    target = os.path.join(vendor_dir, distribution)
+    package = package or distribution
+    target = os.path.join(vendor_dir, package)
     try:
         # Unpack source
         real_version, source = unpack(tmp, distribution, version, git_url)
-        rel_package = os.path.join(source, package or distribution)
-        source_package = os.path.join(tmp, rel_package)
+        abs_source = os.path.join(tmp, source)
+        source_package = os.path.join(abs_source, package)
         # Ensure source package exists
         if not os.path.exists(source_package):
+            rel_package = os.path.join(source, package)
             raise ValueError("Source package %s doesn't exist!" % rel_package)
         # Nuke target if exists
-        #if os.path.exists(target):
-        #    rmtree(target)
+        if os.path.exists(target):
+            print("Removing pre-existing vendorized folder %s" % target)
+            rmtree(target)
         # Perform the copy
-        #copy(source, target)
+        print("Copying %s => %s" % (source_package, target))
+        copytree(source_package, target)
         # Explicit license if needed
         if license:
-            copy(os.path.join(source, license), target)
+            copy(os.path.join(abs_source, license), target)
         # git commit -a -m "Update $package to $version ($real_version if different)"
     finally:
-        pass
-        #rmtree(tmp)
+        rmtree(tmp)
 
 
 @task
