@@ -1,21 +1,70 @@
+from glob import glob
+import os
+from shutil import rmtree, copy
+from tempfile import mkdtemp
+
 from invoke import task, run
 
 
-@task
-def vendorize(package, spec, git_url=None, license=None):
+def unpack(tmp, package, version, git_url=None):
     """
-    Vendorize Python package ``package`` at version/SHA ``spec``.
+    Download + unpack given package into temp dir ``tmp``.
+
+    Return ``(real_version, source)`` where ``real_version`` is the "actual"
+    version downloaded (e.g. if a Git master was indicated, it will be the SHA
+    of master HEAD) and ``source`` is the source directory to import into
+    ``<project>/vendor``.
+    """
+    real_version = version[:]
+    source = None
+    if git_url:
+        pass
+    #   git clone into tempdir
+    #   git checkout <version>
+    #   set target to checkout
+    #   if version does not look SHA-ish:
+    #       in the checkout, obtain SHA from that branch
+    #       set real_version to that value
+    else:
+        cwd = os.getcwd()
+        print("Moving into temp dir %s" % tmp)
+        os.chdir(tmp)
+        try:
+            # Nab from index
+            flags = "--download-cache= --download=. --build=build"
+            cmd = "pip install %s %s==%s" % (flags, package, version)
+            print(cmd)
+            run(cmd)
+            # Identify basename
+            source = os.path.splitext(os.path.basename(glob("*.zip")[0]))[0]
+            # Unzip
+            run("unzip *.zip")
+        finally:
+            os.chdir(cwd)
+    return real_version, source
+
+
+@task
+def vendorize(distribution, version, vendor_dir, package=None, git_url=None,
+    license=None):
+    """
+    Vendorize Python package ``distribution`` at version/SHA ``version``.
+
+    Specify the vendor folder (e.g. ``<mypackage>/vendor``) as ``vendor_dir``.
 
     For Crate/PyPI releases, ``package`` should be the name of the software
-    entry on those sites, and ``spec`` should be a specific version number.
+    entry on those sites, and ``version`` should be a specific version number.
     E.g. ``vendorize('lexicon', '0.1.2')``.
 
     For Git releases, ``package`` should be the name of the package folder
-    within the checkout that needs to be vendorized and ``spec`` should be a
+    within the checkout that needs to be vendorized and ``version`` should be a
     Git identifier (branch, tag, SHA etc.) ``git_url`` must also be given,
     something suitable for ``git clone <git_url>``.
 
     For SVN releases: xxx.
+
+    For packages where the distribution name is not the same as the package
+    directory name, give ``package='name'``.
 
     By default, no explicit license seeking is done -- we assume the license
     info is in file headers or otherwise within the Python package vendorized.
@@ -23,29 +72,28 @@ def vendorize(package, spec, git_url=None, license=None):
     trigger copying of a license into the vendored folder from the
     checkout/download (relative to its root.)
     """
-    # obtain intended target location
-    # set real_spec to copy of spec
-    # if currently occupied:
-    #   nuke
-    # if git_url:
-    #   git clone into tempdir
-    #   git checkout <spec>
-    #   set target to checkout
-    #   if spec does not look SHA-ish:
-    #       in the checkout, obtain SHA from that branch
-    #       set real_spec to that value
-    # else:
-    #   seek on crate for name + spec
-    #   error if not available
-    #   download into tempdir
-    #   unpack
-    #   set target to unpacked dir
-    # now we have target dir:
-    # * error if package dir not inside it
-    # * cp -R target/package invoke/vendor/package
-    # if license:
-    #   cp target/$license invoke/vendor/package/
-    # git commit -a -m "Update $package to $spec ($real_spec if different)"
+    tmp = mkdtemp()
+    target = os.path.join(vendor_dir, distribution)
+    try:
+        # Unpack source
+        real_version, source = unpack(tmp, distribution, version, git_url)
+        rel_package = os.path.join(source, package or distribution)
+        source_package = os.path.join(tmp, rel_package)
+        # Ensure source package exists
+        if not os.path.exists(source_package):
+            raise ValueError("Source package %s doesn't exist!" % rel_package)
+        # Nuke target if exists
+        #if os.path.exists(target):
+        #    rmtree(target)
+        # Perform the copy
+        #copy(source, target)
+        # Explicit license if needed
+        if license:
+            copy(os.path.join(source, license), target)
+        # git commit -a -m "Update $package to $version ($real_version if different)"
+    finally:
+        pass
+        #rmtree(tmp)
 
 
 @task
