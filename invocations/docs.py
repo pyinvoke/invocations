@@ -7,12 +7,12 @@ docs_dir = 'docs'
 build_dir = os.path.join(docs_dir, '_build')
 
 
-@task
+@task(aliases=['c'])
 def _clean():
     run("rm -rf %s" % build_dir)
 
 
-@task
+@task(aliases=['b'])
 def _browse():
     run("open %s" % os.path.join(build_dir, 'index.html'))
 
