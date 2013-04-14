@@ -1,8 +1,8 @@
-from invoke import task, run
+from invoke import ctask as task, run
 
 
 @task
-def test(module=None, runner='spec'):
+def test(ctx, module=None, runner='spec'):
     """
     Run a Spec or Nose-powered internal test suite.
 
@@ -15,4 +15,4 @@ def test(module=None, runner='spec'):
     specific_module = " --tests=tests/%s.py" % module
     args = (specific_module if module else "")
     # Use pty so the spec/nose/Python process buffers "correctly"
-    run(runner + args, pty=True)
+    ctx.run(runner + args, pty=True)
