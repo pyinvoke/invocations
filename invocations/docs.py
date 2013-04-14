@@ -1,6 +1,6 @@
 import os
 
-from invoke import ctask as task, run, Collection
+from invoke import ctask as task, Collection
 
 
 docs_dir = 'docs'

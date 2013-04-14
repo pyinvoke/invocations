@@ -3,10 +3,10 @@ import os
 from shutil import rmtree, copy, copytree
 from tempfile import mkdtemp
 
-from invoke import task, run
+from invoke import ctask as task
 
 
-def unpack(tmp, package, version, git_url=None):
+def unpack(ctx, tmp, package, version, git_url=None):
     """
     Download + unpack given package into temp dir ``tmp``.
 
@@ -33,20 +33,20 @@ def unpack(tmp, package, version, git_url=None):
             # Nab from index
             flags = "--download-cache= --download=. --build=build"
             cmd = "pip install %s %s==%s" % (flags, package, version)
-            run(cmd)
+            ctx.run(cmd)
             # Identify basename
             zipfile = os.path.basename(glob("*.zip")[0])
             source = os.path.splitext(zipfile)[0]
             # Unzip
-            run("unzip *.zip")
+            ctx.run("unzip *.zip")
         finally:
             os.chdir(cwd)
     return real_version, source
 
 
 @task
-def vendorize(distribution, version, vendor_dir, package=None, git_url=None,
-    license=None):
+def vendorize(ctx, distribution, version, vendor_dir, package=None,
+    git_url=None, license=None):
     """
     Vendorize Python package ``distribution`` at version/SHA ``version``.
 
@@ -77,7 +77,7 @@ def vendorize(distribution, version, vendor_dir, package=None, git_url=None,
     target = os.path.join(vendor_dir, package)
     try:
         # Unpack source
-        real_version, source = unpack(tmp, distribution, version, git_url)
+        real_version, source = unpack(ctx, tmp, distribution, version, git_url)
         abs_source = os.path.join(tmp, source)
         source_package = os.path.join(abs_source, package)
         # Ensure source package exists
@@ -100,5 +100,5 @@ def vendorize(distribution, version, vendor_dir, package=None, git_url=None,
 
 
 @task
-def release():
-    run("python setup.py sdist register upload")
+def release(ctx):
+    ctx.run("python setup.py sdist register upload")
