@@ -101,4 +101,7 @@ def vendorize(ctx, distribution, version, vendor_dir, package=None,
 
 @task
 def release(ctx):
+    """
+    Upload an sdist to PyPI via ye olde 'setup.py sdist register upload'.
+    """
     ctx.run("python setup.py sdist register upload")
