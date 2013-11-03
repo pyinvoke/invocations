@@ -27,7 +27,14 @@ def build(ctx, clean=False, browse=False):
     if browse:
         _browse(ctx)
 
-ns = Collection(_clean, _browse, build)
+
+@task
+def tree(ctx):
+    ignore = ".git|*.pyc|*.swp|dist|*.egg-info|_static|_build"
+    ctx.run("tree -Ca -I \"{0}\" docs".format(ignore))
+
+
+ns = Collection(_clean, _browse, build, tree)
 ns.configure({
     'sphinx.source': 'docs',
     # TODO: allow lazy eval so one attr can refer to another?
