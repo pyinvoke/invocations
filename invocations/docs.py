@@ -16,12 +16,14 @@ def _browse(ctx):
     ctx.run("open {0}".format(index))
 
 
-@task(default=True)
-def build(ctx, clean=False, browse=False):
+@task(default=True, help={'opts': "Extra sphinx-build options/args"})
+def build(ctx, clean=False, browse=False, opts=None):
     if clean:
         _clean(ctx)
-    cmd = "sphinx-build {0} {1}".format(
-        ctx['sphinx.source'], ctx['sphinx.target']
+    cmd = "sphinx-build{2} {0} {1}".format(
+        ctx['sphinx.source'],
+        ctx['sphinx.target'],
+        (" " + opts) if opts else "",
     )
     ctx.run(cmd, pty=True)
     if browse:
