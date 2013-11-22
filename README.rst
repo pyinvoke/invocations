@@ -1,4 +1,4 @@
-Invocations is a collection of reusable `http://pyinvoke.org <Invoke>`_
+Invocations is a collection of reusable `Invoke <http://pyinvoke.org>`_
 tasks/task modules, including (but not limited to) Python project management
 tools such as documentation building and dependency organization.
 
