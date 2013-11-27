@@ -33,7 +33,7 @@ def build(ctx, clean=False, browse=False, opts=None):
 @task
 def tree(ctx):
     ignore = ".git|*.pyc|*.swp|dist|*.egg-info|_static|_build"
-    ctx.run("tree -Ca -I \"{0}\" docs".format(ignore))
+    ctx.run("tree -Ca -I \"{0}\" {1}".format(ignore, ctx['sphinx.source']))
 
 
 ns = Collection(_clean, _browse, build, tree)
