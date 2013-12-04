@@ -12,7 +12,7 @@ def _clean(ctx):
 # Ditto
 @task(name='browse')
 def _browse(ctx):
-    index = os.path.join(ctx['sphinx.target'], 'index.html')
+    index = os.path.join(ctx['sphinx.target'], ctx['sphinx.target_file'])
     ctx.run("open {0}".format(index))
 
 
@@ -41,4 +41,5 @@ ns.configure({
     'sphinx.source': 'docs',
     # TODO: allow lazy eval so one attr can refer to another?
     'sphinx.target': os.path.join('docs', '_build'),
+    'sphinx.target_file': 'index.html',
 })
