@@ -3,7 +3,7 @@ import os
 from shutil import rmtree, copy, copytree
 from tempfile import mkdtemp
 
-from invoke import ctask as task
+from invoke import ctask as task, Collection
 
 
 def unpack(ctx, tmp, package, version, git_url=None):
@@ -99,9 +99,52 @@ def vendorize(ctx, distribution, version, vendor_dir, package=None,
         rmtree(tmp)
 
 
-@task
-def release(ctx):
+@task(name='all')
+def all_(ctx):
     """
-    Upload an sdist to PyPI via ye olde 'setup.py sdist register upload'.
+    Catchall version-bump/tag/changelog/PyPI upload task.
     """
     ctx.run("python setup.py sdist register upload")
+
+
+@task
+def changelog(ctx, target='docs/changelog.rst'):
+    """
+    Update changelog with new release entry.
+    """
+    pass
+
+
+@task
+def version(ctx):
+    """
+    Update stored project version (e.g. a ``_version.py``.)
+
+    Requires configuration to be effective (since version file is usually kept
+    within a project-named directory.
+    """
+    pass
+
+
+@task
+def tag(ctx):
+    """
+    Create a release tag.
+
+    May set a config option for a prefix, e.g. 'v1.0.0' vs just '1.0.0'. This
+    is unset/blank by default.
+    """
+    pass
+
+
+@task
+def push(ctx):
+    """
+    Push tag/changelog/version changes to Git origin.
+    """
+    # TODO: or should this be distributed amongst the appropriate tasks?
+    pass
+
+
+release = Collection('release', changelog, version, tag, push)
+release.add_task(all_, default=True)
