@@ -104,7 +104,6 @@ def all_(ctx):
     """
     Catchall version-bump/tag/changelog/PyPI upload task.
     """
-    ctx.run("python setup.py sdist register upload")
 
 
 @task
@@ -144,6 +143,15 @@ def push(ctx):
     """
     # TODO: or should this be distributed amongst the appropriate tasks?
     pass
+
+
+@task
+def publish(ctx):
+    """
+    Publish code to PyPI.
+    """
+    # TODO: sdist + wheel?
+    ctx.run("python setup.py sdist register upload")
 
 
 release = Collection('release', changelog, version, tag, push)
