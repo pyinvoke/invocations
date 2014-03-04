@@ -1,4 +1,2 @@
 # Dev version of Invoke
-invoke>=0.1.0
-# Docs
-Sphinx>=1.1.2
+invoke>=0.7.0
