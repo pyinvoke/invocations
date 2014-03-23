@@ -146,12 +146,17 @@ def push(ctx):
 
 
 @task
-def publish(ctx):
+def publish(ctx, wheel=False):
     """
     Publish code to PyPI.
     """
-    # TODO: sdist + wheel?
-    ctx.run("python setup.py sdist register upload")
+    # TODO: Use twine.
+    parts = ["python", "setup.py", "sdist"]
+    if wheel:
+        parts.append("bdist_wheel")
+    parts.append("register")
+    parts.append("upload")
+    ctx.run(" ".join(parts))
 
 
 release = Collection('release', changelog, version, tag, push)
