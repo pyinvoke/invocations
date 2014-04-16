@@ -22,7 +22,7 @@ setup(
     url='http://pyinvoke.org',
 
     # Release requirements. See dev-requirements.txt for dev version reqs.
-    requirements=['invoke>=0.6.0'],
+    install_requires=['invoke>=0.6.0'],
 
     packages=['invocations'],
 

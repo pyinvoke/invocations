@@ -159,5 +159,20 @@ def publish(ctx, wheel=False):
     ctx.run(" ".join(parts))
 
 
+@task
+def clean(ctx):
+    """Cleans the generated packages."""
+    package_name = ctx.run('python setup.py --name', hide='out')
+    package_name = package_name.stdout.strip()
+    packaging_dirs = ['dist',
+                      '{pkg}.egg-info'.format(pkg=package_name)]
+
+    packaging_dirs = [os.path.join(os.curdir, folder)
+                      for folder in packaging_dirs]
+    for packaging in packaging_dirs:
+        if os.path.exists(packaging):
+            rmtree(packaging)
+
+
 release = Collection('release', changelog, version, tag, push)
 release.add_task(all_, default=True)
