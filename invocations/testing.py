@@ -6,10 +6,11 @@ from invoke import ctask as task
     'runner': "Use STRING to run tests instead of 'spec'.",
     'opts': "Extra flags for the test runner",
 })
-def test(ctx, module=None, runner='spec', opts=None):
+def test(ctx, module=None, runner=None, opts=None):
     """
     Run a Spec or Nose-powered internal test suite.
     """
+    runner = runner or 'spec'
     # Allow selecting specific submodule
     specific_module = " --tests=tests/%s.py" % module
     args = (specific_module if module else "")
