@@ -1,4 +1,5 @@
 import sys
+import os.path
 
 from invoke import ctask as task
 
@@ -8,15 +9,28 @@ from invoke import ctask as task
     'runner': "Use STRING to run tests instead of 'spec'.",
     'opts': "Extra flags for the test runner",
     'pty': "Whether to run tests under a pseudo-tty",
+    'coverage': "Report coverage information",
 })
-def test(c, module=None, runner=None, opts=None, pty=True):
+def test(c, module=None, runner=None, opts=None, pty=True, coverage=True):
     """
     Run a Spec or Nose-powered internal test suite.
     """
     runner = runner or 'spec'
+    args = ""
+    if coverage:
+        full_path = ctx.run("which %s" % runner, hide=True)
+        if module:
+            cover_opts = "--source=%s" % module
+        else:
+            cover_opts = ""
+        runner = "coverage run {opts} {runner}".format(
+            opts=cover_opts, runner=full_path.stdout.strip()
+        )
     # Allow selecting specific submodule
-    specific_module = " --tests=tests/%s.py" % module
-    args = (specific_module if module else "")
+    if module:
+        test_module = "tests/%s.py" % module
+        if os.path.isfile(test_module):
+            args += " --tests=%s" % test_module
     if opts:
         args += " " + opts
     # Always enable timing info by default. OPINIONATED
