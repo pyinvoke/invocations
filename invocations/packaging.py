@@ -35,6 +35,8 @@ def unpack(ctx, tmp, package, version, git_url=None):
             cmd = "pip install %s %s==%s" % (flags, package, version)
             ctx.run(cmd)
             # Identify basename
+            # TODO: glob is bad here because pip install --download gets all
+            # dependencies too! ugh.
             zipfile = os.path.basename(glob("*.zip")[0])
             source = os.path.splitext(zipfile)[0]
             # Unzip
