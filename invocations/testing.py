@@ -7,7 +7,7 @@ from invoke import ctask as task
     'opts': "Extra flags for the test runner",
     'pty': "Whether to run tests under a pseudo-tty",
 })
-def test(ctx, module=None, runner=None, opts=None, pty=True):
+def test(c, module=None, runner=None, opts=None, pty=True):
     """
     Run a Spec or Nose-powered internal test suite.
     """
@@ -18,4 +18,4 @@ def test(ctx, module=None, runner=None, opts=None, pty=True):
     if opts:
         args += " " + opts
     # Use pty by default so the spec/nose/Python process buffers "correctly"
-    ctx.run(runner + args, pty=pty)
+    c.run(runner + args, pty=pty)

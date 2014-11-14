@@ -6,7 +6,7 @@ from tempfile import mkdtemp
 from invoke import ctask as task, Collection
 
 
-def unpack(ctx, tmp, package, version, git_url=None):
+def unpack(c, tmp, package, version, git_url=None):
     """
     Download + unpack given package into temp dir ``tmp``.
 
@@ -33,21 +33,21 @@ def unpack(ctx, tmp, package, version, git_url=None):
             # Nab from index
             flags = "--download-cache= --download=. --build=build"
             cmd = "pip install %s %s==%s" % (flags, package, version)
-            ctx.run(cmd)
+            c.run(cmd)
             # Identify basename
             # TODO: glob is bad here because pip install --download gets all
             # dependencies too! ugh.
             zipfile = os.path.basename(glob("*.zip")[0])
             source = os.path.splitext(zipfile)[0]
             # Unzip
-            ctx.run("unzip *.zip")
+            c.run("unzip *.zip")
         finally:
             os.chdir(cwd)
     return real_version, source
 
 
 @task
-def vendorize(ctx, distribution, version, vendor_dir, package=None,
+def vendorize(c, distribution, version, vendor_dir, package=None,
     git_url=None, license=None):
     """
     Vendorize Python package ``distribution`` at version/SHA ``version``.
@@ -79,7 +79,7 @@ def vendorize(ctx, distribution, version, vendor_dir, package=None,
     target = os.path.join(vendor_dir, package)
     try:
         # Unpack source
-        real_version, source = unpack(ctx, tmp, distribution, version, git_url)
+        real_version, source = unpack(c, tmp, distribution, version, git_url)
         abs_source = os.path.join(tmp, source)
         source_package = os.path.join(abs_source, package)
         # Ensure source package exists
@@ -102,14 +102,14 @@ def vendorize(ctx, distribution, version, vendor_dir, package=None,
 
 
 @task(name='all')
-def all_(ctx):
+def all_(c):
     """
     Catchall version-bump/tag/changelog/PyPI upload task.
     """
 
 
 @task
-def changelog(ctx, target='docs/changelog.rst'):
+def changelog(c, target='docs/changelog.rst'):
     """
     Update changelog with new release entry.
     """
@@ -117,7 +117,7 @@ def changelog(ctx, target='docs/changelog.rst'):
 
 
 @task
-def version(ctx):
+def version(c):
     """
     Update stored project version (e.g. a ``_version.py``.)
 
@@ -128,7 +128,7 @@ def version(ctx):
 
 
 @task
-def tag(ctx):
+def tag(c):
     """
     Create a release tag.
 
@@ -139,7 +139,7 @@ def tag(ctx):
 
 
 @task
-def push(ctx):
+def push(c):
     """
     Push tag/changelog/version changes to Git origin.
     """
@@ -148,7 +148,7 @@ def push(ctx):
 
 
 @task
-def publish(ctx, wheel=False):
+def publish(c, wheel=False):
     """
     Publish code to PyPI.
     """
@@ -158,7 +158,7 @@ def publish(ctx, wheel=False):
         parts.append("bdist_wheel")
     parts.append("register")
     parts.append("upload")
-    ctx.run(" ".join(parts))
+    c.run(" ".join(parts))
 
 
 release = Collection('release', changelog, version, tag, push)
