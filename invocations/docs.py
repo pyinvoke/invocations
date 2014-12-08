@@ -1,4 +1,5 @@
 import os
+import sys
 
 from invoke import ctask as task, Collection
 
@@ -8,12 +9,19 @@ from invoke import ctask as task, Collection
 def _clean(c):
     c.run("rm -rf {0}".format(c.sphinx.target))
 
+_COMMAND_MAP = {
+    'darwin': 'open ',
+    'linux': 'idle ',
+    'win32': '',
+}
 
 # Ditto
 @task(name='browse')
 def _browse(c):
     index = os.path.join(c.sphinx.target, c.sphinx.target_file)
-    c.run("open {0}".format(index))
+    platform = str(sys.platform).lower()
+    cmd = _COMMAND_MAP.get(platform)
+    c.run("{0}{1}".format(cmd, index))
 
 
 @task(default=True, help={'opts': "Extra sphinx-build options/args"})
