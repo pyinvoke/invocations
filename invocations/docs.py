@@ -20,10 +20,15 @@ def _browse(c):
     'opts': "Extra sphinx-build options/args",
     'clean': "Remove build tree before building",
     'browse': "Open docs index in browser after building",
+    'warn': "Build with stricter warnings/errors enabled",
 })
-def build(c, clean=False, browse=False, opts=None):
+def build(c, clean=False, browse=False, warn=False, opts=None):
     if clean:
         _clean(c)
+    if opts is None:
+        opts = ""
+    if warn:
+        opts += " -n -W"
     cmd = "sphinx-build{2} {0} {1}".format(
         c.sphinx.source,
         c.sphinx.target,
