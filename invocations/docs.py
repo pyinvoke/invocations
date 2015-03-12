@@ -16,7 +16,11 @@ def _browse(c):
     c.run("open {0}".format(index))
 
 
-@task(default=True, help={'opts': "Extra sphinx-build options/args"})
+@task(default=True, help={
+    'opts': "Extra sphinx-build options/args",
+    'clean': "Remove build tree before building",
+    'browse': "Open docs index in browser after building",
+})
 def build(c, clean=False, browse=False, opts=None):
     if clean:
         _clean(c)
