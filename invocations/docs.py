@@ -6,12 +6,18 @@ from invoke import ctask as task, Collection
 # Underscored func name to avoid shadowing kwargs in build()
 @task(name='clean')
 def _clean(c):
+    """
+    Nuke docs build target directory so next build is clean.
+    """
     c.run("rm -rf {0}".format(c.sphinx.target))
 
 
 # Ditto
 @task(name='browse')
 def _browse(c):
+    """
+    Open build target's index.html in a browser (using 'open').
+    """
     index = os.path.join(c.sphinx.target, c.sphinx.target_file)
     c.run("open {0}".format(index))
 
@@ -23,6 +29,9 @@ def _browse(c):
     'warn': "Build with stricter warnings/errors enabled",
 })
 def build(c, clean=False, browse=False, warn=False, opts=None):
+    """
+    Build the project's Sphinx docs.
+    """
     if clean:
         _clean(c)
     if opts is None:
