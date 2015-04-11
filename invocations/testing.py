@@ -17,5 +17,7 @@ def test(c, module=None, runner=None, opts=None, pty=True):
     args = (specific_module if module else "")
     if opts:
         args += " " + opts
+    # Always enable timing info by default. OPINIONATED
+    args += " --with-timing"
     # Use pty by default so the spec/nose/Python process buffers "correctly"
     c.run(runner + args, pty=pty)
