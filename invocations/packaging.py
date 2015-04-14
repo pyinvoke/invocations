@@ -1,9 +1,15 @@
 import os
+import sys
 from glob import glob
 from shutil import rmtree, copy, copytree
 from tempfile import mkdtemp
 
-from invoke import ctask as task, Collection
+from invoke import ctask as task, Collection, run
+
+try:
+    from semantic_version import Version
+except ImportError:
+    sys.exit("Please perform your local equivalent of 'pip install semantic_version', as it is required for tasks within invocations.packaging.")
 
 
 def unpack(c, tmp, package, version, git_url=None):
@@ -130,12 +136,46 @@ def version(c):
 @task
 def tag(c):
     """
-    Create a release tag.
-
-    May set a config option for a prefix, e.g. 'v1.0.0' vs just '1.0.0'. This
-    is unset/blank by default.
+    Create a release tag in git.
     """
-    pass
+    # TODO: make this configurable or just smarter
+    # TODO: make subroutine
+    # TODO: is there a way to get this from the same place setup.py does w/o
+    # setup.py barfing (since setup() runs at import time and assumes CLI use)?
+    name = None
+    for path in os.listdir('.'):
+        if (
+            path != 'tests'
+            and os.path.isdir(path)
+            and os.path.exists(os.path.join(path, '__init__.py'))
+        ):
+            name = path
+            break
+    if name is None:
+        sys.exit("Unable to find a local Python package!")
+    package = __import__("{0}".format(name), fromlist=['_version']) 
+    # TODO: document assumption about our usual _version setup
+    current_version = Version(package._version.__version__) # buffalo buffalo
+    msg = "Found package {0.__name__!r} at version {1}"
+    print(msg.format(package, current_version))
+    # TODO: document assumption about semantic versioning in tags
+    tags = []
+    for tagstr in run("git tag", hide=True).stdout.strip().split('\n'):
+        try:
+            tags.append(Version(tagstr))
+        except ValueError: # just skip non-semver version strings
+            pass
+    tags = sorted(tags)
+    # TODO: doc assumption that _version has been updated prior to this step...
+    # TODO: also, maybe run "did you update that yet" test here as well as in
+    # its own task, or set as pre-task
+    if tags[-1] != current_version:
+        msg = "Current version {0} != latest tag {1}, creating new tag"
+        print(msg.format(current_version, tags[-1]))
+        run("git tag {0}".format(current_version))
+    else:
+        msg = "Already see a tag for {0}, doing nothing"
+        print(msg.format(current_version))
 
 
 @task
