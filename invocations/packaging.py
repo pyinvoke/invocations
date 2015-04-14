@@ -1,5 +1,5 @@
-from glob import glob
 import os
+from glob import glob
 from shutil import rmtree, copy, copytree
 from tempfile import mkdtemp
 
