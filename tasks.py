@@ -1,6 +1,6 @@
 from invoke import Collection
 
-from invocations.packaging import publish
+from invocations import packaging
 
 
-ns = Collection(publish)
+ns = Collection(release=packaging)

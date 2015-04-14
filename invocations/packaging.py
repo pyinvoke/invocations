@@ -187,7 +187,7 @@ def push(c):
     pass
 
 
-@task
+@task(aliases=['upload'])
 def publish(c, wheel=False, index=None):
     """
     Publish code to PyPI or index of choice.
@@ -210,5 +210,5 @@ def publish(c, wheel=False, index=None):
     c.run(" ".join(parts))
 
 
-release = Collection('release', changelog, version, tag, push)
+release = Collection('release', changelog, version, tag, push, publish)
 release.add_task(all_, default=True)
