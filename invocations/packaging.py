@@ -188,15 +188,19 @@ def push(c):
 
 
 @task(aliases=['upload'])
-def publish(c, wheel=False, index=None):
+def publish(c, sdist=True, wheel=False, index=None):
     """
     Publish code to PyPI or index of choice.
 
-    :param bool wheel: Whether to upload wheels as well as tgzs.
+    :param bool sdist: Whether to upload sdists/tgzs. Default: True.
+    :param bool wheel: Whether to upload wheels (requires the 'wheel' package).
+                       Default: False.
     :param str index: Custom upload index URL. Uses pip default if ``None``.
     """
     # TODO: (optionally?) use twine.
-    parts = ["python", "setup.py", "sdist"]
+    parts = ["python", "setup.py"]
+    if sdist:
+       parts.append("sdist")
     if wheel:
         parts.append("bdist_wheel")
     if index:
