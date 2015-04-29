@@ -7,11 +7,6 @@ from tempfile import mkdtemp
 
 from invoke import ctask as task, Collection, run
 
-try:
-    from semantic_version import Version
-except ImportError:
-    sys.exit("Please perform your local equivalent of 'pip install semantic_version', as it is required for tasks within invocations.packaging.")
-
 
 @contextmanager
 def tmpdir():
@@ -145,6 +140,7 @@ def tag(c):
     """
     Create a release tag in git.
     """
+    from semantic_version import Version
     # TODO: make this configurable or just smarter
     # TODO: make subroutine
     # TODO: is there a way to get this from the same place setup.py does w/o
