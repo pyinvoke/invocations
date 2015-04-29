@@ -211,6 +211,7 @@ def publish(c, sdist=True, wheel=True, index=None):
            parts.append("sdist")
         if wheel:
             parts.append("bdist_wheel")
+        parts.append("-d {0}".format(tmp))
         c.run(" ".join(parts))
         # Upload
         parts = ["twine", "upload"]
@@ -220,7 +221,10 @@ def publish(c, sdist=True, wheel=True, index=None):
             parts.append(index_arg)
         # Make sure wheels come first so their improved metadata is what PyPI
         # sees initially (otherwise, it only honors the sdist's lesser data).
-        parts.extend(('dist/*.whl', 'dist/*.tgz'))
+        parts.extend(
+            os.path.join(tmp, '*.{0}'.format(ext))
+            for ext in ('whl', 'tgz')
+        )
         c.run(" ".join(parts))
 
 
