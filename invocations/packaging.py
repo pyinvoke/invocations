@@ -12,6 +12,15 @@ except ImportError:
     sys.exit("Please perform your local equivalent of 'pip install semantic_version', as it is required for tasks within invocations.packaging.")
 
 
+@contextmanager
+def tmpdir():
+    tmp = mkdtemp()
+    try:
+        yield tmp
+    finally:
+        rmtree(tmp)
+
+
 def unpack(c, tmp, package, version, git_url=None):
     """
     Download + unpack given package into temp dir ``tmp``.
@@ -80,10 +89,9 @@ def vendorize(c, distribution, version, vendor_dir, package=None,
     trigger copying of a license into the vendored folder from the
     checkout/download (relative to its root.)
     """
-    tmp = mkdtemp()
-    package = package or distribution
-    target = os.path.join(vendor_dir, package)
-    try:
+    with tmpdir() as tmp:
+        package = package or distribution
+        target = os.path.join(vendor_dir, package)
         # Unpack source
         real_version, source = unpack(c, tmp, distribution, version, git_url)
         abs_source = os.path.join(tmp, source)
@@ -103,8 +111,6 @@ def vendorize(c, distribution, version, vendor_dir, package=None,
         if license:
             copy(os.path.join(abs_source, license), target)
         # git commit -a -m "Update $package to $version ($real_version if different)"
-    finally:
-        rmtree(tmp)
 
 
 @task(name='all')
