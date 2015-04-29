@@ -202,21 +202,26 @@ def publish(c, sdist=True, wheel=True, index=None):
     :param bool wheel: Whether to upload wheels (requires the 'wheel' package).
     :param str index: Custom upload index URL. Uses pip default if ``None``.
     """
-    # TODO: (optionally?) use twine.
-    parts = ["python", "setup.py"]
-    if sdist:
-       parts.append("sdist")
-    if wheel:
-        parts.append("bdist_wheel")
-    if index:
-        index_arg = "-r {0}".format(index)
-    parts.append("register")
-    if index:
-        parts.append(index_arg)
-    parts.append("upload")
-    if index:
-        parts.append(index_arg)
-    c.run(" ".join(parts))
+    # Build, into controlled temp dir (avoids attempting to re-upload old
+    # files)
+    with tmpdir() as tmp:
+        parts = ["python", "setup.py"]
+        if sdist:
+           parts.append("sdist")
+        if wheel:
+            parts.append("bdist_wheel")
+        c.run(" ".join(parts))
+        # Upload
+        parts = ["twine", "upload"]
+        if index:
+            index_arg = "-r {0}".format(index)
+        if index:
+            parts.append(index_arg)
+        # Make sure wheels come first so their improved metadata is what PyPI
+        # sees initially (otherwise, it only honors the sdist's lesser data).
+        parts.extend(('dist/*.whl', 'dist/*.tgz'))
+        c.run(" ".join(parts))
+
 
 
 release = Collection('release', changelog, version, tag, push, publish)
