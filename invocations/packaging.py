@@ -203,11 +203,13 @@ def publish(c, sdist=True, wheel=True, index=None):
     # files)
     with tmpdir() as tmp:
         parts = ["python", "setup.py"]
+        dist_dir = "-d {0}".format(tmp)
         if sdist:
-           parts.append("sdist")
+            parts.append("sdist")
+            parts.append(dist_dir)
         if wheel:
             parts.append("bdist_wheel")
-        parts.append("-d {0}".format(tmp))
+            parts.append(dist_dir)
         c.run(" ".join(parts))
         # Upload
         parts = ["twine", "upload"]
@@ -219,7 +221,7 @@ def publish(c, sdist=True, wheel=True, index=None):
         # sees initially (otherwise, it only honors the sdist's lesser data).
         parts.extend(
             os.path.join(tmp, '*.{0}'.format(ext))
-            for ext in ('whl', 'tgz')
+            for ext in ('whl', 'tar.gz')
         )
         c.run(" ".join(parts))
 
