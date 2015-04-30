@@ -1,4 +1,5 @@
-import os
+from os.path import join
+import sys
 
 from invoke import ctask as task, Collection
 
@@ -18,7 +19,7 @@ def _browse(c):
     """
     Open build target's index.html in a browser (using 'open').
     """
-    index = os.path.join(c.sphinx.target, c.sphinx.target_file)
+    index = join(c.sphinx.target, c.sphinx.target_file)
     c.run("open {0}".format(index))
 
 
@@ -54,12 +55,37 @@ def tree(c):
     c.run("tree -Ca -I \"{0}\" {1}".format(ignore, c.sphinx.source))
 
 
+# Vanilla/default/parameterized collection for normal use
 ns = Collection(_clean, _browse, build, tree)
 ns.configure({
     'sphinx': {
         'source': 'docs',
         # TODO: allow lazy eval so one attr can refer to another?
-        'target': os.path.join('docs', '_build'),
+        'target': join('docs', '_build'),
         'target_file': 'index.html',
     }
 })
+
+
+# Multi-site variants, used by various projects (fabric, invoke, paramiko)
+# Expects a tree like sites/www/<sphinx> + sites/docs/<sphinx>,
+# and that you want 'inline' html build dirs, e.g. sites/www/_build/index.html.
+
+def _site(name, build_help):
+    _path = join('sites', name)
+    # TODO: turn part of from_module into .clone(), heh.
+    self = sys.modules[__name__]
+    coll = Collection.from_module(self, name=name, config={
+        'sphinx': {
+            'source': _path,
+            'target': join(_path, '_build')
+        }
+    })
+    coll['build'].__doc__ = build_help
+    return coll
+
+
+# Usage doc/API site (published as e.g. docs.myproject.org)
+docs = _site('docs', "Build the API docs subsite.")
+# Main/about/changelog site (e.g. (www.)?myproject.org)
+www = _site('www', "Build the main project website.")
