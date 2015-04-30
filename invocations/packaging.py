@@ -199,6 +199,9 @@ def publish(c, sdist=True, wheel=True, index=None):
     :param bool wheel: Whether to upload wheels (requires the 'wheel' package).
     :param str index: Custom upload index URL. Uses pip default if ``None``.
     """
+    # Sanity
+    if not sdist and not wheel:
+        sys.exit("You said no sdists and no wheels...what DO you want to publish exactly?") # noqa
     # Build, into controlled temp dir (avoids attempting to re-upload old
     # files)
     with tmpdir() as tmp:
