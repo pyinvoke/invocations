@@ -21,3 +21,17 @@ def test(c, module=None, runner=None, opts=None, pty=True):
     args += " --with-timing"
     # Use pty by default so the spec/nose/Python process buffers "correctly"
     c.run(runner + args, pty=pty)
+
+
+@task
+def coverage(c, package=None):
+    """
+    Run tests w/ coverage enabled, generating HTML, & opening it.
+    """
+    opts = ""
+    if package is not None:
+        # TODO: make omission list more configurable
+        opts = "--include='{0}/*' --omit='{0}/vendor/*'".format(package)
+    test(c, opts="--with-coverage --cover-branches")
+    c.run("coverage html {0}".format(opts))
+    c.run("open htmlcov/index.html")
