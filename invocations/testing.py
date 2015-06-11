@@ -29,10 +29,14 @@ def test(c, module=None, runner=None, opts=None, pty=True):
 def coverage(c, package=None):
     """
     Run tests w/ coverage enabled, generating HTML, & opening it.
+
+    Honors the 'coverage.package' config path, which supplies a default value
+    for the ``package`` kwarg if given.
     """
     if not c.run("which coverage", hide=True, warn=True).ok:
         sys.exit("You need to 'pip install coverage' to use this task!")
     opts = ""
+    package = c.config.get('coverage', {}).get('package', package)
     if package is not None:
         # TODO: make omission list more configurable
         opts = "--include='{0}/*' --omit='{0}/vendor/*'".format(package)
