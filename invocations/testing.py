@@ -21,6 +21,10 @@ def test(c, module=None, runner=None, opts=None, pty=True):
         args += " " + opts
     # Always enable timing info by default. OPINIONATED
     args += " --with-timing"
+    # Allow client to configure some other Nose-related things.
+    logformat = c.config.get('tests', {}).get('logformat', None)
+    if logformat is not None:
+        args += " --logging-format='{0}'".format(logformat)
     # Use pty by default so the spec/nose/Python process buffers "correctly"
     c.run(runner + args, pty=pty)
 
