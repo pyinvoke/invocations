@@ -1,7 +1,9 @@
 from os.path import join
 import sys
 
-from invoke import ctask as task, Collection
+from invoke import ctask as task, Collection, Context
+
+from .watch import make_handler, observe
 
 
 # Underscored func name to avoid shadowing kwargs in build()
@@ -108,3 +110,39 @@ def sites(c):
     www_c.update(**www.configuration())
     docs['build'](docs_c, opts=opts)
     www['build'](www_c, opts=opts)
+
+
+@task
+def watch_docs(c):
+    """
+    Watch both doc trees & rebuild them if files change.
+
+    This includes e.g. rebuilding the API docs if the source code changes;
+    rebuilding the WWW docs if the README changes; etc.
+    """
+    # TODO: break back down into generic single-site version, then create split
+    # tasks as with docs/www above. Probably wants invoke#63.
+
+    # NOTE: 'www'/'docs' refer to the module level sub-collections. meh.
+
+    # Readme & WWW triggers WWW
+    www_c = Context(config=c.config.clone())
+    www_c.update(**www.configuration())
+    www_handler = make_handler(
+        ctx=www_c,
+        task_=www['build'],
+        regexes=['\./README.rst', '\./sites/www'],
+        ignore_regexes=['.*/\..*\.swp', '\./sites/www/_build'],
+    )
+
+    # Code and docs trigger API
+    docs_c = Context(config=c.config.clone())
+    docs_c.update(**docs.configuration())
+    api_handler = make_handler(
+        ctx=docs_c,
+        task_=docs['build'],
+        regexes=['\./invoke/', '\./sites/docs'],
+        ignore_regexes=['.*/\..*\.swp', '\./sites/docs/_build'],
+    )
+
+    observe(www_handler, api_handler)
