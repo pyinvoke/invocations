@@ -29,6 +29,16 @@ def test(c, module=None, runner=None, opts=None, pty=True):
     c.run(runner + args, pty=pty)
 
 
+@task(help=test.help)
+def integration(c, module=None, runner=None, opts=None, pty=True):
+    """
+    Run the integration test suite. May be slow!
+    """
+    opts = opts or ""
+    opts += " --tests=integration/"
+    test(c, module, runner, opts, pty)
+
+
 @task
 def coverage(c, package=None):
     """
