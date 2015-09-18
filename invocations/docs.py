@@ -89,3 +89,22 @@ def _site(name, build_help):
 docs = _site('docs', "Build the API docs subsite.")
 # Main/about/changelog site (e.g. (www.)?myproject.org)
 www = _site('www', "Build the main project website.")
+
+
+@task
+def sites(c):
+    """
+    Build both doc sites w/ maxed nitpicking.
+    """
+    # Turn warnings into errors, emit warnings about missing references.
+    # This gives us a maximally noisy docs build.
+    # Also enable tracebacks for easier debuggage.
+    opts = "-W -n -T"
+    # This is super lolzy but we haven't actually tackled nontrivial in-Python
+    # task calling yet, so...
+    docs_c = Context(config=c.config.clone())
+    www_c = Context(config=c.config.clone())
+    docs_c.update(**docs.configuration())
+    www_c.update(**www.configuration())
+    docs['build'](docs_c, opts=opts)
+    www['build'](www_c, opts=opts)
