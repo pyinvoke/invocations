@@ -2,6 +2,8 @@ import sys
 
 from invoke import ctask as task
 
+from .watch import watch
+
 
 @task(help={
     'module': "Just runs tests/STRING.py.",
@@ -40,17 +42,34 @@ def integration(c, module=None, runner=None, opts=None, pty=True):
 
 
 @task
+def watch_tests(c, module=None):
+    """
+    Watch source tree and test tree for changes, rerunning tests as necessary.
+
+    Honors ``tests.package`` setting re: which source directory to watch for
+    changes.
+    """
+    package = c.config.get('tests', {}).get('package')
+    patterns = ['\./tests/']
+    if package:
+        patterns.append('\./{0}/'.format(package))
+    watch(
+        c, test, patterns, ['.*/\..*\.swp'], module=module
+    )
+
+
+@task
 def coverage(c, package=None):
     """
     Run tests w/ coverage enabled, generating HTML, & opening it.
 
-    Honors the 'coverage.package' config path, which supplies a default value
+    Honors the ``tests.package`` config path, which supplies a default value
     for the ``package`` kwarg if given.
     """
     if not c.run("which coverage", hide=True, warn=True).ok:
         sys.exit("You need to 'pip install coverage' to use this task!")
     opts = ""
-    package = c.config.get('coverage', {}).get('package', package)
+    package = c.config.get('tests', {}).get('package', package)
     if package is not None:
         # TODO: make omission list more configurable
         opts = "--include='{0}/*' --omit='{0}/vendor/*'".format(package)
