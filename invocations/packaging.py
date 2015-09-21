@@ -114,7 +114,7 @@ def all_(c):
     """
     Catchall version-bump/tag/changelog/PyPI upload task.
     """
-
+    pass
 
 @task
 def changelog(c, target='docs/changelog.rst'):
