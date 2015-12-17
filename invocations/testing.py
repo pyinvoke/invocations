@@ -45,7 +45,7 @@ def integration(c, module=None, runner=None, opts=None, pty=True):
 
 
 @task
-def watch_tests(c, module=None):
+def watch_tests(c, module=None, opts=None):
     """
     Watch source tree and test tree for changes, rerunning tests as necessary.
 
@@ -57,7 +57,7 @@ def watch_tests(c, module=None):
     if package:
         patterns.append('\./{0}/'.format(package))
     watch(
-        c, test, patterns, ['.*/\..*\.swp'], module=module
+        c, test, patterns, ['.*/\..*\.swp'], module=module, opts=opts
     )
 
 
