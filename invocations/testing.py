@@ -37,8 +37,11 @@ def integration(c, module=None, runner=None, opts=None, pty=True):
     Run the integration test suite. May be slow!
     """
     opts = opts or ""
-    opts += " --tests=integration/"
-    test(c, module, runner, opts, pty)
+    override = " --tests=integration/"
+    if module:
+        override += "{0}.py".format(module)
+    opts += override
+    test(c, runner=runner, opts=opts, pty=pty)
 
 
 @task
