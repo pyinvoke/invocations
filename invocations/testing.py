@@ -62,20 +62,26 @@ def watch_tests(c, module=None, opts=None):
 
 
 @task
-def coverage(c, package=None):
+def coverage(c, html=True, integration_=True):
     """
-    Run tests w/ coverage enabled, generating HTML, & opening it.
+    Run tests w/ coverage enabled, optionally generating HTML & opening it.
 
-    Honors the ``tests.package`` config path, which supplies a default value
-    for the ``package`` kwarg if given.
+    :param bool html:
+        Whether to generate & open an HTML report. Default: ``True``.
+
+    :param bool integration_:
+        Whether to run integration test suite (``integration/``) in addition to
+        unit test suite (``tests/``). Default: ``True``.
     """
     if not c.run("which coverage", hide=True, warn=True).ok:
         sys.exit("You need to 'pip install coverage' to use this task!")
-    opts = ""
-    package = c.config.get('tests', {}).get('package', package)
-    if package is not None:
-        # TODO: make omission list more configurable
-        opts = "--include='{0}/*' --omit='{0}/vendor/*'".format(package)
-    test(c, opts="--with-coverage --cover-branches")
-    c.run("coverage html {0}".format(opts))
-    c.run("open htmlcov/index.html")
+    # Generate actual coverage data. NOTE: this will honor a local .coveragerc
+    test_opts = "--with-coverage"
+    test(c, opts=test_opts)
+    # Coverage naturally accumulates unless --cover-erase is used - so the
+    # resulting .coverage file parsed by 'coverage html' will contain the union
+    # of both suites, if integration suite is run too.
+    if integration_:
+        integration(c, opts=test_opts)
+    if html:
+        c.run("coverage html && open htmlcov/index.html")
