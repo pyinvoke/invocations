@@ -191,13 +191,14 @@ def push(c):
 
 
 @task(aliases=['upload'])
-def publish(c, sdist=True, wheel=True, index=None):
+def publish(c, sdist=True, wheel=True, index=None, dry_run=False):
     """
     Publish code to PyPI or index of choice.
 
     :param bool sdist: Whether to upload sdists/tgzs.
     :param bool wheel: Whether to upload wheels (requires the 'wheel' package).
     :param str index: Custom upload index URL. Uses pip default if ``None``.
+    :param bool dry_run: Skip actual publication step if ``True``.
     """
     # Sanity
     if not sdist and not wheel:
@@ -227,12 +228,21 @@ def publish(c, sdist=True, wheel=True, index=None):
             extensions.append('whl')
         if sdist:
             extensions.append('tar.gz')
-        parts.extend(
+        # Use the listed extensions in glob-expressions. Saves us from having
+        # to know exactly what was created. Reasonably safe given we're working
+        # in a controlled tmpdir.
+        args = [
             os.path.join(tmp, '*.{0}'.format(ext))
             for ext in extensions
-        )
-        c.run(" ".join(parts))
-
+        ]
+        parts.extend(args)
+        cmd = " ".join(parts)
+        if dry_run:
+            print("Would publish via: {0}".format(cmd))
+            print("ls'ing matching files...")
+            c.run("ls -l {0}".format(" ".join(args)))
+        else:
+            c.run(cmd)
 
 
 release = Collection('release', changelog, version, tag, push, publish)
