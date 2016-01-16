@@ -5,8 +5,9 @@ import sys
 from contextlib import contextmanager
 from glob import glob
 from shutil import rmtree, copy, copytree
-from StringIO import StringIO
 from tempfile import mkdtemp
+
+from six import StringIO
 
 from invoke import ctask as task, Collection, run
 
