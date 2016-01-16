@@ -194,14 +194,18 @@ def push(c):
 
 
 @task(aliases=['upload'])
-def publish(c, sdist=True, wheel=True, index=None, sign=False, dry_run=False):
+def publish(c, sdist=True, wheel=True, index=None, sign=None, dry_run=False):
     """
     Publish code to PyPI or index of choice.
 
     :param bool sdist: Whether to upload sdists/tgzs.
     :param bool wheel: Whether to upload wheels (requires the 'wheel' package).
     :param str index: Custom upload index URL. Uses pip default if ``None``.
-    :param bool sign: Whether to sign the built archive(s) via GPG.
+    :param bool sign:
+        Whether to sign the built archive(s) via GPG.
+
+        Honors config setting ``packaging.sign``; defaults to ``False``.
+
     :param bool dry_run: Skip actual publication step if ``True``.
     """
     # Sanity
@@ -228,7 +232,7 @@ def publish(c, sdist=True, wheel=True, index=None, sign=False, dry_run=False):
             for extension in ('whl', 'tar.gz')
         ))
         # Sign each archive in turn
-        if sign:
+        if c.config.get('packaging', {}).get('sign', False):
             prompt = "Please enter GPG passphrase for signing: "
             input_ = StringIO(getpass.getpass(prompt) + "\n")
             for archive in archives:
