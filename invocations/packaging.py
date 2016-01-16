@@ -194,20 +194,37 @@ def push(c):
 
 
 @task(aliases=['upload'])
-def publish(c, sdist=True, wheel=True, index=None, sign=None, dry_run=False):
+def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False):
     """
     Publish code to PyPI or index of choice.
 
-    :param bool sdist: Whether to upload sdists/tgzs.
-    :param bool wheel: Whether to upload wheels (requires the 'wheel' package).
-    :param str index: Custom upload index URL. Uses pip default if ``None``.
+    All parameters save ``dry_run`` honor config settings of the same name,
+    under the ``packaging`` tree. E.g. say ``.configure({'packaging': {'wheel':
+    True}})`` to force building wheel archives by default.
+
+    :param bool sdist:
+        Whether to upload sdists/tgzs.
+
+    :param bool wheel:
+        Whether to upload wheels (requires the ``wheel`` package from PyPI).
+
+    :param str index:
+        Custom upload index URL.
+
+        By default, uses whatever the invoked ``pip`` is configured to use.
+
     :param bool sign:
         Whether to sign the built archive(s) via GPG.
 
-        Honors config setting ``packaging.sign``; defaults to ``False``.
-
-    :param bool dry_run: Skip actual publication step if ``True``.
+    :param bool dry_run:
+        Skip actual publication step if ``True``.
     """
+    # Config hooks
+    config = c.config.get('packaging', {})
+    sdist = config.get('sdist', sdist)
+    wheel = config.get('wheel', wheel)
+    index = config.get('index', index)
+    sign = config.get('sign', sign)
     # Sanity
     if not sdist and not wheel:
         sys.exit("You said no sdists and no wheels...what DO you want to publish exactly?") # noqa
@@ -232,7 +249,7 @@ def publish(c, sdist=True, wheel=True, index=None, sign=None, dry_run=False):
             for extension in ('whl', 'tar.gz')
         ))
         # Sign each archive in turn
-        if c.config.get('packaging', {}).get('sign', False):
+        if sign:
             prompt = "Please enter GPG passphrase for signing: "
             input_ = StringIO(getpass.getpass(prompt) + "\n")
             for archive in archives:
