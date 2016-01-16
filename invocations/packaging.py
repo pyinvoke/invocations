@@ -230,13 +230,11 @@ def publish(c, sdist=True, wheel=True, index=None, sign=False, dry_run=False):
         # Sign each archive in turn
         if sign:
             prompt = "Please enter GPG passphrase for signing: "
-            input_ = StringIO(getpass.getpass(prompt))
+            input_ = StringIO(getpass.getpass(prompt) + "\n")
             for archive in archives:
-                # TODO: pass input_ via in_stream and switch to --passphrase-fd
-                # 0, once remainder of invoke#289 is merged; --passphrase is
-                # pretty insecure
-                cmd = "gpg --detach-sign -a --passphrase \"{0}\" {1}"
-                c.run(cmd.format(input_.getvalue(), archive))
+                cmd = "gpg --detach-sign -a --passphrase-fd 0 {0}"
+                c.run(cmd.format(archive), in_stream=input_)
+                input_.seek(0) # So it can be replayed by subsequent iterations
         # Upload
         parts = ["twine", "upload"]
         if index:
