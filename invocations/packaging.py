@@ -1,8 +1,11 @@
+import getpass
+import itertools
 import os
 import sys
 from contextlib import contextmanager
 from glob import glob
 from shutil import rmtree, copy, copytree
+from StringIO import StringIO
 from tempfile import mkdtemp
 
 from invoke import ctask as task, Collection, run
@@ -191,13 +194,14 @@ def push(c):
 
 
 @task(aliases=['upload'])
-def publish(c, sdist=True, wheel=True, index=None, dry_run=False):
+def publish(c, sdist=True, wheel=True, index=None, sign=False, dry_run=False):
     """
     Publish code to PyPI or index of choice.
 
     :param bool sdist: Whether to upload sdists/tgzs.
     :param bool wheel: Whether to upload wheels (requires the 'wheel' package).
     :param str index: Custom upload index URL. Uses pip default if ``None``.
+    :param bool sign: Whether to sign the built archive(s) via GPG.
     :param bool dry_run: Skip actual publication step if ``True``.
     """
     # Sanity
@@ -206,6 +210,7 @@ def publish(c, sdist=True, wheel=True, index=None, dry_run=False):
     # Build, into controlled temp dir (avoids attempting to re-upload old
     # files)
     with tmpdir() as tmp:
+        # Build
         parts = ["python", "setup.py"]
         dist_dir = "-d {0}".format(tmp)
         if sdist:
@@ -215,32 +220,36 @@ def publish(c, sdist=True, wheel=True, index=None, dry_run=False):
             parts.append("bdist_wheel")
             parts.append(dist_dir)
         c.run(" ".join(parts))
+        # Obtain list of archive filenames, then ensure any wheels come first
+        # so their improved metadata is what PyPI sees initially (otherwise, it
+        # only honors the sdist's lesser data).
+        archives = list(itertools.chain.from_iterable(
+            glob(os.path.join(tmp, '*.{0}'.format(extension)))
+            for extension in ('whl', 'tar.gz')
+        ))
+        # Sign each archive in turn
+        if sign:
+            prompt = "Please enter GPG passphrase for signing: "
+            input_ = StringIO(getpass.getpass(prompt))
+            for archive in archives:
+                # TODO: pass input_ via in_stream and switch to --passphrase-fd
+                # 0, once remainder of invoke#289 is merged; --passphrase is
+                # pretty insecure
+                cmd = "gpg --detach-sign -a --passphrase \"{0}\" {1}"
+                c.run(cmd.format(input_.getvalue(), archive))
         # Upload
         parts = ["twine", "upload"]
         if index:
             index_arg = "-r {0}".format(index)
         if index:
             parts.append(index_arg)
-        # Make sure wheels come first so their improved metadata is what PyPI
-        # sees initially (otherwise, it only honors the sdist's lesser data).
-        extensions = []
-        if wheel:
-            extensions.append('whl')
-        if sdist:
-            extensions.append('tar.gz')
-        # Use the listed extensions in glob-expressions. Saves us from having
-        # to know exactly what was created. Reasonably safe given we're working
-        # in a controlled tmpdir.
-        args = [
-            os.path.join(tmp, '*.{0}'.format(ext))
-            for ext in extensions
-        ]
-        parts.extend(args)
+        paths = archives + [os.path.join(tmp, "*.asc")]
+        parts.extend(paths)
         cmd = " ".join(parts)
         if dry_run:
             print("Would publish via: {0}".format(cmd))
-            print("ls'ing matching files...")
-            c.run("ls -l {0}".format(" ".join(args)))
+            print("Files that would be published:")
+            c.run("ls -l {0}".format(" ".join(paths)))
         else:
             c.run(cmd)
 
