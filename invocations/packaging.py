@@ -224,6 +224,8 @@ def build(c, sdist=True, wheel=False, directory=None):
     """
     # Config hooks
     config = c.config.get('packaging', {})
+    # TODO: update defaults to be None, then flip the below so non-None runtime
+    # beats config.
     sdist = config.get('sdist', sdist)
     wheel = config.get('wheel', wheel)
     # Sanity
