@@ -198,7 +198,7 @@ def push(c):
 @task
 def build(c, sdist=True, wheel=False, directory=None):
     """
-    Build sdist and/or wheel archives, optionally in a temp directory.
+    Build sdist and/or wheel archives, optionally in a temp base directory.
 
     All parameters save ``directory`` honor config settings of the same name,
     under the ``packaging`` tree. E.g. say ``.configure({'packaging': {'wheel':
@@ -211,13 +211,16 @@ def build(c, sdist=True, wheel=False, directory=None):
         Whether to build wheels (requires the ``wheel`` package from PyPI).
 
     :param bool directory:
-        Allows specifying a specific directory in which to build the archives.
-        Useful when running as a subroutine from ``publish`` which sets up a
-        temporary directory. Generally maps to providing a ``-d`` flag to
-        ``setup.py``.
+        Allows specifying a specific directory in which to perform builds and
+        dist creation. Useful when running as a subroutine from ``publish``
+        which sets up a temporary directory.
 
-        When omitted, ``setup.py`` isn't given any ``-d`` flag and thus will
-        usually default to a ``dist/`` directory.
+        Two subdirectories will be created within this directory: one for
+        builds, and one for the dist archives.
+
+        When omitted, ``setup.py`` defaults will take effect, which usually
+        means creation of (or reuse of!) local ``build/`` and ``dist/``
+        directories.
     """
     # Config hooks
     config = c.config.get('packaging', {})
@@ -226,15 +229,22 @@ def build(c, sdist=True, wheel=False, directory=None):
     # Sanity
     if not sdist and not wheel:
         sys.exit("You said no sdists and no wheels...what DO you want to build exactly?") # noqa
+    # Directory setup
+    dist_dir = ""
+    if directory:
+        dist_dir = "-d {0}".format(os.path.join(directory, "dist"))
+    build_dir = ""
+    if directory:
+        build_dir = "-b {0}".format(os.path.join(directory, "build"))
     # Build
     parts = ["python", "setup.py"]
-    dist_dir = "-d {0}".format(directory) if directory else ""
     if sdist:
-        parts.append("sdist")
-        parts.append(dist_dir)
+        parts.extend(("sdist", dist_dir))
     if wheel:
-        parts.append("bdist_wheel")
-        parts.append(dist_dir)
+        # Manually execute build in case we are using a custom build dir.
+        # Doesn't seem to be a way to tell bdist_wheel to do this directly.
+        parts.extend(("build", build_dir))
+        parts.extend(("bdist_wheel", dist_dir))
     c.run(" ".join(parts))
 
 
@@ -280,7 +290,7 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False):
         # so their improved metadata is what PyPI sees initially (otherwise, it
         # only honors the sdist's lesser data).
         archives = list(itertools.chain.from_iterable(
-            glob(os.path.join(tmp, '*.{0}'.format(extension)))
+            glob(os.path.join(tmp, 'dist', '*.{0}'.format(extension)))
             for extension in ('whl', 'tar.gz')
         ))
         # Sign each archive in turn
@@ -297,7 +307,7 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False):
             index_arg = "-r {0}".format(index)
         if index:
             parts.append(index_arg)
-        paths = archives + [os.path.join(tmp, "*.asc")]
+        paths = archives + [os.path.join(tmp, 'dist', "*.asc")]
         parts.extend(paths)
         cmd = " ".join(parts)
         if dry_run:
