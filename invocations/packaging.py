@@ -13,12 +13,13 @@ from invoke import ctask as task, Collection, run
 
 
 @contextmanager
-def tmpdir():
+def tmpdir(skip_cleanup=False):
     tmp = mkdtemp()
     try:
         yield tmp
     finally:
-        rmtree(tmp)
+        if not skip_cleanup:
+            rmtree(tmp)
 
 
 def unpack(c, tmp, package, version, git_url=None):
@@ -262,6 +263,9 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False):
 
     :param bool dry_run:
         Skip actual publication step if ``True``.
+
+        This also prevents cleanup of the temporary build/dist directories, so
+        you can examine the build artifacts.
     """
     # Config hooks
     config = c.config.get('packaging', {})
@@ -269,7 +273,7 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False):
     sign = config.get('sign', sign)
     # Build, into controlled temp dir (avoids attempting to re-upload old
     # files)
-    with tmpdir() as tmp:
+    with tmpdir(skip_cleanup=dry_run) as tmp:
         # Build
         build(c, sdist=sdist, wheel=wheel, directory=tmp)
         # Obtain list of archive filenames, then ensure any wheels come first
