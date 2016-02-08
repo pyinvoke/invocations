@@ -194,6 +194,49 @@ def push(c):
     pass
 
 
+@task
+def build(c, sdist=True, wheel=False, directory=None):
+    """
+    Build sdist and/or wheel archives, optionally in a temp directory.
+
+    All parameters save ``directory`` honor config settings of the same name,
+    under the ``packaging`` tree. E.g. say ``.configure({'packaging': {'wheel':
+    True}})`` to force building wheel archives by default.
+
+    :param bool sdist:
+        Whether to build sdists/tgzs.
+
+    :param bool wheel:
+        Whether to build wheels (requires the ``wheel`` package from PyPI).
+
+    :param bool directory:
+        Allows specifying a specific directory in which to build the archives.
+        Useful when running as a subroutine from ``publish`` which sets up a
+        temporary directory. Generally maps to providing a ``-d`` flag to
+        ``setup.py``.
+
+        When omitted, ``setup.py`` isn't given any ``-d`` flag and thus will
+        usually default to a ``dist/`` directory.
+    """
+    # Config hooks
+    config = c.config.get('packaging', {})
+    sdist = config.get('sdist', sdist)
+    wheel = config.get('wheel', wheel)
+    # Sanity
+    if not sdist and not wheel:
+        sys.exit("You said no sdists and no wheels...what DO you want to build exactly?") # noqa
+    # Build
+    parts = ["python", "setup.py"]
+    dist_dir = "-d {0}".format(directory) if directory else ""
+    if sdist:
+        parts.append("sdist")
+        parts.append(dist_dir)
+    if wheel:
+        parts.append("bdist_wheel")
+        parts.append(dist_dir)
+    c.run(" ".join(parts))
+
+
 @task(aliases=['upload'])
 def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False):
     """
@@ -222,26 +265,13 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False):
     """
     # Config hooks
     config = c.config.get('packaging', {})
-    sdist = config.get('sdist', sdist)
-    wheel = config.get('wheel', wheel)
     index = config.get('index', index)
     sign = config.get('sign', sign)
-    # Sanity
-    if not sdist and not wheel:
-        sys.exit("You said no sdists and no wheels...what DO you want to publish exactly?") # noqa
     # Build, into controlled temp dir (avoids attempting to re-upload old
     # files)
     with tmpdir() as tmp:
         # Build
-        parts = ["python", "setup.py"]
-        dist_dir = "-d {0}".format(tmp)
-        if sdist:
-            parts.append("sdist")
-            parts.append(dist_dir)
-        if wheel:
-            parts.append("bdist_wheel")
-            parts.append(dist_dir)
-        c.run(" ".join(parts))
+        build(c, sdist=sdist, wheel=wheel, directory=tmp)
         # Obtain list of archive filenames, then ensure any wheels come first
         # so their improved metadata is what PyPI sees initially (otherwise, it
         # only honors the sdist's lesser data).
@@ -274,5 +304,5 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False):
             c.run(cmd)
 
 
-release = Collection('release', changelog, version, tag, push, publish)
+release = Collection('release', changelog, version, tag, push, publish, build)
 release.add_task(all_, default=True)
