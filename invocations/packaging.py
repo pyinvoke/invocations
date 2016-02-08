@@ -13,8 +13,18 @@ from invoke import ctask as task, Collection, run
 
 
 @contextmanager
-def tmpdir(skip_cleanup=False):
-    tmp = mkdtemp()
+def tmpdir(skip_cleanup=False, explicit=None):
+    """
+    Context-manage a temporary directory.
+
+    Can be given ``skip_cleanup`` to skip cleanup, and ``explicit`` to choose a
+    specific location.
+
+    (If both are given, this is basically not doing anything, but it allows
+    code that normally requires a secure temporary directory to 'dry run'
+    instead.)
+    """
+    tmp = explicit if explicit is not None else mkdtemp()
     try:
         yield tmp
     finally:
@@ -210,7 +220,7 @@ def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
     :param bool wheel:
         Whether to build wheels (requires the ``wheel`` package from PyPI).
 
-    :param bool directory:
+    :param str directory:
         Allows specifying a specific directory in which to perform builds and
         dist creation. Useful when running as a subroutine from ``publish``
         which sets up a temporary directory.
@@ -221,7 +231,7 @@ def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
         When ``None`` or another false-y value, the current working directory
         is used (and thus, local ``dist/`` and ``build/`` subdirectories).
 
-    :param bool python:
+    :param str python:
         Which Python binary to use when invoking ``setup.py``.
 
         Defaults to just ``python``.
@@ -270,13 +280,14 @@ def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
 
 @task(aliases=['upload'])
 def publish(c, sdist=True, wheel=False, dual_wheels=False, index=None,
-    sign=False, dry_run=False):
+    sign=False, dry_run=False, directory=None):
     """
     Publish code to PyPI or index of choice.
 
-    All parameters save ``dry_run`` honor config settings of the same name,
-    under the ``packaging`` tree. E.g. say ``.configure({'packaging': {'wheel':
-    True}})`` to force building wheel archives by default.
+    All parameters save ``dry_run`` and ``directory`` honor config settings of
+    the same name, under the ``packaging`` tree. E.g. say
+    ``.configure({'packaging': {'wheel': True}})`` to force building wheel
+    archives by default.
 
     :param bool sdist:
         Whether to upload sdists/tgzs.
@@ -306,6 +317,13 @@ def publish(c, sdist=True, wheel=False, dual_wheels=False, index=None,
 
         This also prevents cleanup of the temporary build/dist directories, so
         you can examine the build artifacts.
+
+    :param str directory:
+        Base directory within which will live the ``dist/`` and ``build/``
+        directories.
+
+        Defaults to a temporary directory which is cleaned up after the run
+        finishes.
     """
     # Config hooks
     # TODO: same as in build() re: config vs runtime. bleh.
@@ -317,7 +335,7 @@ def publish(c, sdist=True, wheel=False, dual_wheels=False, index=None,
     dual_wheels = config.get('dual_wheels', dual_wheels)
     # Build, into controlled temp dir (avoids attempting to re-upload old
     # files)
-    with tmpdir(skip_cleanup=dry_run) as tmp:
+    with tmpdir(skip_cleanup=dry_run, explicit=directory) as tmp:
         # Build default archives
         build(c, sdist=sdist, wheel=wheel, directory=tmp)
         # Build opposing interpreter archive, if necessary
