@@ -196,7 +196,7 @@ def push(c):
 
 
 @task
-def build(c, sdist=True, wheel=False, directory=None):
+def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
     """
     Build sdist and/or wheel archives, optionally in a temp base directory.
 
@@ -218,9 +218,19 @@ def build(c, sdist=True, wheel=False, directory=None):
         Two subdirectories will be created within this directory: one for
         builds, and one for the dist archives.
 
-        When omitted, ``setup.py`` defaults will take effect, which usually
-        means creation of (or reuse of!) local ``build/`` and ``dist/``
-        directories.
+        When ``None`` or another false-y value, the current working directory
+        is used (and thus, local ``dist/`` and ``build/`` subdirectories).
+
+    :param bool python:
+        Which Python binary to use when invoking ``setup.py``.
+
+        Defaults to just ``python``.
+
+        If ``wheel=True``, then this Python must have ``wheel`` installed in
+        its default ``site-packages`` (or similar) location.
+
+    :param bool clean:
+        Whether to clean out the local ``build/`` folder before building.
     """
     # Config hooks
     config = c.config.get('packaging', {})
@@ -228,30 +238,39 @@ def build(c, sdist=True, wheel=False, directory=None):
     # beats config.
     sdist = config.get('sdist', sdist)
     wheel = config.get('wheel', wheel)
+    python = config.get('python', python or 'python') # buffalo buffalo
     # Sanity
     if not sdist and not wheel:
         sys.exit("You said no sdists and no wheels...what DO you want to build exactly?") # noqa
-    # Directory setup
-    dist_dir = ""
-    if directory:
-        dist_dir = "-d {0}".format(os.path.join(directory, "dist"))
-    build_dir = ""
-    if directory:
-        build_dir = "-b {0}".format(os.path.join(directory, "build"))
+    # Directory path/arg logic
+    if not directory:
+        directory = "" # os.path.join() doesn't like None
+    dist_dir = os.path.join(directory, "dist")
+    dist_arg = "-d {0}".format(dist_dir)
+    build_dir = os.path.join(directory, "build")
+    build_arg = "-b {0}".format(build_dir)
+    # Clean
+    if clean:
+        if os.path.exists(build_dir):
+            rmtree(build_dir)
+        # NOTE: not cleaning dist_dir, since this may be called >1 time within
+        # publish() trying to build up multiple wheels/etc.
+        # TODO: separate clean-build/clean-dist args? Meh
     # Build
-    parts = ["python", "setup.py"]
+    parts = [python, "setup.py"]
     if sdist:
-        parts.extend(("sdist", dist_dir))
+        parts.extend(("sdist", dist_arg))
     if wheel:
         # Manually execute build in case we are using a custom build dir.
         # Doesn't seem to be a way to tell bdist_wheel to do this directly.
-        parts.extend(("build", build_dir))
-        parts.extend(("bdist_wheel", dist_dir))
+        parts.extend(("build", build_arg))
+        parts.extend(("bdist_wheel", dist_arg))
     c.run(" ".join(parts))
 
 
 @task(aliases=['upload'])
-def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False):
+def publish(c, sdist=True, wheel=False, dual_wheels=False, index=None,
+    sign=False, dry_run=False):
     """
     Publish code to PyPI or index of choice.
 
@@ -264,6 +283,15 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False):
 
     :param bool wheel:
         Whether to upload wheels (requires the ``wheel`` package from PyPI).
+
+    :param bool dual_wheels:
+        When ``True``, builds individual wheels for Python 2 and Python 3.
+
+        Useful for situations where you can't build universal wheels, but still
+        want to distribute for both interpreter versions.
+
+        Requires that you have a useful ``python3`` (or ``python2``, if you're
+        on Python 3 already) binary in your ``$PATH``.
 
     :param str index:
         Custom upload index URL.
@@ -280,14 +308,22 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False):
         you can examine the build artifacts.
     """
     # Config hooks
+    # TODO: same as in build() re: config vs runtime. bleh.
+    # TODO: maybe update config/context so it takes care of this? it can
+    # examine the parser result & determine what to use...
     config = c.config.get('packaging', {})
     index = config.get('index', index)
     sign = config.get('sign', sign)
+    dual_wheels = config.get('dual_wheels', dual_wheels)
     # Build, into controlled temp dir (avoids attempting to re-upload old
     # files)
     with tmpdir(skip_cleanup=dry_run) as tmp:
-        # Build
+        # Build default archives
         build(c, sdist=sdist, wheel=wheel, directory=tmp)
+        # Build opposing interpreter archive, if necessary
+        if dual_wheels:
+            other = 'python3' if sys.version_info[0] == 2 else 'python2'
+            build(c, sdist=False, wheel=True, directory=tmp, python=other)
         # Obtain list of archive filenames, then ensure any wheels come first
         # so their improved metadata is what PyPI sees initially (otherwise, it
         # only honors the sdist's lesser data).
