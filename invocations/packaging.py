@@ -279,8 +279,8 @@ def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
 
 
 @task(aliases=['upload'])
-def publish(c, sdist=True, wheel=False, dual_wheels=False, index=None,
-    sign=False, dry_run=False, directory=None):
+def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
+    directory=None, dual_wheels=False, alt_python=None):
     """
     Publish code to PyPI or index of choice.
 
@@ -294,15 +294,6 @@ def publish(c, sdist=True, wheel=False, dual_wheels=False, index=None,
 
     :param bool wheel:
         Whether to upload wheels (requires the ``wheel`` package from PyPI).
-
-    :param bool dual_wheels:
-        When ``True``, builds individual wheels for Python 2 and Python 3.
-
-        Useful for situations where you can't build universal wheels, but still
-        want to distribute for both interpreter versions.
-
-        Requires that you have a useful ``python3`` (or ``python2``, if you're
-        on Python 3 already) binary in your ``$PATH``.
 
     :param str index:
         Custom upload index URL.
@@ -324,11 +315,25 @@ def publish(c, sdist=True, wheel=False, dual_wheels=False, index=None,
 
         Defaults to a temporary directory which is cleaned up after the run
         finishes.
+
+    :param bool dual_wheels:
+        When ``True``, builds individual wheels for Python 2 and Python 3.
+
+        Useful for situations where you can't build universal wheels, but still
+        want to distribute for both interpreter versions.
+
+        Requires that you have a useful ``python3`` (or ``python2``, if you're
+        on Python 3 already) binary in your ``$PATH``.
+
+        See also the ``alt_python`` argument.
+
+    :param str alt_python:
+        Path to the 'alternate' Python interpreter to use when ``dual_wheels=True``.
+
+        When ``None`` (the default) will be ``python3`` or ``python2``,
+        depending on the currently active interpreter.
     """
     # Config hooks
-    # TODO: same as in build() re: config vs runtime. bleh.
-    # TODO: maybe update config/context so it takes care of this? it can
-    # examine the parser result & determine what to use...
     config = c.config.get('packaging', {})
     index = config.get('index', index)
     sign = config.get('sign', sign)
@@ -340,8 +345,9 @@ def publish(c, sdist=True, wheel=False, dual_wheels=False, index=None,
         build(c, sdist=sdist, wheel=wheel, directory=tmp)
         # Build opposing interpreter archive, if necessary
         if dual_wheels:
-            other = 'python3' if sys.version_info[0] == 2 else 'python2'
-            build(c, sdist=False, wheel=True, directory=tmp, python=other)
+            if not alt_python:
+                alt_python = 'python3' if sys.version_info[0] == 2 else 'python2'
+            build(c, sdist=False, wheel=True, directory=tmp, python=alt_python)
         # Obtain list of archive filenames, then ensure any wheels come first
         # so their improved metadata is what PyPI sees initially (otherwise, it
         # only honors the sdist's lesser data).
