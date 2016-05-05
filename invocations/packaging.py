@@ -356,6 +356,9 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
             for extension in ('whl', 'tar.gz')
         ))
         # Sign each archive in turn
+        # TODO: twine has a --sign option; but the below is still nice insofar
+        # as it lets us dry-run, generate for web upload when pypi's API is
+        # being cranky, etc. Figure out which is better.
         if sign:
             prompt = "Please enter GPG passphrase for signing: "
             input_ = StringIO(getpass.getpass(prompt) + "\n")
