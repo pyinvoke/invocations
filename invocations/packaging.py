@@ -9,7 +9,7 @@ from tempfile import mkdtemp
 
 from invoke.vendor.six import StringIO
 
-from invoke import ctask as task, Collection, run
+from invoke import task, Collection
 
 
 @contextmanager
@@ -178,7 +178,7 @@ def tag(c):
     print(msg.format(package, current_version))
     # TODO: document assumption about semantic versioning in tags
     tags = []
-    for tagstr in run("git tag", hide=True).stdout.strip().split('\n'):
+    for tagstr in c.run("git tag", hide=True).stdout.strip().split('\n'):
         try:
             tags.append(Version(tagstr))
         except ValueError: # just skip non-semver version strings
@@ -190,7 +190,7 @@ def tag(c):
     if tags[-1] != current_version:
         msg = "Current version {0} != latest tag {1}, creating new tag"
         print(msg.format(current_version, tags[-1]))
-        run("git tag {0}".format(current_version))
+        c.run("git tag {0}".format(current_version))
     else:
         msg = "Already see a tag for {0}, doing nothing"
         print(msg.format(current_version))

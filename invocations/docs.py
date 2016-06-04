@@ -1,7 +1,7 @@
 from os.path import join
 import sys
 
-from invoke import ctask as task, Collection, Context
+from invoke import task, Collection, Context
 
 from .watch import make_handler, observe
 
