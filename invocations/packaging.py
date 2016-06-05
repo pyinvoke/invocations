@@ -278,6 +278,8 @@ def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
     c.run(" ".join(parts))
 
 
+# TODO: open some PRs for twine to push things like dual wheels, better
+# dry-run/cleanroom directory concerns, etc into it.
 @task(aliases=['upload'])
 def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
     directory=None, dual_wheels=False, alt_python=None):
