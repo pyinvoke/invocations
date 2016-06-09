@@ -325,12 +325,16 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
         want to distribute for both interpreter versions.
 
         Requires that you have a useful ``python3`` (or ``python2``, if you're
-        on Python 3 already) binary in your ``$PATH``.
+        on Python 3 already) binary in your ``$PATH``. Also requires that this
+        other python have the ``wheel`` package installed in its
+        ``site-packages``; usually this will mean the global site-packages for
+        that interpreter.
 
         See also the ``alt_python`` argument.
 
     :param str alt_python:
-        Path to the 'alternate' Python interpreter to use when ``dual_wheels=True``.
+        Path to the 'alternate' Python interpreter to use when
+        ``dual_wheels=True``.
 
         When ``None`` (the default) will be ``python3`` or ``python2``,
         depending on the currently active interpreter.
