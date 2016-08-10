@@ -190,6 +190,7 @@ def tag(c):
     if tags[-1] != current_version:
         msg = "Current version {0} != latest tag {1}, creating new tag"
         print(msg.format(current_version, tags[-1]))
+        # TODO: annotate!! -a or even GPG sign
         c.run("git tag {0}".format(current_version))
     else:
         msg = "Already see a tag for {0}, doing nothing"
