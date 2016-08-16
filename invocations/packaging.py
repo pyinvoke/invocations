@@ -279,6 +279,12 @@ def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
     c.run(" ".join(parts))
 
 
+def find_gpg(c):
+    for candidate in "gpg gpg1 gpg2".split():
+        if c.run("which {0}".format(candidate), hide=True, warn=True).ok:
+            return candidate
+
+
 # TODO: open some PRs for twine to push things like dual wheels, better
 # dry-run/cleanroom directory concerns, etc into it.
 @task(aliases=['upload'])
@@ -369,8 +375,11 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
         if sign:
             prompt = "Please enter GPG passphrase for signing: "
             input_ = StringIO(getpass.getpass(prompt) + "\n")
+            gpg_bin = find_gpg(c)
+            if not gpg_bin:
+                sys.exit("You need to have one of `gpg`, `gpg1` or `gpg2` installed to GPG-sign!") # noqa
             for archive in archives:
-                cmd = "gpg --detach-sign -a --passphrase-fd 0 {0}"
+                cmd = "{0} --detach-sign -a --passphrase-fd 0 {{0}}".format(gpg_bin)
                 c.run(cmd.format(archive), in_stream=input_)
                 input_.seek(0) # So it can be replayed by subsequent iterations
         # Upload
