@@ -1,3 +1,13 @@
+"""
+Python package release tasks.
+
+This module assumes:
+
+- you're using semantic versioning for your releases
+- you maintain a file called ``$package/_version.py`` containing normal version
+  conventions (``__version_info__`` tuple and ``__version__`` string).
+"""
+
 import getpass
 import itertools
 import os
@@ -8,6 +18,10 @@ from shutil import rmtree
 from invoke.vendor.six import StringIO
 
 from invoke import Collection, task
+try:
+    from semantic_version import Version
+except ImportError:
+    sys.exit("Use of the packaging.release collection requires the `semantic_version` package; please install it!") # noqa
 
 from ..util import tmpdir
 
@@ -25,6 +39,24 @@ def changelog(c, target='docs/changelog.rst'):
     Update changelog with new release entry.
     """
     pass
+
+
+def tags(c):
+    """
+    Return sorted list of release-style tags as semver objects.
+    """
+    tags_ = []
+    for tagstr in c.run("git tag", hide=True).stdout.strip().split('\n'):
+        try:
+            tags_.append(Version(tagstr))
+        # Ignore anything non-semver; most of the time they'll be non-release
+        # tags, and even if they are, we can't reason about anything
+        # non-semver anyways.
+        # TODO: perhaps log these to DEBUG
+        except ValueError:
+            pass
+    # Version objects sort semantically
+    return sorted(tags_)
 
 
 @task
@@ -71,31 +103,20 @@ def tag(c, dry_run=False):
     You should already have 'bumped' your version prior to calling this - it
     compares to your existing list of git tags.
 
-    Assumes you're using semantic versioning for your releases, and that you
-    maintain a file called ``$package/_version.py`` containing normal version
-    conventions (``__version_info__`` tuple and ``__version__`` string).
-
     :param bool dry_run: Whether to dry-run instead of actually tagging.
     """
-    # NOTE: internal import as optional dependency.
-    from semantic_version import Version
     name = find_package(c)
     package = __import__("{0}".format(name), fromlist=['_version']) 
     current_version = Version(package._version.__version__) # buffalo buffalo
     msg = "Found package {0.__name__!r} at version {1}"
     # TODO: use logging for this sometime
     print(msg.format(package, current_version))
-    tags = []
-    for tagstr in c.run("git tag", hide=True).stdout.strip().split('\n'):
-        try:
-            tags.append(Version(tagstr))
-        except ValueError: # just skip non-semver version strings
-            pass
-    tags = sorted(tags) # Uses semantic versioning sorting
-    # TODO: pre-task that checks if you forgot to update _version.py
-    if tags[-1] != current_version:
+    latest_tag = tags(c)[-1]
+    # TODO: pre-task/call to version() task; perhaps use its return value to
+    # determine whether it got updated or not.
+    if latest_tag != current_version:
         msg = "Current version {0} != latest tag {1}, creating new tag"
-        print(msg.format(current_version, tags[-1]))
+        print(msg.format(current_version, latest_tag))
         # TODO: annotate!! -a or even GPG sign
         cmd = "git tag {0}".format(current_version)
         # TODO: use eventual run() dry-run feature
