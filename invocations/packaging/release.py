@@ -38,48 +38,71 @@ def version(c):
     pass
 
 
-@task
-def tag(c):
+def find_package(c):
     """
-    Create a release tag in git.
+    Try to find 'the' One True Package for this project.
+
+    Mostly for obtaining the `_version` file within it.
     """
-    from semantic_version import Version
-    # TODO: make this configurable or just smarter
-    # TODO: make subroutine
+    # TODO: allow overriding the package via config
     # TODO: is there a way to get this from the same place setup.py does w/o
     # setup.py barfing (since setup() runs at import time and assumes CLI use)?
-    name = None
-    for path in os.listdir('.'):
+    packages = [
+        path
+        for path in os.listdir('.')
         if (
-            path != 'tests'
-            and os.path.isdir(path)
+            os.path.isdir(path)
             and os.path.exists(os.path.join(path, '__init__.py'))
-        ):
-            name = path
-            break
-    if name is None:
+            and path not in ('tests', 'integration', 'sites', 'vendor')
+        )
+    ]
+    if not packages:
         sys.exit("Unable to find a local Python package!")
+    if len(packages) > 1:
+        sys.exit("Found multiple Python packages: {0!r}".format(packages))
+    return packages[0]
+
+
+@task
+def tag(c, dry_run=False):
+    """
+    Create a release tag in git, if one doesn't appear to already exist.
+
+    You should already have 'bumped' your version prior to calling this - it
+    compares to your existing list of git tags.
+
+    Assumes you're using semantic versioning for your releases, and that you
+    maintain a file called ``$package/_version.py`` containing normal version
+    conventions (``__version_info__`` tuple and ``__version__`` string).
+
+    :param bool dry_run: Whether to dry-run instead of actually tagging.
+    """
+    # NOTE: internal import as optional dependency.
+    from semantic_version import Version
+    name = find_package(c)
     package = __import__("{0}".format(name), fromlist=['_version']) 
-    # TODO: document assumption about our usual _version setup
     current_version = Version(package._version.__version__) # buffalo buffalo
     msg = "Found package {0.__name__!r} at version {1}"
+    # TODO: use logging for this sometime
     print(msg.format(package, current_version))
-    # TODO: document assumption about semantic versioning in tags
     tags = []
     for tagstr in c.run("git tag", hide=True).stdout.strip().split('\n'):
         try:
             tags.append(Version(tagstr))
         except ValueError: # just skip non-semver version strings
             pass
-    tags = sorted(tags)
-    # TODO: doc assumption that _version has been updated prior to this step...
-    # TODO: also, maybe run "did you update that yet" test here as well as in
-    # its own task, or set as pre-task
+    tags = sorted(tags) # Uses semantic versioning sorting
+    # TODO: pre-task that checks if you forgot to update _version.py
     if tags[-1] != current_version:
         msg = "Current version {0} != latest tag {1}, creating new tag"
         print(msg.format(current_version, tags[-1]))
         # TODO: annotate!! -a or even GPG sign
-        c.run("git tag {0}".format(current_version))
+        cmd = "git tag {0}".format(current_version)
+        # TODO: use eventual run() dry-run feature
+        if dry_run:
+            print("Would run: {0}".format(cmd))
+        else:
+            c.run(cmd)
     else:
         msg = "Already see a tag for {0}, doing nothing"
         print(msg.format(current_version))
