@@ -56,9 +56,11 @@ def watch_tests(c, module=None, opts=None):
     patterns = ['\./tests/']
     if package:
         patterns.append('\./{0}/'.format(package))
-    watch(
-        c, test, patterns, ['.*/\..*\.swp'], module=module, opts=opts
-    )
+    kwargs = {'module': module, 'opts': opts}
+    # Kick things off with an initial test
+    test(c, **kwargs)
+    # Then watch
+    watch(c, test, patterns, ['.*/\..*\.swp'], **kwargs)
 
 
 @task
