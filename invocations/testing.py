@@ -57,7 +57,9 @@ def watch_tests(c, module=None, opts=None):
     if package:
         patterns.append('\./{0}/'.format(package))
     kwargs = {'module': module, 'opts': opts}
-    # Kick things off with an initial test
+    # Kick things off with an initial test (making sure it doesn't exit on its
+    # own if tests currently fail)
+    c.config.run.warn = True
     test(c, **kwargs)
     # Then watch
     watch(c, test, patterns, ['.*/\..*\.swp'], **kwargs)
