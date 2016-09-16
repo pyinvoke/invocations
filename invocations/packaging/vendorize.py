@@ -34,8 +34,8 @@ def unpack(c, tmp, package, version, git_url=None):
         print("Moving into temp dir %s" % tmp)
         os.chdir(tmp)
         try:
-            # Nab from index
-            flags = "--download-cache= --download=. --build=build"
+            # Nab from index. Skip wheels; we want to unpack an sdist.
+            flags = "--download=. --build=build --no-use-wheel"
             cmd = "pip install %s %s==%s" % (flags, package, version)
             c.run(cmd)
             # Identify basename
