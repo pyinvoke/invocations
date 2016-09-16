@@ -40,11 +40,21 @@ def unpack(c, tmp, package, version, git_url=None):
             c.run(cmd)
             # Identify basename
             # TODO: glob is bad here because pip install --download gets all
-            # dependencies too! ugh.
-            zipfile = os.path.basename(glob("*.zip")[0])
-            source = os.path.splitext(zipfile)[0]
-            # Unzip
-            c.run("unzip *.zip")
+            # dependencies too! ugh. Figure out best approach for that.
+            globs = []
+            globexpr = ""
+            for extension, opener in (
+                ('zip', 'unzip'),
+                ('tgz', 'tar xzvf'),
+                ('tar.gz', 'tar xzvf'),
+            ):
+                globexpr = "*.{0}".format(extension)
+                globs = glob(globexpr)
+                if globs:
+                    break
+            archive = os.path.basename(globs[0])
+            source, _, _ = archive.rpartition(".{0}".format(extension))
+            c.run("{0} {1}".format(opener, globexpr))
         finally:
             os.chdir(cwd)
     return real_version, source
