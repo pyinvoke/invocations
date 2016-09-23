@@ -66,7 +66,7 @@ def watch_tests(c, module=None, opts=None):
 
 
 @task
-def coverage(c, html=True, integration_=True, include_ci_only=True):
+def coverage(c, html=True, integration_=True):
     """
     Run tests w/ coverage enabled, optionally generating HTML & opening it.
 
@@ -76,11 +76,6 @@ def coverage(c, html=True, integration_=True, include_ci_only=True):
     :param bool integration_:
         Whether to run integration test suite (``integration/``) in addition to
         unit test suite (``tests/``). Default: ``True``.
-
-    :param bool include_ci_only:
-        Whether to run a CI-only test suite (``ci-only-integration/``).
-        Default: ``True``. (Will only actually fire if that directory exists,
-        however.)
     """
     if not c.run("which coverage", hide=True, warn=True).ok:
         sys.exit("You need to 'pip install coverage' to use this task!")
@@ -92,11 +87,5 @@ def coverage(c, html=True, integration_=True, include_ci_only=True):
     # of both suites, if integration suite is run too.
     if integration_:
         integration(c, opts=test_opts)
-    # NOTE: this isn't its own subtask because it's basically never desired
-    # outside of CI environments, which want to run coverage() instead of the
-    # constituent subtasks.
-    ci_only_dir = 'ci-only-integration'
-    if include_ci_only and os.path.exists(ci_only_dir):
-        test(c, opts="--tests={0}".format(ci_only_dir))
     if html:
         c.run("coverage html && open htmlcov/index.html")
