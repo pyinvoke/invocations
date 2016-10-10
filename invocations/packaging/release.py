@@ -26,6 +26,27 @@ except ImportError:
 from ..util import tmpdir
 
 
+# TODO: this would be a good module to test out a more class-centric method of
+# organizing tasks. E.g.:
+# - 'Checks'/readonly things like 'should_changelog' live in a base class
+# - one subclass defines dry-run actions for the 'verbs', and is used for
+# sanity checking or dry-running
+# - another subclass defines actual, mutating actions for the 'verbs', and is
+# used for actual release management
+# - are those classes simply arbitrary tasky classes used *by*
+# actual task functions exposing them; or are they the collections themselves
+# (as per #347)?
+# - if the latter, how should one "switch" between the subclasses when dry
+# running vs real running?
+# - what's the CLI "API" look like for that?
+#   - Different subcollections, e.g. `inv release.dry-run(.all/changelog/etc)`
+#   vs `inv release.all`?
+#   - Dry-run flag (which feels more natural/obvious/expected)? How
+#   would/should that flag affect collection/task loading/selection?
+#       - especially given task load concerns are typically part of core, but
+#       this dry-run-or-not behavior clearly doesn't want to be in core?
+
+
 @task(name='all')
 def all_(c):
     """
