@@ -57,6 +57,18 @@ def all_(c):
     """
     Catchall version-bump/tag/changelog/PyPI upload task.
     """
+    # TODO: ensure all can dry-run successfully on their own;
+    # then just pass our own dry-run option into them.
+    # TODO: good use case for invoke#170 and friends
+    # TODO: allow skipping changelog if not using Releases since we have no
+    # other good way of detecting whether a changelog needs/got an update.
+    changelog(c)
+    # TODO: add a step for checking reqs.txt / setup.py vs virtualenv contents
+    version(c)
+    tag(c)
+    push(c)
+    build(c)
+    publish(c)
 
 
 @task
