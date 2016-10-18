@@ -442,7 +442,9 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
             c.run(cmd)
 
 
-release = Collection('release', changelog, version, tag, push, publish, build)
+release = Collection('release',
+    changelog, should_changelog, version, tag, push, publish, build, dry_run,
+)
 # TODO: why are we doing this this way exactly? Issues when importing it into
 # external namespaces? Feels bad.
 # TODO: even if this is somehow necessary, it should ride on top of the
