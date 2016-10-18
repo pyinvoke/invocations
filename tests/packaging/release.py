@@ -83,7 +83,7 @@ class should_changelog_(Spec):
 
     class true:
         def release_line_branch_and_issues_in_line_bucket(self):
-            c = self._context("1.1", 'outstanding_1.1_issues')
+            c = self._context("1.1", 'unreleased_1.1_bugs')
             eq_(should_changelog(c), True)
 
         def master_branch_and_issues_in_unreleased_feature_bucket(self):
