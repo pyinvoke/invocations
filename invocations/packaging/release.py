@@ -445,4 +445,7 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
 release = Collection('release', changelog, version, tag, push, publish, build)
 # TODO: why are we doing this this way exactly? Issues when importing it into
 # external namespaces? Feels bad.
+# TODO: even if this is somehow necessary, it should ride on top of the
+# "generate collection from this module" feature and then just rename 'all' or
+# whatever.
 release.add_task(all_, default=True)
