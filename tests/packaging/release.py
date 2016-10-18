@@ -1,5 +1,4 @@
 from spec import Spec, trap, skip, eq_
-from mock import Mock
 
 from invoke import MockContext, Result, Config
 

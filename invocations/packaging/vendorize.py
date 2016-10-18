@@ -109,4 +109,4 @@ def vendorize(c, distribution, version, vendor_dir, package=None,
         # Explicit license if needed
         if license:
             copy(os.path.join(abs_source, license), target)
-        # git commit -a -m "Update $package to $version ($real_version if different)"
+        # git commit -a -m "Update $package to $version ($real_version if different)" # noqa

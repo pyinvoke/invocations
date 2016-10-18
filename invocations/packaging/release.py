@@ -215,7 +215,7 @@ def tag(c, dry_run=False):
     :param bool dry_run: Whether to dry-run instead of actually tagging.
     """
     name = find_package(c)
-    package = __import__("{0}".format(name), fromlist=['_version']) 
+    package = __import__("{0}".format(name), fromlist=['_version'])
     current_version = Version(package._version.__version__) # buffalo buffalo
     msg = "Found package {0.__name__!r} at version {1}"
     # TODO: use logging for this sometime
@@ -400,7 +400,9 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
         # Build opposing interpreter archive, if necessary
         if dual_wheels:
             if not alt_python:
-                alt_python = 'python3' if sys.version_info[0] == 2 else 'python2'
+                alt_python = 'python2'
+                if sys.version_info[0] == 2:
+                    alt_python = 'python3'
             build(c, sdist=False, wheel=True, directory=tmp, python=alt_python)
         # Obtain list of archive filenames, then ensure any wheels come first
         # so their improved metadata is what PyPI sees initially (otherwise, it
@@ -420,7 +422,7 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
             if not gpg_bin:
                 sys.exit("You need to have one of `gpg`, `gpg1` or `gpg2` installed to GPG-sign!") # noqa
             for archive in archives:
-                cmd = "{0} --detach-sign -a --passphrase-fd 0 {{0}}".format(gpg_bin)
+                cmd = "{0} --detach-sign -a --passphrase-fd 0 {{0}}".format(gpg_bin) # noqa
                 c.run(cmd.format(archive), in_stream=input_)
                 input_.seek(0) # So it can be replayed by subsequent iterations
         # Upload
