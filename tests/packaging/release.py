@@ -92,7 +92,8 @@ class should_changelog_(Spec):
 
     class false:
         def release_line_branch_and_empty_line_bucket(self):
-            skip()
+            c = self._context("1.1", 'no_unreleased_1.1_bugs')
+            eq_(should_changelog(c), False)
 
         def master_branch_and_empty_unreleased_feature_bucket(self):
             c = self._context("master", 'no_unreleased_1.x_features')
