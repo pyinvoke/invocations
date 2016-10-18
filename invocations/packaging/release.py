@@ -11,6 +11,7 @@ This module assumes:
 import getpass
 import itertools
 import os
+import re
 import sys
 from glob import glob
 from shutil import rmtree
@@ -22,6 +23,10 @@ try:
     from semantic_version import Version
 except ImportError:
     sys.exit("Use of the packaging.release collection requires the `semantic_version` package; please install it!") # noqa
+try:
+    from releases.util import parse_changelog
+except ImportError:
+    sys.exit("Use of the packaging.release collection requires the `releases` package; please install it!") # noqa
 
 from ..util import tmpdir
 
@@ -52,6 +57,89 @@ def all_(c):
     """
     Catchall version-bump/tag/changelog/PyPI upload task.
     """
+
+
+# TODO: I always feel like this is a Python antipattern. Is it really?
+# TODO: At least make them strings instead of ints?
+# TODO: make attrs on an object instead of the module?
+BUGFIX, FEATURE, UNDEFINED = range(3)
+
+bugfix_re = re.compile("^\d+\.\d+$")
+# TODO: allow tweaking this if folks use different branch methodology:
+# - same concept, different name, e.g. s/master/dev/
+# - different concept entirely, e.g. no master-ish, only feature branches
+feature_re = re.compile("^master$")
+
+
+def release_line(c):
+    """
+    Examine current repo state to determine what type of release to prep.
+
+    :returns:
+        A two-tuple of ``(branch-name, line-type)`` where:
+
+        - ``branch-name`` is the current branch name, e.g. ``1.1``, ``master``,
+          ``gobbledygook`` (or, usually, ``HEAD`` if not on a branch).
+        - ``line-type`` is a symbolic module member representing what "type" of
+          release the line appears to be for:
+
+            - ``BUGFIX`` if on a bugfix/stable release line, e.g. ``1.1``.
+            - ``FEATURE`` if on a feature-release branch (typically
+              ``master``).
+            - ``UNDEFINED`` if neither of those appears to apply (usually means
+              on some unmerged feature/dev branch).
+    """
+    # TODO: I don't _think_ this technically overlaps with Releases (because
+    # that only ever deals with changelog contents, and therefore full release
+    # version numbers) but in case it does, move it there sometime.
+    # TODO: this and similar calls in this module may want to be given an
+    # explicit pointer-to-git-repo option (i.e. if run from outside project
+    # context).
+    # TODO: major releases? or are they big enough events we don't need to
+    # bother with the script? Also just hard to gauge - when is master the next
+    # 1.x feature vs 2.0?
+    branch = c.run("git rev-parse --abbrev-ref HEAD").stdout.strip()
+    type_ = UNDEFINED
+    if bugfix_re.match(branch):
+        type_ = BUGFIX
+    if feature_re.match(branch):
+        type_ = FEATURE
+    return branch, type_
+
+
+def latest_feature_bucket(changelog):
+    """
+    Select 'latest'/'highest' unreleased feature bucket from changelog.
+
+    :returns: a string key from ``changelog``.
+    """
+    unreleased = [x for x in changelog if x.startswith('unreleased_')]
+    return sorted(
+        unreleased,
+        key=lambda x: int(x.split('_')[1]),
+        reverse=True,
+    )[0]
+
+
+def should_changelog(c):
+    # Get data about current repo context: what branch are we on & what kind of
+    # release does it appear to represent?
+    branch, release_type = release_line(c)
+    # Parse our changelog so we can tell what's released and what's not.
+    changelog = parse_changelog(c.packaging.changelog_file)
+    # Bugfix-type line + unreleased items in its line bucket? Release!
+    if release_type is BUGFIX and changelog[branch]:
+        return True
+    # Feature-type line + items in latest 'unreleased' bucket? Release!
+    # TODO: smarter detection/selection of "what does 'master' represent?"
+    # Right now we just grab the most recent feature release bucket.
+    latest_feature_key = latest_feature_bucket(changelog)
+    if release_type is FEATURE and changelog[latest_feature_key]:
+        return True
+    # Anything else - meaning an unknown branch type, or a known branch type
+    # but no unreleased issues for it in the changelog - means there's no need,
+    # the changelog is up to date!
+    return False
 
 
 @task
