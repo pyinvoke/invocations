@@ -121,7 +121,16 @@ def latest_feature_bucket(changelog):
     )[0]
 
 
+@task(autoprint=True)
 def should_changelog(c):
+    """
+    Detect whether the local project changelog needs a new :release: line.
+
+    .. note::
+        Requires that one sets the ``packaging.changelog_file`` configuration
+        option; it should be a relative or absolute path to your
+        ``changelog.rst`` (or whatever it's named in your project).
+    """
     # Get data about current repo context: what branch are we on & what kind of
     # release does it appear to represent?
     branch, release_type = release_line(c)
