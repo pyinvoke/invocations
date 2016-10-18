@@ -59,6 +59,23 @@ def all_(c):
     """
 
 
+@task
+def dry_run(c):
+    # TODO: wants some holistic "you don't actually HAVE any changes to
+    # release" final status - i.e. all steps were at no-op status.
+    # TODO: so kinda does want to integrate stronger with all_ / having each
+    # task binary between dry-run and real-run...hrm
+    # TODO: color? if can do be done very quickly...see fabric#101 I think
+    # TODO: tabulate (without column separators tho) - find that one I used at
+    # UA
+    check = u"\u2714"
+    ex = u"\u2718"
+    status = u"{0} up-to-date".format(check)
+    if should_changelog(c):
+        status = u"{0} wants a :release: entry".format(ex)
+    print(u"Changelog: {0}".format(status))
+
+
 # TODO: I always feel like this is a Python antipattern. Is it really?
 # TODO: At least make them strings instead of ints?
 # TODO: make attrs on an object instead of the module?
