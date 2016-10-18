@@ -482,7 +482,14 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
 
 
 release = Collection('release',
-    changelog, should_changelog, version, tag, push, publish, build, dry_run,
+    build,
+    changelog,
+    dry_run,
+    publish,
+    push,
+    should_changelog,
+    tag,
+    version,
 )
 # TODO: why are we doing this this way exactly? Issues when importing it into
 # external namespaces? Feels bad.
