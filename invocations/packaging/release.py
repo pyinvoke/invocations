@@ -98,7 +98,7 @@ def release_line(c):
     # TODO: major releases? or are they big enough events we don't need to
     # bother with the script? Also just hard to gauge - when is master the next
     # 1.x feature vs 2.0?
-    branch = c.run("git rev-parse --abbrev-ref HEAD", hide=True).stdout.strip()
+    branch = c.run("git rev-parse --abbrev-ref HEAD").stdout.strip()
     type_ = UNDEFINED
     if bugfix_re.match(branch):
         type_ = BUGFIX
@@ -449,3 +449,5 @@ release = Collection('release', changelog, version, tag, push, publish, build)
 # "generate collection from this module" feature and then just rename 'all' or
 # whatever.
 release.add_task(all_, default=True)
+# Hide stdout by default, preferring to explicitly enable it when necessary.
+release.configure({'run': {'hide': 'stdout'}})
