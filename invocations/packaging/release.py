@@ -185,6 +185,7 @@ def changelog(c, target='docs/changelog.rst'):
     """
     Update changelog with new release entry.
     """
+    # TODO: work in should_changelog() so we short-circuit unless needed.
     pass
 
 
