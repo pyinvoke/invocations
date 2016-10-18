@@ -71,7 +71,9 @@ class latest_feature_bucket_(Spec):
 
 class should_changelog_(Spec):
     # TODO: find way to reuse sphinx conf option instead of duplicating
-    # it/requiring use of the invoke-specific conf option.
+    # it/requiring use of the invoke-specific conf option. Looks like one can
+    # safely chdir to sphinx.source (invoke conf setting) then 'import conf'
+    # and examine 'conf.releases_changelog_name' or w/e it is
     def _context(self, branch, file_):
         # Fake git rev-parse output & path to mock changelog
         config = Config(overrides={
