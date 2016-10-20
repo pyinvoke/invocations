@@ -76,10 +76,14 @@ def dry_run(c):
     # TODO: wants some holistic "you don't actually HAVE any changes to
     # release" final status - i.e. all steps were at no-op status.
     # TODO: so kinda does want to integrate stronger with all_ / having each
-    # task binary between dry-run and real-run...hrm
+    # task binary between dry-run and real-run...hrm. TODO: yes definitely
+    # starting to lean towards "only expose all/dry-run, the only truly valid
+    # viewpoint is one considering all components together, even if the data is
+    # being gathered by subroutines".
     # TODO: color? if can do be done very quickly...see fabric#101 I think
     # TODO: tabulate (without column separators tho) - find that one I used at
     # UA
+    # TODO: switch to future unicode_literals import!!
     check = u"\u2714"
     ex = u"\u2718"
     status = u"{0} up-to-date".format(check)
