@@ -16,7 +16,15 @@ import sys
 from glob import glob
 from shutil import rmtree
 
+# TODO: really not a fan of these optional requirements. Given nothing so far
+# is C-extension based, maybe just suck it up & add them all as true
+# requirements?
+
 from invoke.vendor.six import StringIO
+try:
+    from enum import Enum
+except ImportError:
+    sys.exit("Need the 'enum' library and you seem to be on Python<3.4; please 'pip install enum34'!") # noqa
 
 from invoke import Collection, task
 try:
@@ -31,7 +39,7 @@ except ImportError:
 from ..util import tmpdir
 
 
-# TODO: this would be a good module to test out a more class-centric method of
+# TODO: this could be a good module to test out a more class-centric method of
 # organizing tasks. E.g.:
 # - 'Checks'/readonly things like 'should_changelog' live in a base class
 # - one subclass defines dry-run actions for the 'verbs', and is used for
@@ -52,34 +60,101 @@ from ..util import tmpdir
 #       this dry-run-or-not behavior clearly doesn't want to be in core?
 
 
+#
+# State junk
+#
+
+# TODO: I always feel a bit icky when I see the enum pattern, or the related
+# one of "define a bunch of module level constants as integers". Feels
+# non-Pythonic. But not sure what's truly better given the pitfalls of
+# comparing strings as values. (String *keys* are typically much safer thanks
+# to KeyError, but "if actions['changelog'] == 'needs_releas'" [note typo] is
+# far easier to run into.)
+
+# TODO: these enums kinda-sorta wants to grow and eat related functionality,
+# e.g. Changelog.update(), Changelog.determine_state(), etc etc. In that case,
+# probably switch (back) to regular classes with constants equal to their name
+# strings (for debugging etc, as Enum does).
+
+Changelog = Enum('Changelog', "NEEDS_RELEASE UP_TO_DATE")
+Release = Enum('Release', "BUGFIX FEATURE UNDEFINED")
+
+BUGFIX_RE = re.compile("^\d+\.\d+$")
+# TODO: allow tweaking this if folks use different branch methodology:
+# - same concept, different name, e.g. s/master/dev/
+# - different concept entirely, e.g. no master-ish, only feature branches
+FEATURE_RE = re.compile("^master$")
+
+
+def converge(c):
+    """
+    Examine world state, returning data on what needs updating for release.
+
+    :param c: Invoke ``Context`` object or subclass.
+
+    :returns:
+        Two dicts, ``actions`` and ``state`` (in that order.)
+
+        ``actions`` maps release component names to variables (usually class
+        constants) determining what action should be taken for that component:
+
+        - ``changelog``: members of `.Changelog` such as ``NEEDS_RELEASE`` or
+          ``UP_TO_DATE``.
+        - ...
+
+        ``state`` contains the data used to calculate the actions, in case the caller wants to do further analysis:
+
+        - ``branch``: the name of the checked-out Git branch.
+        - ``changelog``: the parsed project changelog, a `dict` of releases.
+        - ``release_type``: what type of release the branch appears to be (will
+          be a member of `.Release` such as ``Release.BUGFIX``.)
+    """
+    #
+    # Data/state gathering
+    #
+
+    # Get data about current repo context: what branch are we on & what kind of
+    # release does it appear to represent?
+    branch, release_type = release_line(c)
+    # Parse our changelog so we can tell what's released and what's not.
+    changelog = parse_changelog(c.packaging.changelog_file)
+
+    #
+    # Logic determination / convergence
+    #
+
+    actions = {}
+
+    actions['changelog'] = Changelog.UP_TO_DATE
+    if changelog_needs_release(branch, release_type, changelog):
+        actions['changelog'] = Changelog.NEEDS_RELEASE
+
+
+    #
+    # Return
+    #
+
+    state = {
+        'branch': branch,
+        'release_type': release_type,
+        'changelog': changelog,
+    }
+
+    return actions, state
+
+
 @task(name='all')
-def all_(c):
+def all_(c, dry_run=False):
     """
     Catchall version-bump/tag/changelog/PyPI upload task.
     """
-    # TODO: ensure all can dry-run successfully on their own;
-    # then just pass our own dry-run option into them.
-    # TODO: good use case for invoke#170 and friends
-    # TODO: allow skipping changelog if not using Releases since we have no
-    # other good way of detecting whether a changelog needs/got an update.
-    changelog(c)
-    # TODO: add a step for checking reqs.txt / setup.py vs virtualenv contents
-    version(c)
-    tag(c)
-    push(c)
-    build(c)
-    publish(c)
 
+    #
+    # Dry run display
+    #
 
-@task
-def dry_run(c):
     # TODO: wants some holistic "you don't actually HAVE any changes to
     # release" final status - i.e. all steps were at no-op status.
-    # TODO: so kinda does want to integrate stronger with all_ / having each
-    # task binary between dry-run and real-run...hrm. TODO: yes definitely
-    # starting to lean towards "only expose all/dry-run, the only truly valid
-    # viewpoint is one considering all components together, even if the data is
-    # being gathered by subroutines".
     # TODO: color? if can do be done very quickly...see fabric#101 I think
     # TODO: tabulate (without column separators tho) - find that one I used at
     # UA
@@ -87,21 +162,25 @@ def dry_run(c):
     check = u"\u2714"
     ex = u"\u2718"
     status = u"{0} up-to-date".format(check)
-    if should_changelog(c):
+    # TODO: allow skipping changelog if not using Releases since we have no
+    # other good way of detecting whether a changelog needs/got an update.
+    if changelog_wants_release:
         status = u"{0} wants a :release: entry".format(ex)
     print(u"Changelog: {0}".format(status))
 
+    # TODO: add a step for checking reqs.txt / setup.py vs virtualenv contents
+    version(c)
+    tag(c)
+    push(c)
+    build(c)
+    publish(c)
 
-# TODO: I always feel like this is a Python antipattern. Is it really?
-# TODO: At least make them strings instead of ints?
-# TODO: make attrs on an object instead of the module?
-BUGFIX, FEATURE, UNDEFINED = range(3)
+    #
+    # Actions
+    #
 
-bugfix_re = re.compile("^\d+\.\d+$")
-# TODO: allow tweaking this if folks use different branch methodology:
-# - same concept, different name, e.g. s/master/dev/
-# - different concept entirely, e.g. no master-ish, only feature branches
-feature_re = re.compile("^master$")
+    # TODO: probably want to always show dry-run, then when not
+    # just-dry-running, display default-Y prompt saying "should I remedy this?"
 
 
 def release_line(c):
@@ -113,14 +192,15 @@ def release_line(c):
 
         - ``branch-name`` is the current branch name, e.g. ``1.1``, ``master``,
           ``gobbledygook`` (or, usually, ``HEAD`` if not on a branch).
-        - ``line-type`` is a symbolic module member representing what "type" of
-          release the line appears to be for:
+        - ``line-type`` is a symbolic member of `.Release` representing what
+          "type" of release the line appears to be for:
 
-            - ``BUGFIX`` if on a bugfix/stable release line, e.g. ``1.1``.
-            - ``FEATURE`` if on a feature-release branch (typically
+            - ``Release.BUGFIX`` if on a bugfix/stable release line, e.g.
+              ``1.1``.
+            - ``Release.FEATURE`` if on a feature-release branch (typically
               ``master``).
-            - ``UNDEFINED`` if neither of those appears to apply (usually means
-              on some unmerged feature/dev branch).
+            - ``Release.UNDEFINED`` if neither of those appears to apply
+              (usually means on some unmerged feature/dev branch).
     """
     # TODO: I don't _think_ this technically overlaps with Releases (because
     # that only ever deals with changelog contents, and therefore full release
@@ -132,11 +212,11 @@ def release_line(c):
     # bother with the script? Also just hard to gauge - when is master the next
     # 1.x feature vs 2.0?
     branch = c.run("git rev-parse --abbrev-ref HEAD").stdout.strip()
-    type_ = UNDEFINED
-    if bugfix_re.match(branch):
-        type_ = BUGFIX
-    if feature_re.match(branch):
-        type_ = FEATURE
+    type_ = Release.UNDEFINED
+    if BUGFIX_RE.match(branch):
+        type_ = Release.BUGFIX
+    if FEATURE_RE.match(branch):
+        type_ = Release.FEATURE
     return branch, type_
 
 
@@ -154,29 +234,35 @@ def latest_feature_bucket(changelog):
     )[0]
 
 
-@task(autoprint=True)
-def should_changelog(c):
+def changelog_needs_release(branch, release_type, changelog):
     """
     Detect whether the local project changelog needs a new :release: line.
 
+    :param str branch:
+        Current git branch, usually from `release_line`.
+    :param int release_type:
+        Current branch release type, usually from `release_line`.
+    :param dict changelog:
+        Parsed changelog data, usually from `parse_changelog`.
+
+    :returns bool:
+    """
+    # TODO: below needs to go in something doc-y somewhere; having it in a
+    # non-user-facing subroutine docstring isn't visible enough.
+    """
     .. note::
         Requires that one sets the ``packaging.changelog_file`` configuration
         option; it should be a relative or absolute path to your
         ``changelog.rst`` (or whatever it's named in your project).
     """
-    # Get data about current repo context: what branch are we on & what kind of
-    # release does it appear to represent?
-    branch, release_type = release_line(c)
-    # Parse our changelog so we can tell what's released and what's not.
-    changelog = parse_changelog(c.packaging.changelog_file)
     # Bugfix-type line + unreleased items in its line bucket? Release!
-    if release_type is BUGFIX and changelog[branch]:
+    if release_type is Release.BUGFIX and changelog[branch]:
         return True
     # Feature-type line + items in latest 'unreleased' bucket? Release!
     # TODO: smarter detection/selection of "what does 'master' represent?"
     # Right now we just grab the most recent feature release bucket.
     latest_feature_key = latest_feature_bucket(changelog)
-    if release_type is FEATURE and changelog[latest_feature_key]:
+    if release_type is Release.FEATURE and changelog[latest_feature_key]:
         return True
     # Anything else - meaning an unknown branch type, or a known branch type
     # but no unreleased issues for it in the changelog - means there's no need,
@@ -212,13 +298,49 @@ def tags(c):
 
 
 @task
+def should_version(c):
+    """
+    Whether the project's packaging version needs to be updated.
+    """
+    # Get current version value
+    name = find_package(c)
+    # TODO: explode nicely if it lacks a _version
+    package = __import__("{0}".format(name), fromlist=['_version'])
+    current_version = Version(package._version.__version__) # buffalo buffalo
+    # Get latest release in changelog for our line, OR the fact that changelog
+    # needs an update (which overrides that)
+    changelog = parse_changelog(c.packaging.changelog_file)
+    branch, release_type = release_line(c)
+    
+    # Possibilities:
+    # - no pending changelog changes
+    #   - changelog latest release == current version val: no action required
+    #   - cl latest release > current version: need update (to the cl value -
+    #   auto insert/replace??) TODO: how best to pass that kind of info between
+    #   'should' and action func??
+    #   - cl latest release < current version: shouldn't happen...implies bug
+    #   or version got bumped too high
+    # - pending changelog changes
+    #   - changelog latest release == current version val: both need updating
+    #   (to the derived next version number)
+    #   - CL > version: wat. should not get here
+    #   - CL < version: implies version has already been updated (& changelog
+    #   wants that version)
+    # TODO: when we fully control situation and user has done nothing besides
+    # commit fixes, which of the two do we update first?
+
+
+@task
 def version(c):
     """
     Update stored project version (e.g. a ``_version.py``.)
-
-    Requires configuration to be effective (since version file is usually kept
-    within a project-named directory.
     """
+    # - version already > latest release-style tag
+    #   - typically means we can no-op/short-circuit
+    # tags_ =
+    # - version == latest tag, & there's commits since then
+    #   - implies version needs bump
+    #   - likely has some annoying false positives...?
     pass
 
 
@@ -227,10 +349,17 @@ def find_package(c):
     Try to find 'the' One True Package for this project.
 
     Mostly for obtaining the `_version` file within it.
+
+    Uses the ``packaging.package`` config setting if defined. If not defined,
+    fallback is to look for a single top-level Python package (directory
+    containing ``__init__.py``). (This search ignores a small blacklist of
+    directories like ``tests/``, ``vendor/`` etc.)
     """
-    # TODO: allow overriding the package via config
     # TODO: is there a way to get this from the same place setup.py does w/o
     # setup.py barfing (since setup() runs at import time and assumes CLI use)?
+    conf = c.get('packaging', {}).get('package', None)
+    if conf:
+        return conf
     packages = [
         path
         for path in os.listdir('.')
@@ -485,16 +614,17 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
             c.run(cmd)
 
 
-release = Collection('release',
-    build,
-    changelog,
-    dry_run,
-    publish,
-    push,
-    should_changelog,
-    tag,
-    version,
-)
+release = Collection('release')#,
+#    build,
+#    changelog,
+#    #dry_run,
+#    publish,
+#    push,
+#    should_changelog,
+#    should_version,
+#    tag,
+#    version,
+#)
 # TODO: why are we doing this this way exactly? Issues when importing it into
 # external namespaces? Feels bad.
 # TODO: even if this is somehow necessary, it should ride on top of the
