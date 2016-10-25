@@ -108,7 +108,7 @@ def converge(c):
 
         - ``changelog``: members of `.Changelog` such as ``NEEDS_RELEASE`` or
           ``OKAY``.
-        - ...
+        - ``version``: members of `.VersionFile`.
 
         ``state`` contains the data used to calculate the actions, in case the caller wants to do further analysis:
 
@@ -348,9 +348,6 @@ def should_version(latest_release, issues, current_version):
         # changelog). No update required.
         else:
             return False
-
-    # TODO: when we fully control situation and user has done nothing besides
-    # commit fixes, which of the two do we update first?
 
 
 @task

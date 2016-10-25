@@ -252,8 +252,19 @@ class converge_(Spec):
                         version=VersionFile.NEEDS_BUMP,
                     )
 
-            def version_file_is_newer(self):
-                skip()
+            class version_file_is_newer:
+                _version = '1.1.3'
+
+                def both_technically_okay(self):
+                    _expect_actions(self,
+                        # TODO: display a 'warning' state noting that your
+                        # version outpaces your changelog despite your
+                        # changelog having no unreleased stuff in it. Still
+                        # "Okay" (no action needed), not an error per se, but
+                        # still "strange".
+                        changelog=Changelog.OKAY,
+                        version=VersionFile.OKAY,
+                    )
 
     class master_branch:
         pass
