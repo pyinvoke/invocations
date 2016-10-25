@@ -339,12 +339,16 @@ def should_version(latest_release, issues, current_version):
         # Versions match -> probably just cut a release, no update needed
         if latest_release == current_version:
             return False
-    #   - cl latest release > current version: need update (to the cl value -
-    #   auto insert/replace??) TODO: how best to pass that kind of info between
-    #   'should' and action func??
-        elif latest_release
-    #   - cl latest release < current version: shouldn't happen...implies bug
-    #   or version got bumped too high
+        # Changelog has a newer version not seen in version file: version file
+        # needs update (presumably, to that specific version)
+        elif latest_release > current_version:
+            return True
+        # Version is newer than changelog: implies version got bumped by the
+        # dev but nothing's been worked on yet (or at least not added to
+        # changelog). No update required.
+        else:
+            return False
+
     # TODO: when we fully control situation and user has done nothing besides
     # commit fixes, which of the two do we update first?
 

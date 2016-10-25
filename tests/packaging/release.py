@@ -235,7 +235,7 @@ class converge_(Spec):
             _changelog = 'no_unreleased_1.1_bugs'
 
             class file_version_equals_latest_in_changelog:
-                _version = '1.1.1'
+                _version = '1.1.2'
 
                 def no_updates_necessary(self):
                     _expect_actions(self,
@@ -243,10 +243,16 @@ class converge_(Spec):
                         version=VersionFile.OKAY,
                     )
 
-            def changelog_newer(self):
-                skip()
+            class changelog_is_newer:
+                _version = '1.1.1'
 
-            def version_newer(self):
+                def changelog_okay_version_needs_bump(self):
+                    _expect_actions(self,
+                        changelog=Changelog.OKAY,
+                        version=VersionFile.NEEDS_BUMP,
+                    )
+
+            def version_file_is_newer(self):
                 skip()
 
     class master_branch:
