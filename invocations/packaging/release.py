@@ -90,6 +90,9 @@ BUGFIX_RELEASE_RE = re.compile("^\d+\.\d+\.\d+$")
 # - different concept entirely, e.g. no master-ish, only feature branches
 FEATURE_RE = re.compile("^master$")
 
+class UndefinedReleaseType(Exception):
+    pass
+
 
 def converge(c):
     """
@@ -121,6 +124,9 @@ def converge(c):
     # Get data about current repo context: what branch are we on & what kind of
     # release does it appear to represent?
     branch, release_type = release_line(c)
+    # Short-circuit if type is undefined; we can't do useful work for that.
+    if release_type is Release.UNDEFINED:
+        raise UndefinedReleaseType("You don't seem to be on a release-related branch; why are you trying to cut a release?") # noqa
     # Parse our changelog so we can tell what's released and what's not.
     # TODO: below needs to go in something doc-y somewhere; having it in a
     # non-user-facing subroutine docstring isn't visible enough.
@@ -266,9 +272,6 @@ def latest_feature_bucket(changelog):
 
 # TODO: may want to live in releases.util eventually
 def release_and_issues(changelog, branch, release_type):
-    # Not clearly feature or bugfix line -> this is meaningless
-    if release_type is Release.UNDEFINED:
-        return None, []
     # Bugfix lines just use the branch to find issues
     bucket = branch
     # Features need a bit more logic

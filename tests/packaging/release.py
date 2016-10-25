@@ -1,13 +1,13 @@
 from contextlib import nested
 
 from mock import Mock, patch
-from spec import Spec, trap, skip, eq_
+from spec import Spec, trap, skip, eq_, raises
 
 from invoke import MockContext, Result, Config
 
 from invocations.packaging.release import (
     converge, release_line, latest_feature_bucket, release_and_issues,
-    Changelog, Release, VersionFile,
+    Changelog, Release, VersionFile, UndefinedReleaseType,
 )
 
 
@@ -234,3 +234,11 @@ class converge_(Spec):
 
     class master_branch:
         pass
+
+    class undefined_branch:
+        _branch = "whatever"
+        _changelog = "nah"
+
+        @raises(UndefinedReleaseType)
+        def raises_exception(self):
+            _mock_converge(self)
