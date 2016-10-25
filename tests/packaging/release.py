@@ -210,7 +210,7 @@ class converge_(Spec):
             _changelog = 'unreleased_1.1_bugs'
 
             class file_version_equals_latest_in_changelog:
-                _version = '1.1.0'
+                _version = '1.1.1'
                 
                 def changelog_release_version_update(self):
                     _expect_actions(self,
@@ -218,11 +218,18 @@ class converge_(Spec):
                         version=VersionFile.NEEDS_BUMP,
                     )
 
-            def changelog_newer(self):
-                skip()
+            class version_file_is_newer:
+                _version = '1.1.2'
 
-            def version_newer(self):
-                skip()
+                def changelog_release_version_okay(self):
+                    _expect_actions(self,
+                        changelog=Changelog.NEEDS_RELEASE,
+                        version=VersionFile.OKAY,
+                    )
+
+            class changelog_version_is_newer:
+                _version = '1.1.0'
+                # Undefined situation - unsure how/whether to test
 
         class no_unreleased_issues:
             _changelog = 'no_unreleased_1.1_bugs'
@@ -231,14 +238,16 @@ class converge_(Spec):
                 _version = '1.1.1'
 
                 def no_updates_necessary(self):
-                    skip()
-
+                    _expect_actions(self,
+                        changelog=Changelog.OKAY,
+                        version=VersionFile.OKAY,
+                    )
 
             def changelog_newer(self):
-                pass
+                skip()
 
             def version_newer(self):
-                pass
+                skip()
 
     class master_branch:
         pass

@@ -2,8 +2,9 @@
 Changelog
 =========
 
-.. Notably, no release yet for 1.1.x
-
+* :release:`1.0.2 <2016-10-24>`
+* :bug:`2` Yup.
+* :release:`1.1.1 <2016-10-24>`
 * :release:`1.0.1 <2014-01-02>`
 * :bug:`1` Fix a bug.
 * :release:`1.1.0 <2014-01-01>`

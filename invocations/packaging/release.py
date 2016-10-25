@@ -323,23 +323,28 @@ def should_version(latest_release, issues, current_version):
     """
     latest_release = Version(latest_release)
     current_version = Version(current_version)
-    # Possibilities:
-    # - no pending changelog changes
-    #   - changelog latest release == current version val: no action required
+    # When the changelog is 'dirty' and there are unreleased issues
+    if issues:
+        # Both versions match -> both are outdated, so version needs bump
+        if latest_release == current_version:
+            return True
+        # Version is newer -> was pre-emptively bumped, no updated needed
+        elif latest_release < current_version:
+            return False
+        # else: # latest release > current_version
+        # Should not ever get here, implies the version is 2+ releases out of
+        # date. wat??
+    # Changelog looks up to date / no unreleased issues
+    else:
+        # Versions match -> probably just cut a release, no update needed
+        if latest_release == current_version:
+            return False
     #   - cl latest release > current version: need update (to the cl value -
     #   auto insert/replace??) TODO: how best to pass that kind of info between
     #   'should' and action func??
+        elif latest_release
     #   - cl latest release < current version: shouldn't happen...implies bug
     #   or version got bumped too high
-    # - pending changelog changes
-    if issues:
-    #   - changelog latest release == current version val: both need updating
-    #   (to the derived next version number)
-        if current_version == latest_release:
-            return True
-    #   - CL > version: wat. should not get here
-    #   - CL < version: implies version has already been updated (& changelog
-    #   wants that version)
     # TODO: when we fully control situation and user has done nothing besides
     # commit fixes, which of the two do we update first?
 
