@@ -79,9 +79,9 @@ from ..util import tmpdir
 # probably switch (back) to regular classes with constants equal to their name
 # strings (for debugging etc, as Enum does).
 
-Changelog = Enum('Changelog', "NEEDS_RELEASE UP_TO_DATE")
+Changelog = Enum('Changelog', "NEEDS_RELEASE OKAY")
 Release = Enum('Release', "BUGFIX FEATURE UNDEFINED")
-VersionFile = Enum('VersionFile', "NEEDS_UPDATE UP_TO_DATE")
+VersionFile = Enum('VersionFile', "NEEDS_UPDATE OKAY")
 
 BUGFIX_RE = re.compile("^\d+\.\d+$")
 BUGFIX_RELEASE_RE = re.compile("^\d+\.\d+\.\d+$")
@@ -104,7 +104,7 @@ def converge(c):
         constants) determining what action should be taken for that component:
 
         - ``changelog``: members of `.Changelog` such as ``NEEDS_RELEASE`` or
-          ``UP_TO_DATE``.
+          ``OKAY``.
         - ...
 
         ``state`` contains the data used to calculate the actions, in case the caller wants to do further analysis:
@@ -147,15 +147,16 @@ def converge(c):
 
     actions = {}
 
-    # TODO: change these UP_TO_DATEs to OKAY ?
-
-    actions['changelog'] = Changelog.UP_TO_DATE
+    # Changelog
+    actions['changelog'] = Changelog.OKAY
     if release_type in (Release.BUGFIX, Release.FEATURE) and issues:
         actions['changelog'] = Changelog.NEEDS_RELEASE
 
-    actions['version'] = VersionFile.UP_TO_DATE
+    # Version file
+    actions['version'] = VersionFile.OKAY
     # TODO: this needs to become generic 'return action' func, or just pull the
     # funcs back in here cuz not testing as subroutines??
+
     if should_version(branch, release_type, changelog, current_version):
         actions['version'] = VersionFile.NEEDS_UPDATE
 
