@@ -79,9 +79,9 @@ from ..util import tmpdir
 # probably switch (back) to regular classes with constants equal to their name
 # strings (for debugging etc, as Enum does).
 
-Changelog = Enum('Changelog', "NEEDS_RELEASE OKAY")
 Release = Enum('Release', "BUGFIX FEATURE UNDEFINED")
-VersionFile = Enum('VersionFile', "NEEDS_UPDATE OKAY")
+Changelog = Enum('Changelog', "OKAY NEEDS_RELEASE")
+VersionFile = Enum('VersionFile', "OKAY NEEDS_BUMP")
 
 BUGFIX_RE = re.compile("^\d+\.\d+$")
 BUGFIX_RELEASE_RE = re.compile("^\d+\.\d+\.\d+$")
@@ -163,7 +163,7 @@ def converge(c):
     # Version file: more complex - see subroutine.
     actions['version'] = VersionFile.OKAY
     if should_version(release, issues, current_version):
-        actions['version'] = VersionFile.NEEDS_UPDATE
+        actions['version'] = VersionFile.NEEDS_BUMP
 
     #
     # Return
@@ -336,7 +336,7 @@ def should_version(latest_release, issues, current_version):
     #   - changelog latest release == current version val: both need updating
     #   (to the derived next version number)
         if current_version == latest_release:
-            return VersionFile.NEEDS_UPDATE
+            return True
     #   - CL > version: wat. should not get here
     #   - CL < version: implies version has already been updated (& changelog
     #   wants that version)

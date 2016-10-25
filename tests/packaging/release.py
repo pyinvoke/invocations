@@ -207,7 +207,7 @@ class converge_(Spec):
                 def changelog_release_version_update(self):
                     actions, state = _mock_converge(self)
                     eq_(actions['changelog'], Changelog.NEEDS_RELEASE)
-                    eq_(actions['version'], VersionFile.NEEDS_UPDATE)
+                    eq_(actions['version'], VersionFile.NEEDS_BUMP)
 
             def changelog_newer(self):
                 skip()
