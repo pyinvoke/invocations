@@ -113,9 +113,6 @@ class should_version_(Spec):
         def no_pending_changelog_and_changelog_version_newer(self):
             skip()
 
-        def pending_changelog_and_versions_match(self):
-            skip()
-
     class false:
         def no_pending_changelog_and_versions_match(self):
             skip()

@@ -145,7 +145,8 @@ def converge(c):
     # Obtain the project's main package & its version data
     # TODO: explode nicely if it lacks a _version
     package = __import__(find_package(c), fromlist=['_version'])
-    current_version = Version(package._version.__version__) # buffalo buffalo
+    # TODO: probably make this & 'release' Version()s here
+    current_version = package._version.__version__ # buffalo buffalo
 
     #
     # Logic determination / convergence
@@ -153,17 +154,15 @@ def converge(c):
 
     actions = {}
 
-    # Changelog
+    # Changelog: needs new release entry if there are any unreleased issues for
+    # current branch's line.
     actions['changelog'] = Changelog.OKAY
     if release_type in (Release.BUGFIX, Release.FEATURE) and issues:
         actions['changelog'] = Changelog.NEEDS_RELEASE
 
-    # Version file
+    # Version file: more complex - see subroutine.
     actions['version'] = VersionFile.OKAY
-    # TODO: this needs to become generic 'return action' func, or just pull the
-    # funcs back in here cuz not testing as subroutines??
-
-    if should_version(branch, release_type, changelog, current_version):
+    if should_version(release, issues, current_version):
         actions['version'] = VersionFile.NEEDS_UPDATE
 
     #
@@ -318,14 +317,12 @@ def tags(c):
     return sorted(tags_)
 
 
-# TODO: real needs: release bucket, latest release for line, contents of version file
-def should_version(branch, release_type, changelog, current_version):
+def should_version(latest_release, issues, current_version):
     """
     Whether the project's packaging version needs to be updated.
     """
-    # Get latest release in changelog for our line, OR the fact that changelog
-    # needs an update (which overrides that)
-    
+    latest_release = Version(latest_release)
+    current_version = Version(current_version)
     # Possibilities:
     # - no pending changelog changes
     #   - changelog latest release == current version val: no action required
@@ -335,8 +332,11 @@ def should_version(branch, release_type, changelog, current_version):
     #   - cl latest release < current version: shouldn't happen...implies bug
     #   or version got bumped too high
     # - pending changelog changes
+    if issues:
     #   - changelog latest release == current version val: both need updating
     #   (to the derived next version number)
+        if current_version == latest_release:
+            return VersionFile.NEEDS_UPDATE
     #   - CL > version: wat. should not get here
     #   - CL < version: implies version has already been updated (& changelog
     #   wants that version)
