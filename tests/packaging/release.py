@@ -1,5 +1,7 @@
 from contextlib import nested
 
+from invoke.vendor.six import iteritems
+
 from mock import Mock, patch
 from spec import Spec, trap, skip, eq_, raises
 
@@ -193,6 +195,12 @@ def _mock_converge(self):
     with nested(*patches):
         return converge(context)
 
+# TODO: ditto re: integration with outermost Spec classes
+def _expect_actions(self, **kwargs):
+    actions, state = _mock_converge(self)
+    for component, action in iteritems(kwargs):
+        eq_(actions[component], action)
+
 
 class converge_(Spec):
     class release_line_branch:
@@ -205,9 +213,10 @@ class converge_(Spec):
                 _version = '1.1.0'
                 
                 def changelog_release_version_update(self):
-                    actions, state = _mock_converge(self)
-                    eq_(actions['changelog'], Changelog.NEEDS_RELEASE)
-                    eq_(actions['version'], VersionFile.NEEDS_BUMP)
+                    _expect_actions(self,
+                        changelog=Changelog.NEEDS_RELEASE,
+                        version=VersionFile.NEEDS_BUMP,
+                    )
 
             def changelog_newer(self):
                 skip()
@@ -218,10 +227,12 @@ class converge_(Spec):
         class no_unreleased_issues:
             _changelog = 'no_unreleased_1.1_bugs'
 
-            def versions_match(self):
-                # TODO: actually test version stuff
-                #eq_(changelog_up_to_date(_context(self)), False)
-                skip()
+            class file_version_equals_latest_in_changelog:
+                _version = '1.1.1'
+
+                def no_updates_necessary(self):
+                    skip()
+
 
             def changelog_newer(self):
                 pass
