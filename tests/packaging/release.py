@@ -110,27 +110,6 @@ class changelog_needs_release_(Spec):
             eq_(changelog_up_to_date(c), False)
 
 
-class should_version_(Spec):
-    class true:
-        def no_pending_changelog_and_changelog_version_newer(self):
-            skip()
-
-    class false:
-        def no_pending_changelog_and_versions_match(self):
-            skip()
-
-        def pending_changelog_and_version_file_newer(self):
-            skip()
-
-    class error:
-        def no_pending_changelog_and_version_file_newer(self):
-            skip()
-
-        def pending_changelog_and_changelog_newer(self):
-            skip()
-
-
-
 # Multi-dimensional scenarios, in relatively arbitrary nesting order:
 # - what type of release we're talking about (based on branch name)
 # - whether there appear to be unreleased issues in the changelog
