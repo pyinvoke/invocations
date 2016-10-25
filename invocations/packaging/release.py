@@ -116,6 +116,10 @@ def converge(c):
         - ``changelog``: the parsed project changelog, a `dict` of releases.
         - ``release_type``: what type of release the branch appears to be (will
           be a member of `.Release` such as ``Release.BUGFIX``.)
+        - ``latest_release``: the latest changelog release found for current
+          release type/line.
+        - ``current_version``: the version string as found in the package's
+          ``__version__``.
     """
     #
     # Data/state gathering
@@ -173,6 +177,8 @@ def converge(c):
         'branch': branch,
         'release_type': release_type,
         'changelog': changelog,
+        'latest_release': release,
+        'unreleased_issues': issues,
     }
 
     return actions, state
