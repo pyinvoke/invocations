@@ -16,11 +16,14 @@ import sys
 from glob import glob
 from shutil import rmtree
 
+from invoke.vendor.six import StringIO
+
+from invoke.vendor.six import text_type
+
 # TODO: really not a fan of these optional requirements. Given nothing so far
 # is C-extension based, maybe just suck it up & add them all as true
 # requirements?
 
-from invoke.vendor.six import StringIO
 try:
     from enum import Enum
 except ImportError:
@@ -78,8 +81,10 @@ from ..util import tmpdir
 
 Changelog = Enum('Changelog', "NEEDS_RELEASE UP_TO_DATE")
 Release = Enum('Release', "BUGFIX FEATURE UNDEFINED")
+VersionFile = Enum('VersionFile', "NEEDS_UPDATE UP_TO_DATE")
 
 BUGFIX_RE = re.compile("^\d+\.\d+$")
+BUGFIX_RELEASE_RE = re.compile("^\d+\.\d+\.\d+$")
 # TODO: allow tweaking this if folks use different branch methodology:
 # - same concept, different name, e.g. s/master/dev/
 # - different concept entirely, e.g. no master-ish, only feature branches
@@ -117,7 +122,24 @@ def converge(c):
     # release does it appear to represent?
     branch, release_type = release_line(c)
     # Parse our changelog so we can tell what's released and what's not.
+    # TODO: below needs to go in something doc-y somewhere; having it in a
+    # non-user-facing subroutine docstring isn't visible enough.
+    """
+    .. note::
+        Requires that one sets the ``packaging.changelog_file`` configuration
+        option; it should be a relative or absolute path to your
+        ``changelog.rst`` (or whatever it's named in your project).
+    """
+    # TODO: chdir to sphinx.source, import conf.py, look at
+    # releases_changelog_name - that way it will honor that setting and we can
+    # ditch this explicit one instead. (and the docstring above)
     changelog = parse_changelog(c.packaging.changelog_file)
+    # Get latest changelog release and any unreleased issues, for current line
+    release, issues = release_and_issues( changelog, branch, release_type)
+    # Obtain the project's main package & its version data
+    # TODO: explode nicely if it lacks a _version
+    package = __import__(find_package(c), fromlist=['_version'])
+    current_version = Version(package._version.__version__) # buffalo buffalo
 
     #
     # Logic determination / convergence
@@ -125,10 +147,17 @@ def converge(c):
 
     actions = {}
 
+    # TODO: change these UP_TO_DATEs to OKAY ?
+
     actions['changelog'] = Changelog.UP_TO_DATE
-    if changelog_needs_release(branch, release_type, changelog):
+    if release_type in (Release.BUGFIX, Release.FEATURE) and issues:
         actions['changelog'] = Changelog.NEEDS_RELEASE
 
+    actions['version'] = VersionFile.UP_TO_DATE
+    # TODO: this needs to become generic 'return action' func, or just pull the
+    # funcs back in here cuz not testing as subroutines??
+    if should_version(branch, release_type, changelog, current_version):
+        actions['version'] = VersionFile.NEEDS_UPDATE
 
     #
     # Return
@@ -234,40 +263,28 @@ def latest_feature_bucket(changelog):
     )[0]
 
 
-def changelog_needs_release(branch, release_type, changelog):
-    """
-    Detect whether the local project changelog needs a new :release: line.
-
-    :param str branch:
-        Current git branch, usually from `release_line`.
-    :param int release_type:
-        Current branch release type, usually from `release_line`.
-    :param dict changelog:
-        Parsed changelog data, usually from `parse_changelog`.
-
-    :returns bool:
-    """
-    # TODO: below needs to go in something doc-y somewhere; having it in a
-    # non-user-facing subroutine docstring isn't visible enough.
-    """
-    .. note::
-        Requires that one sets the ``packaging.changelog_file`` configuration
-        option; it should be a relative or absolute path to your
-        ``changelog.rst`` (or whatever it's named in your project).
-    """
-    # Bugfix-type line + unreleased items in its line bucket? Release!
-    if release_type is Release.BUGFIX and changelog[branch]:
-        return True
-    # Feature-type line + items in latest 'unreleased' bucket? Release!
-    # TODO: smarter detection/selection of "what does 'master' represent?"
-    # Right now we just grab the most recent feature release bucket.
-    latest_feature_key = latest_feature_bucket(changelog)
-    if release_type is Release.FEATURE and changelog[latest_feature_key]:
-        return True
-    # Anything else - meaning an unknown branch type, or a known branch type
-    # but no unreleased issues for it in the changelog - means there's no need,
-    # the changelog is up to date!
-    return False
+# TODO: may want to live in releases.util eventually
+def release_and_issues(changelog, branch, release_type):
+    # Not clearly feature or bugfix line -> this is meaningless
+    if release_type is Release.UNDEFINED:
+        return None, []
+    # Bugfix lines just use the branch to find issues
+    bucket = branch
+    # Features need a bit more logic
+    if release_type is Release.FEATURE:
+        bucket = latest_feature_bucket(changelog)
+    # Issues is simply what's in the bucket
+    issues = changelog[bucket]
+    # Latest release is undefined for feature lines
+    release = None
+    # And requires scanning changelog, for bugfix lines
+    if release_type is Release.BUGFIX:
+        versions = []
+        for x in changelog:
+            if x.startswith(bucket) and BUGFIX_RELEASE_RE.match(x):
+                versions.append(Version(x))
+        release = text_type(sorted(versions)[-1]) # TODO: unicode-friendly?
+    return release, issues
 
 
 @task
@@ -297,20 +314,13 @@ def tags(c):
     return sorted(tags_)
 
 
-@task
-def should_version(c):
+# TODO: real needs: release bucket, latest release for line, contents of version file
+def should_version(branch, release_type, changelog, current_version):
     """
     Whether the project's packaging version needs to be updated.
     """
-    # Get current version value
-    name = find_package(c)
-    # TODO: explode nicely if it lacks a _version
-    package = __import__("{0}".format(name), fromlist=['_version'])
-    current_version = Version(package._version.__version__) # buffalo buffalo
     # Get latest release in changelog for our line, OR the fact that changelog
     # needs an update (which overrides that)
-    changelog = parse_changelog(c.packaging.changelog_file)
-    branch, release_type = release_line(c)
     
     # Possibilities:
     # - no pending changelog changes
@@ -357,9 +367,11 @@ def find_package(c):
     """
     # TODO: is there a way to get this from the same place setup.py does w/o
     # setup.py barfing (since setup() runs at import time and assumes CLI use)?
-    conf = c.get('packaging', {}).get('package', None)
-    if conf:
-        return conf
+    configured_value = c.get('packaging', {}).get('package', None)
+    if configured_value:
+        return configured_value
+    # TODO: tests covering this stuff here (most logic tests simply supply
+    # config above)
     packages = [
         path
         for path in os.listdir('.')

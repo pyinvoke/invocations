@@ -1,9 +1,13 @@
+from contextlib import nested
+
+from mock import Mock, patch
 from spec import Spec, trap, skip, eq_
 
 from invoke import MockContext, Result, Config
 
 from invocations.packaging.release import (
-    converge, release_line, Release, Changelog, latest_feature_bucket
+    converge, release_line, latest_feature_bucket, release_and_issues,
+    Changelog, Release, VersionFile,
 )
 
 
@@ -59,20 +63,38 @@ class latest_feature_bucket_(Spec):
         )
 
 
-class changelog_needs_release_(Spec):
-    # TODO: find way to reuse sphinx conf option instead of duplicating
-    # it/requiring use of the invoke-specific conf option. Looks like one can
-    # safely chdir to sphinx.source (invoke conf setting) then 'import conf'
-    # and examine 'conf.releases_changelog_name' or w/e it is
-    def _context(self, branch, file_):
-        # Fake git rev-parse output & path to mock changelog
-        config = Config(overrides={
-            'packaging': {
-                'changelog_file': 'packaging/_support/{0}.rst'.format(file_),
-            },
-        })
-        return MockContext(config=config, run=Result(branch))
+class release_and_issues_(Spec):
+    class bugfix:
+        # TODO: factor out into setup() so each test has some excluded/ignored
+        # data in it - helps avoid naive implementation returning x[0] etc.
 
+        def no_unreleased(self):
+            release, issues = release_and_issues(
+                changelog={'1.1': [], '1.1.0': [1, 2]},
+                branch='1.1',
+                release_type=Release.BUGFIX,
+            )
+            eq_(release, '1.1.0')
+            eq_(issues, [])
+
+        def has_unreleased(self):
+            skip()
+
+    class feature:
+        def no_unreleased(self):
+            # release is None, issues is empty list
+            skip()
+
+        def has_unreleased(self):
+            # release is still None, issues is nonempty list
+            skip()
+
+    def undefined_always_returns_None_and_empty_list(self):
+        skip()
+
+
+# TODO: chop up into more converge() tests
+class changelog_needs_release_(Spec):
     class true:
         def master_branch_and_issues_in_unreleased_feature_bucket(self):
             skip()
@@ -120,12 +142,34 @@ class should_version_(Spec):
 # NOTE: can't slap this on the converge_ class itself due to how Spec has to
 # handle inner classes (basically via getattr chain). If that can be converted
 # to true inheritance (seems unlikely), we can organize more "naturally".
-def _context(self):
+def _mock_converge(self):
+    """
+    Run `converge` with a mocked Context & some external mocks where needed.
+
+    Specifically:
+
+    - Examine test class attributes for configuration; this allows easy
+      multidimensional test setup.
+    - Where possible, the code under test relies on calling shell commands via
+      the Context object, so we pass in a MockContext for that.
+    - Where not possible (eg things which must be Python-level and not
+      shell-level, such as version imports), mock with the 'mock' lib as usual.
+
+    Returns the value of the `converge` call unaltered.
+    """
+    # Sentinel for targeted __import__ mocking
+    PACKAGE = object()
+
+    #
+    # Generate config & context from attrs
+    #
+
     config = Config(overrides={
         'packaging': {
             'changelog_file': 'packaging/_support/{0}.rst'.format(
                 self._changelog
             ),
+            'package': PACKAGE,
         },
     })
     # TODO: if/when regex implemented for MockContext, make these keys less
@@ -133,7 +177,24 @@ def _context(self):
     run_results = {
         "git rev-parse --abbrev-ref HEAD": Result(self._branch),
     }
-    return MockContext(config=config, run=run_results)
+    context = MockContext(config=config, run=run_results)
+    
+    #
+    # Execute converge() inside a mock environment
+    #
+
+    patches = []
+
+    # Allow targeted import mocking, leaving regular imports alone.
+    real_import = __import__
+    def fake_import(*args, **kwargs):
+        if args[0] is not PACKAGE:
+            return real_import(*args, **kwargs)
+        return Mock(_version=Mock(__version__=self._version))
+    patches.append(patch('__builtin__.__import__', side_effect=fake_import))
+
+    with nested(*patches):
+        return converge(context)
 
 
 class converge_(Spec):
@@ -143,10 +204,13 @@ class converge_(Spec):
         class unreleased_issues:
             _changelog = 'unreleased_1.1_bugs'
 
-            def versions_match(self):
-                # TODO: actually test version stuff
-                actions, state = converge(_context(self))
-                eq_(actions['changelog'], Changelog.NEEDS_RELEASE)
+            class file_version_equals_latest_in_changelog:
+                _version = '1.1.0'
+                
+                def changelog_release_version_update(self):
+                    actions, state = _mock_converge(self)
+                    eq_(actions['changelog'], Changelog.NEEDS_RELEASE)
+                    eq_(actions['version'], VersionFile.NEEDS_UPDATE)
 
             def changelog_newer(self):
                 skip()
