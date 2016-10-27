@@ -8,6 +8,8 @@ This module assumes:
   conventions (``__version_info__`` tuple and ``__version__`` string).
 """
 
+from __future__ import unicode_literals
+
 import getpass
 import itertools
 import os
@@ -197,17 +199,15 @@ def all_(c, dry_run=False):
     # TODO: wants some holistic "you don't actually HAVE any changes to
     # release" final status - i.e. all steps were at no-op status.
     # TODO: color? if can do be done very quickly...see fabric#101 I think
-    # TODO: tabulate (without column separators tho) - find that one I used at
-    # UA
-    # TODO: switch to future unicode_literals import!!
-    check = u"\u2714"
-    ex = u"\u2718"
-    status = u"{0} up-to-date".format(check)
+    # TODO: tabulate
+    check = "\u2714"
+    ex = "\u2718"
+    status = "{0} up-to-date".format(check)
     # TODO: allow skipping changelog if not using Releases since we have no
     # other good way of detecting whether a changelog needs/got an update.
     if changelog_wants_release:
-        status = u"{0} wants a :release: entry".format(ex)
-    print(u"Changelog: {0}".format(status))
+        status = "{0} wants a :release: entry".format(ex)
+    print("Changelog: {0}".format(status))
 
     # TODO: add a step for checking reqs.txt / setup.py vs virtualenv contents
     version(c)
