@@ -1,7 +1,10 @@
+from __future__ import unicode_literals
+
 from contextlib import nested
 
 from invoke.vendor.six import iteritems
 
+from invoke.vendor.six import text_type
 from mock import Mock, patch
 from spec import Spec, trap, skip, eq_, raises
 
@@ -255,3 +258,63 @@ class converge_(Spec):
         @raises(UndefinedReleaseType)
         def raises_exception(self):
             _mock_converge(self)
+
+
+
+class All(Spec):
+    "all_" # mehhh
+
+    def displays_all_component_actions_in_a_table(self):
+        skip()
+
+    def display_only_when_dry_run_set(self):
+        skip()
+
+    def prompts_to_take_necessary_actions_by_default(self):
+        # I.e. --dry-run is nondefault behavior
+        # TODO: how to test interactive stuff exactly? how are we doing that in
+        # invoke again? maybe we DO need to expose the quirky low level test
+        # helpers too...and expect-like stuff...ugh
+        skip()
+
+    def prompt_disabled_with_flag(self):
+        # TODO: or should it be the default?? feels like no?
+        # TODO: what flag exactly? -y? --headless?
+        skip()
+
+    def opens_EDITOR_with_changelog_when_it_needs_update(self):
+        skip()
+
+    def opens_EDITOR_with_version_file_when_it_needs_update(self):
+        skip()
+
+    # TODO: rest...
+
+
+# Blurgh, nose 1.x isn't super unicode friendly, uses str() etc
+def _safe_eq(val1, val2, msg=None):
+    if msg is None:
+        msg = "{0!r} != {1!r}".format(val1, val2)
+    eq_(val1, val2, msg)
+
+# NOTE: yea...this kinda pushes the limits of sane TDD...meh
+# NOTE: possible that the actual codes blessings emits differ based on
+# termcap/etc; consider sucking it up and just calling blessings directly in
+# that case, tautology or no.
+class component_state_enums_contain_human_readable_values(Spec):
+    class changelog:
+        def okay(self):
+            _safe_eq(
+                Changelog.OKAY.value,
+                "\x1b[32m\u2714 up to date\x1b(B\x1b[m",
+            )
+
+        def needs_release(self):
+            skip()
+
+    class version_file:
+        def okay(self):
+            skip()
+
+        def needs_bump(self):
+            skip()

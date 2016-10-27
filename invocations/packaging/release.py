@@ -21,6 +21,7 @@ from shutil import rmtree
 from invoke.vendor.six import StringIO
 
 from invoke.vendor.six import text_type
+from blessings import Terminal
 
 # TODO: really not a fan of these optional requirements. Given nothing so far
 # is C-extension based, maybe just suck it up & add them all as true
@@ -84,9 +85,25 @@ from ..util import tmpdir
 # Types of releases/branches
 Release = Enum('Release', "BUGFIX FEATURE UNDEFINED")
 
-# Actions necessary on each release component
-Changelog = Enum('Changelog', "OKAY NEEDS_RELEASE")
-VersionFile = Enum('VersionFile', "OKAY NEEDS_BUMP")
+# Actions necessary on each release component. Defined as explicit/class enums
+# so we can store their "human-readable" display as the value. Thus:
+# - enum members themselves act as constants for comparison's sake, as usual
+# - member .name acts as its shorthand, well, name
+# - member .value acts as longhand status display
+
+# NOTE: mildly uncomfortable with this here but also pretty sure it's unlikely
+# to change meaningfully between threads/etc.
+t = Terminal()
+check = "\u2714"
+ex = "\u2718"
+
+class Changelog(Enum):
+    OKAY = t.green(check + " up to date")
+    NEEDS_RELEASE = "o noz"
+
+class VersionFile(Enum):
+    OKAY = "we're good"
+    NEEDS_BUMP = "ugh"
 
 BUGFIX_RE = re.compile("^\d+\.\d+$")
 BUGFIX_RELEASE_RE = re.compile("^\d+\.\d+\.\d+$")
@@ -203,10 +220,8 @@ def all_(c, dry_run=False):
 
     # TODO: wants some holistic "you don't actually HAVE any changes to
     # release" final status - i.e. all steps were at no-op status.
-    # TODO: color? if can do be done very quickly...see fabric#101 I think
     # TODO: tabulate
-    check = "\u2714"
-    ex = "\u2718"
+
     status = "{0} up-to-date".format(check)
     if changelog_wants_release:
         status = "{0} wants a :release: entry".format(ex)
