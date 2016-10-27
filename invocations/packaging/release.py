@@ -145,6 +145,8 @@ def converge(c):
         option; it should be a relative or absolute path to your
         ``changelog.rst`` (or whatever it's named in your project).
     """
+    # TODO: allow skipping changelog if not using Releases since we have no
+    # other good way of detecting whether a changelog needs/got an update.
     # TODO: chdir to sphinx.source, import conf.py, look at
     # releases_changelog_name - that way it will honor that setting and we can
     # ditch this explicit one instead. (and the docstring above)
@@ -206,8 +208,6 @@ def all_(c, dry_run=False):
     check = "\u2714"
     ex = "\u2718"
     status = "{0} up-to-date".format(check)
-    # TODO: allow skipping changelog if not using Releases since we have no
-    # other good way of detecting whether a changelog needs/got an update.
     if changelog_wants_release:
         status = "{0} wants a :release: entry".format(ex)
     print("Changelog: {0}".format(status))
