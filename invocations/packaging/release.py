@@ -81,7 +81,10 @@ from ..util import tmpdir
 # probably switch (back) to regular classes with constants equal to their name
 # strings (for debugging etc, as Enum does).
 
+# Types of releases/branches
 Release = Enum('Release', "BUGFIX FEATURE UNDEFINED")
+
+# Actions necessary on each release component
 Changelog = Enum('Changelog', "OKAY NEEDS_RELEASE")
 VersionFile = Enum('VersionFile', "OKAY NEEDS_BUMP")
 
