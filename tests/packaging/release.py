@@ -200,7 +200,7 @@ class status_(Spec):
             skip()
 
     class release_line_branch:
-        _branch = "1.1"
+        _branch = '1.1'
 
         class unreleased_issues:
             _changelog = 'unreleased_1.1_bugs'
