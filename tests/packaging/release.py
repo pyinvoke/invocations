@@ -176,7 +176,7 @@ def _mock_status(self):
     patches.append(patch('__builtin__.__import__', side_effect=fake_import))
 
     with nested(*patches):
-        status(context)
+        return status(context)
 
 # TODO: same as above re: integration w/ test class
 @trap
@@ -219,8 +219,13 @@ Version +{version}
             err += "\n\nRepr edition...\n\nExpected:\n\n{0!r}\n\nGot:\n\n{1!r}".format(regex, output) # noqa
             ok_(re.match(regex, output), err)
 
+        @trap # just for cleaner test output
         def returns_actions_dict_for_reuse(self):
-            skip()
+            expected = dict(
+                changelog=Changelog.NEEDS_RELEASE,
+                version=VersionFile.NEEDS_BUMP,
+            )
+            eq_(_mock_status(self), expected)
 
     class release_line_branch:
         _branch = '1.1'
