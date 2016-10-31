@@ -1,17 +1,19 @@
 from __future__ import unicode_literals
 
 from contextlib import nested
+from os import path
+import sys
 
 from invoke.vendor.six import iteritems
 
 from invoke.vendor.six import text_type
 from mock import Mock, patch
-from spec import Spec, trap, skip, eq_, raises
+from spec import Spec, trap, skip, eq_, ok_, raises
 
 from invoke import MockContext, Result, Config
 
 from invocations.packaging.release import (
-    converge, release_line, latest_feature_bucket, release_and_issues,
+    release_line, latest_feature_bucket, release_and_issues, all_, status,
     Changelog, Release, VersionFile, UndefinedReleaseType,
 )
 
@@ -120,12 +122,12 @@ class changelog_needs_release_(Spec):
 # TODO: ... (git tag, pypi release, etc)
 
 
-# NOTE: can't slap this on the converge_ class itself due to how Spec has to
-# handle inner classes (basically via getattr chain). If that can be converted
-# to true inheritance (seems unlikely), we can organize more "naturally".
-def _mock_converge(self):
+# NOTE: can't slap this on the test class itself due to how Spec has to handle
+# inner classes (basically via getattr chain). If that can be converted to true
+# inheritance (seems unlikely), we can organize more "naturally".
+def _mock_status(self):
     """
-    Run `converge` with a mocked Context & some external mocks where needed.
+    Run `status` with a mocked Context & some external mocks where needed.
 
     Specifically:
 
@@ -135,8 +137,6 @@ def _mock_converge(self):
       the Context object, so we pass in a MockContext for that.
     - Where not possible (eg things which must be Python-level and not
       shell-level, such as version imports), mock with the 'mock' lib as usual.
-
-    Returns the value of the `converge` call unaltered.
     """
     # Sentinel for targeted __import__ mocking
     PACKAGE = object()
@@ -145,11 +145,11 @@ def _mock_converge(self):
     # Generate config & context from attrs
     #
 
+    support_dir = path.join(path.dirname(__file__), '_support')
+    changelog_file = '{0}.rst'.format(self._changelog)
     config = Config(overrides={
         'packaging': {
-            'changelog_file': 'packaging/_support/{0}.rst'.format(
-                self._changelog
-            ),
+            'changelog_file': path.join(support_dir, changelog_file),
             'package': PACKAGE,
         },
     })
@@ -175,16 +175,30 @@ def _mock_converge(self):
     patches.append(patch('__builtin__.__import__', side_effect=fake_import))
 
     with nested(*patches):
-        return converge(context)
+        status(context)
 
-# TODO: ditto re: integration with outermost Spec classes
-def _expect_actions(self, **kwargs):
-    actions, state = _mock_converge(self)
-    for component, action in iteritems(kwargs):
-        eq_(actions[component], action)
+# TODO: same as above re: integration w/ test class
+@trap
+def _expect_actions(self, *actions):
+    _mock_status(self)
+    stdout = sys.stdout.getvalue()
+    for action in actions:
+        # Check for action's text value in the table which gets printed.
+        # (Actual table formatting is tested in an individual test.)
+        ok_(
+            action.value in stdout,
+            "Didn't find {0} in stdout:\n\n{1}".format(action, stdout),
+        )
 
 
-class converge_(Spec):
+class status_(Spec):
+    class overall_behavior:
+        def displays_statuses_in_a_table(self):
+            skip()
+
+        def returns_actions_dict_for_reuse(self):
+            skip()
+
     class release_line_branch:
         _branch = "1.1"
 
@@ -196,8 +210,8 @@ class converge_(Spec):
                 
                 def changelog_release_version_update(self):
                     _expect_actions(self,
-                        changelog=Changelog.NEEDS_RELEASE,
-                        version=VersionFile.NEEDS_BUMP,
+                        Changelog.NEEDS_RELEASE,
+                        VersionFile.NEEDS_BUMP,
                     )
 
             class version_file_is_newer:
@@ -205,8 +219,8 @@ class converge_(Spec):
 
                 def changelog_release_version_okay(self):
                     _expect_actions(self,
-                        changelog=Changelog.NEEDS_RELEASE,
-                        version=VersionFile.OKAY,
+                        Changelog.NEEDS_RELEASE,
+                        VersionFile.OKAY,
                     )
 
             class changelog_version_is_newer:
@@ -221,8 +235,8 @@ class converge_(Spec):
 
                 def no_updates_necessary(self):
                     _expect_actions(self,
-                        changelog=Changelog.OKAY,
-                        version=VersionFile.OKAY,
+                        Changelog.OKAY,
+                        VersionFile.OKAY,
                     )
 
             class changelog_is_newer:
@@ -230,8 +244,8 @@ class converge_(Spec):
 
                 def changelog_okay_version_needs_bump(self):
                     _expect_actions(self,
-                        changelog=Changelog.OKAY,
-                        version=VersionFile.NEEDS_BUMP,
+                        Changelog.OKAY,
+                        VersionFile.NEEDS_BUMP,
                     )
 
             class version_file_is_newer:
@@ -244,8 +258,8 @@ class converge_(Spec):
                         # changelog having no unreleased stuff in it. Still
                         # "Okay" (no action needed), not an error per se, but
                         # still "strange".
-                        changelog=Changelog.OKAY,
-                        version=VersionFile.OKAY,
+                        Changelog.OKAY,
+                        VersionFile.OKAY,
                     )
 
     class master_branch:
@@ -257,18 +271,15 @@ class converge_(Spec):
 
         @raises(UndefinedReleaseType)
         def raises_exception(self):
-            _mock_converge(self)
+            _mock_status(self)
 
 
 
 class All(Spec):
     "all_" # mehhh
 
-    def displays_all_component_actions_in_a_table(self):
-        skip()
-
-    def display_only_when_dry_run_set(self):
-        skip()
+    def displays_status_output(self):
+        pass
 
     def prompts_to_take_necessary_actions_by_default(self):
         # I.e. --dry-run is nondefault behavior
@@ -300,7 +311,7 @@ def _safe_eq(val1, val2, msg=None):
 # NOTE: yea...this kinda pushes the limits of sane TDD...meh
 # NOTE: possible that the actual codes blessings emits differ based on
 # termcap/etc; consider sucking it up and just calling blessings directly in
-# that case, tautology or no.
+# that case, even though it makes the tests kinda tautological.
 class component_state_enums_contain_human_readable_values(Spec):
     class changelog:
         def okay(self):

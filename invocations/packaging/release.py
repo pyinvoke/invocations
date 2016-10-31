@@ -208,24 +208,32 @@ def converge(c):
     return actions, state
 
 
+@task
+def status(c):
+    """
+    Print current release (version, changelog, tag, etc) status.
+
+    Doubles as a subroutine, returning the ``actions`` dict from its inner call
+    to `converge`.
+    """
+    # TODO: wants some holistic "you don't actually HAVE any changes to
+    # release" final status - i.e. all steps were at no-op status.
+    actions, state = converge(c)
+    # TODO: tabulate
+    return actions
+
+
 @task(name='all')
-def all_(c, dry_run=False):
+def all_(c):
     """
     Catchall version-bump/tag/changelog/PyPI upload task.
     """
-
-    #
-    # Dry run display
-    #
-
-    # TODO: wants some holistic "you don't actually HAVE any changes to
-    # release" final status - i.e. all steps were at no-op status.
-    # TODO: tabulate
-
-    status = "{0} up-to-date".format(check)
-    if changelog_wants_release:
-        status = "{0} wants a :release: entry".format(ex)
-    print("Changelog: {0}".format(status))
+    # TODO: status display
+    # TODO: then prompt going "should I do this?" default Y
+    # TODO: unless nothing-to-do in which case just say that & exit 0
+    # TODO: then actually do shit...guess implies passthru of converge() result
+    # from status(), OR pass converge() result into status(), OR calling
+    # converge() twice (bad)?
 
     # TODO: add a step for checking reqs.txt / setup.py vs virtualenv contents
     version(c)
@@ -233,13 +241,6 @@ def all_(c, dry_run=False):
     push(c)
     build(c)
     publish(c)
-
-    #
-    # Actions
-    #
-
-    # TODO: probably want to always show dry-run, then when not
-    # just-dry-running, display default-Y prompt saying "should I remedy this?"
 
 
 def release_line(c):
