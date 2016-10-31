@@ -20,7 +20,7 @@ from shutil import rmtree
 
 from invoke.vendor.six import StringIO
 
-from invoke.vendor.six import text_type
+from invoke.vendor.six import text_type, iteritems
 from blessings import Terminal
 
 # TODO: really not a fan of these optional requirements. Given nothing so far
@@ -219,7 +219,9 @@ def status(c):
     # TODO: wants some holistic "you don't actually HAVE any changes to
     # release" final status - i.e. all steps were at no-op status.
     actions, state = converge(c)
-    # TODO: tabulate
+    for component, action in iteritems(actions):
+        # TODO: tabulate
+        print(action.value)
     return actions
 
 
