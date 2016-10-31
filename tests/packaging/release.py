@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from contextlib import nested
 from os import path
+import re
 import sys
 
 from invoke.vendor.six import iteritems
@@ -200,16 +201,23 @@ class status_(Spec):
         @trap
         def displays_statuses_in_a_table(self):
             _mock_status(self)
-            expected = """
----------  --------------------------
-Changelog  {0}
-Version    {1}
----------  --------------------------
-""".format(
-    Changelog.NEEDS_RELEASE.value,
-    VersionFile.NEEDS_BUMP.value,
-).lstrip()
-            eq_(sys.stdout.getvalue(), expected)
+            parts = dict(
+                changelog=Changelog.NEEDS_RELEASE.value,
+                version=VersionFile.NEEDS_BUMP.value,
+            )
+            for part in parts:
+                parts[part] = re.escape(parts[part])
+            parts['header_footer' ] = r'-+ +-+'
+            regex = r"""
+{header_footer}
+Changelog +{changelog}
+Version +{version}
+{header_footer}
+""".format(**parts).strip()
+            output = sys.stdout.getvalue()
+            err = "Expected:\n\n{0}\n\nGot:\n\n{1}".format(regex, output)
+            err += "\n\nRepr edition...\n\nExpected:\n\n{0!r}\n\nGot:\n\n{1!r}".format(regex, output) # noqa
+            ok_(re.match(regex, output), err)
 
         def returns_actions_dict_for_reuse(self):
             skip()
