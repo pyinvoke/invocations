@@ -667,7 +667,7 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
             c.run(cmd)
 
 
-release = Collection('release')#,
+ns = Collection('release')#,
 #    build,
 #    changelog,
 #    #dry_run,
@@ -683,7 +683,7 @@ release = Collection('release')#,
 # TODO: even if this is somehow necessary, it should ride on top of the
 # "generate collection from this module" feature and then just rename 'all' or
 # whatever.
-release.add_task(all_, default=True)
-release.add_task(status)
+ns.add_task(all_, default=True)
+ns.add_task(status)
 # Hide stdout by default, preferring to explicitly enable it when necessary.
-release.configure({'run': {'hide': 'stdout'}})
+ns.configure({'run': {'hide': 'stdout'}})
