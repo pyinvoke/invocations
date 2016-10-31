@@ -193,8 +193,23 @@ def _expect_actions(self, *actions):
 
 class status_(Spec):
     class overall_behavior:
+        _branch = '1.1'
+        _changelog = 'unreleased_1.1_bugs'
+        _version = '1.1.1'
+
+        @trap
         def displays_statuses_in_a_table(self):
-            skip()
+            _mock_status(self)
+            expected = """
+---------  --------------------------
+Changelog  {0}
+Version    {1}
+---------  --------------------------
+""".format(
+    Changelog.NEEDS_RELEASE.value,
+    VersionFile.NEEDS_BUMP.value,
+).lstrip()
+            eq_(sys.stdout.getvalue(), expected)
 
         def returns_actions_dict_for_reuse(self):
             skip()
@@ -302,12 +317,6 @@ class All(Spec):
     # TODO: rest...
 
 
-# Blurgh, nose 1.x isn't super unicode friendly, uses str() etc
-def _safe_eq(val1, val2, msg=None):
-    if msg is None:
-        msg = "{0!r} != {1!r}".format(val1, val2)
-    eq_(val1, val2, msg)
-
 # NOTE: yea...this kinda pushes the limits of sane TDD...meh
 # NOTE: possible that the actual codes blessings emits differ based on
 # termcap/etc; consider sucking it up and just calling blessings directly in
@@ -315,9 +324,9 @@ def _safe_eq(val1, val2, msg=None):
 class component_state_enums_contain_human_readable_values(Spec):
     class changelog:
         def okay(self):
-            _safe_eq(
+            eq_(
                 Changelog.OKAY.value,
-                "\x1b[32m\u2714 up to date\x1b(B\x1b[m",
+                "\x1b[32m\u2714 no unreleased issues\x1b(B\x1b[m",
             )
 
         def needs_release(self):

@@ -21,7 +21,9 @@ from shutil import rmtree
 from invoke.vendor.six import StringIO
 
 from invoke.vendor.six import text_type, iteritems
+
 from blessings import Terminal
+from tabulate import tabulate
 
 # TODO: really not a fan of these optional requirements. Given nothing so far
 # is C-extension based, maybe just suck it up & add them all as true
@@ -91,19 +93,19 @@ Release = Enum('Release', "BUGFIX FEATURE UNDEFINED")
 # - member .name acts as its shorthand, well, name
 # - member .value acts as longhand status display
 
-# NOTE: mildly uncomfortable with this here but also pretty sure it's unlikely
-# to change meaningfully between threads/etc.
+# NOTE: mildly uncomfortable with this living here but also pretty sure it's
+# unlikely to change meaningfully over time, between threads/etc.
 t = Terminal()
 check = "\u2714"
 ex = "\u2718"
 
 class Changelog(Enum):
-    OKAY = t.green(check + " up to date")
-    NEEDS_RELEASE = "o noz"
+    OKAY = t.green(check + " no unreleased issues")
+    NEEDS_RELEASE = t.red(ex + " needs :release: entry")
 
 class VersionFile(Enum):
-    OKAY = "we're good"
-    NEEDS_BUMP = "ugh"
+    OKAY = t.green(check + " version up to date")
+    NEEDS_BUMP = t.red(ex + " needs version bump")
 
 BUGFIX_RE = re.compile("^\d+\.\d+$")
 BUGFIX_RELEASE_RE = re.compile("^\d+\.\d+\.\d+$")
@@ -219,9 +221,11 @@ def status(c):
     # TODO: wants some holistic "you don't actually HAVE any changes to
     # release" final status - i.e. all steps were at no-op status.
     actions, state = converge(c)
-    for component, action in iteritems(actions):
-        # TODO: tabulate
-        print(action.value)
+    table = []
+    # TODO: lexical sort on component names? Explicit sort?
+    for component, action in sorted(iteritems(actions), key=lambda x: x[0]):
+        table.append((component.capitalize(), action.value))
+    print(tabulate(table))
     return actions
 
 
@@ -680,5 +684,6 @@ release = Collection('release')#,
 # "generate collection from this module" feature and then just rename 'all' or
 # whatever.
 release.add_task(all_, default=True)
+release.add_task(status)
 # Hide stdout by default, preferring to explicitly enable it when necessary.
 release.configure({'run': {'hide': 'stdout'}})
