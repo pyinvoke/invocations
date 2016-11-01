@@ -127,7 +127,7 @@ class changelog_needs_release_(Spec):
 @contextmanager
 def _mock_context(self):
     """
-    Run `status` with a mocked Context & some external mocks where needed.
+    Context manager for a mocked Invoke context + other external patches.
 
     Specifically:
 
@@ -137,6 +137,15 @@ def _mock_context(self):
       the Context object, so we pass in a MockContext for that.
     - Where not possible (eg things which must be Python-level and not
       shell-level, such as version imports), mock with the 'mock' lib as usual.
+
+    The MockContext's `run` method has been further mocked by wrapping it in a
+    pass-through `mock.Mock`. It will act like regular `MockContext.run`
+    (returning the result value it's been configured to return) but will be a
+    `mock.Mock` object and thus exhibit all the usual call-tracking attributes
+    and methods such as ``.called``, ``.call_args_list``, etc.
+
+    :yields:
+        an `invoke.context.MockContext` created & modified as described above.
     """
     # Sentinel for targeted __import__ mocking
     PACKAGE = object()
@@ -156,9 +165,19 @@ def _mock_context(self):
     # TODO: if/when regex implemented for MockContext, make these keys less
     # strictly tied to the real implementation.
     run_results = {
+        # Branch detection
         "git rev-parse --abbrev-ref HEAD": Result(self._branch),
+        # Changelog update action - just here so it can be called
+        "$EDITOR {0.packaging.changelog_file}".format(config): Result(),
     }
     context = MockContext(config=config, run=run_results)
+    # Wrap run() in a Mock too.
+    # NOTE: we don't do this inside MockContext itself because that would add a
+    # test lib as a runtime dependency =/
+    # NOTE: end-running around Context/DataProxy setattr because doing
+    # context.run.echo = True (or similar) is too common a use case to be worth
+    # breaking just for stupid test monkeypatch purposes
+    object.__setattr__(context, 'run', Mock(wraps=context.run))
 
     #
     # Execute converge() inside a mock environment
