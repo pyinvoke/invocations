@@ -241,9 +241,11 @@ def all_(c):
     # TODO: then prompt going "should I do this?" default Y
     confirm("Take the above actions?")
     # TODO: unless nothing-to-do in which case just say that & exit 0
-    # TODO: then actually do shit...guess implies passthru of converge() result
-    # from status(), OR pass converge() result into status(), OR calling
-    # converge() twice (bad)?
+    # Changelog!
+    # TODO: maybe expand the enum-based stuff to have values that split up
+    # textual description, command string, etc. See the TODO up by their
+    # definition too, re: just making them non-enum classes period.
+    c.run("$EDITOR {0.packaging.changelog_file}".format(c))
 
     # TODO: add a step for checking reqs.txt / setup.py vs virtualenv contents
     # version(c)

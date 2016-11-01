@@ -351,11 +351,33 @@ class All(Spec):
             all_(c)
         eq_(mock_input.call_args[0][0], "Take the above actions? [Y/n] ")
 
-    def if_prompt_response_negative_no_action_taken(self):
+    @trap
+    @patch('invocations.packaging.release.confirm', return_value='no')
+    def if_prompt_response_negative_no_action_taken(self, mock_confirm):
+        with _mock_context(self) as c:
+            all_(c)
+        # TODO: assert one (or more?) of the below steps didn't actually happen
         skip()
 
-    def opens_EDITOR_with_changelog_when_it_needs_update(self):
-        skip()
+    @trap
+    @patch('invocations.packaging.release.confirm', return_value='yes')
+    def opens_EDITOR_with_changelog_when_it_needs_update(self, _):
+        with _mock_context(self) as c:
+            all_(c)
+            # Grab changelog path from the context config, why not
+            path = c.config.packaging.changelog_file
+            # TODO: real code should probs expand EDITOR explicitly so it can
+            # run w/o a shell wrap / require a full env?
+            # TODO: either just use assert_any_call (and update if other args
+            # like hide, warn etc change later) or make this a helper
+            posargs = reduce(
+                lambda x, y: x + list(y),
+                [x[0] for x in c.run.call_args_list],
+                [],
+            )
+            cmd = "$EDITOR {0}".format(path)
+            err = "No sign of {0!r} in {1!r}".format(cmd, posargs)
+            ok_(cmd in posargs, err)
 
     def opens_EDITOR_with_version_file_when_it_needs_update(self):
         skip()
