@@ -234,7 +234,8 @@ def all_(c):
     """
     Catchall version-bump/tag/changelog/PyPI upload task.
     """
-    # TODO: status display
+    # Print dry-run/status/actions-to-take data & grab programmatic result
+    actions = status(c)
     # TODO: then prompt going "should I do this?" default Y
     # TODO: unless nothing-to-do in which case just say that & exit 0
     # TODO: then actually do shit...guess implies passthru of converge() result
@@ -242,11 +243,11 @@ def all_(c):
     # converge() twice (bad)?
 
     # TODO: add a step for checking reqs.txt / setup.py vs virtualenv contents
-    version(c)
-    tag(c)
-    push(c)
-    build(c)
-    publish(c)
+    #version(c)
+    #tag(c)
+    #push(c)
+    #build(c)
+    #publish(c)
 
 
 def release_line(c):

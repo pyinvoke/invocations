@@ -313,8 +313,20 @@ Version +{version}
 class All(Spec):
     "all_" # mehhh
 
-    def displays_status_output(self):
-        pass
+    _branch = '1.1'
+    _changelog = 'unreleased_1.1_bugs'
+    _version = '1.1.1'
+
+    @trap
+    @patch('invocations.packaging.release.confirm')
+    def displays_status_output(self, mock_confirm):
+        with _mock_context(self) as c:
+            all_(c)
+        output = sys.stdout.getvalue()
+        # Basic spot checks suffice; we test status() explicitly elsewhere.
+        for action in (Changelog.NEEDS_RELEASE, VersionFile.NEEDS_BUMP):
+            err = "Didn't see '{0}' text in status output!".format(action.name)
+            ok_(action.value in output, err)
 
     def prompts_to_take_necessary_actions_by_default(self):
         # I.e. --dry-run is nondefault behavior
