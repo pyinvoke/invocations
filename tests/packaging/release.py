@@ -325,8 +325,12 @@ class All(Spec):
             err = "Didn't see '{0}' text in status output!".format(action.name)
             ok_(action.value in output, err)
 
-    def prompts_before_taking_action(self):
-        skip()
+    @trap
+    @patch('invocations.console.input', return_value='no')
+    def prompts_before_taking_action(self, mock_input):
+        with _mock_context(self) as c:
+            all_(c)
+        eq_(mock_input.call_args[0][0], "Take the above actions? [Y/n] ")
 
     def if_prompt_response_negative_no_action_taken(self):
         skip()

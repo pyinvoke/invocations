@@ -45,6 +45,7 @@ except ImportError:
     sys.exit("Use of the packaging.release collection requires the `releases` package; please install it!") # noqa
 
 from ..util import tmpdir
+from ..console import confirm
 
 
 # TODO: this could be a good module to test out a more class-centric method of
@@ -238,6 +239,7 @@ def all_(c):
     # Print dry-run/status/actions-to-take data & grab programmatic result
     actions = status(c)
     # TODO: then prompt going "should I do this?" default Y
+    confirm("Take the above actions?")
     # TODO: unless nothing-to-do in which case just say that & exit 0
     # TODO: then actually do shit...guess implies passthru of converge() result
     # from status(), OR pass converge() result into status(), OR calling
