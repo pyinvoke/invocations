@@ -337,6 +337,10 @@ class All(Spec):
     def opens_EDITOR_with_version_file_when_it_needs_update(self):
         skip()
 
+    def reruns_status_at_end_as_sanity_check(self):
+        # I.e. you might have screwed up editing one of the files...
+        skip()
+
     # TODO: rest...
 
 
