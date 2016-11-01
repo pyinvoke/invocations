@@ -316,7 +316,7 @@ class All(Spec):
 
     @trap
     @patch('invocations.packaging.release.confirm')
-    def displays_status_output(self, mock_confirm):
+    def displays_status_output(self, _):
         with _mock_context(self) as c:
             all_(c)
         output = sys.stdout.getvalue()
