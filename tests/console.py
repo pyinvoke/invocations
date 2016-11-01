@@ -46,3 +46,7 @@ class confirm_(Spec):
         self, mock_input
     ):
         ok_(confirm("Are you sure?", affirmative=False) is False)
+
+    @patch('invocations.console.input', return_value=' y ')
+    def whitespace_is_trimmed(self, mock_input):
+        ok_(confirm("Are you sure?") is True)

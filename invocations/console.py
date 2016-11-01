@@ -44,7 +44,7 @@ def confirm(question, affirmative=True):
         # TODO: ensure that this is Ctrl-C friendly, ISTR issues with
         # raw_input/input on some Python versions blocking KeyboardInterrupt.
         response = input("{0} [{1}] ".format(question, suffix))
-        response = response.lower() # Normalize
+        response = response.lower().strip() # Normalize
         # Default
         if not response:
             return affirmative
