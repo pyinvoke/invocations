@@ -328,16 +328,10 @@ class All(Spec):
             err = "Didn't see '{0}' text in status output!".format(action.name)
             ok_(action.value in output, err)
 
-    def prompts_to_take_necessary_actions_by_default(self):
-        # I.e. --dry-run is nondefault behavior
-        # TODO: how to test interactive stuff exactly? how are we doing that in
-        # invoke again? maybe we DO need to expose the quirky low level test
-        # helpers too...and expect-like stuff...ugh
+    def prompts_before_taking_action(self):
         skip()
 
-    def prompt_disabled_with_flag(self):
-        # TODO: or should it be the default?? feels like no?
-        # TODO: what flag exactly? -y? --headless?
+    def if_prompt_response_negative_no_action_taken(self):
         skip()
 
     def opens_EDITOR_with_changelog_when_it_needs_update(self):
