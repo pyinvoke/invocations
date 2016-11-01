@@ -5,9 +5,6 @@ from os import path
 import re
 import sys
 
-from invoke.vendor.six import iteritems
-
-from invoke.vendor.six import text_type
 from mock import Mock, patch
 from spec import Spec, trap, skip, eq_, ok_, raises
 
@@ -162,7 +159,7 @@ def _mock_context(self):
         "git rev-parse --abbrev-ref HEAD": Result(self._branch),
     }
     context = MockContext(config=config, run=run_results)
-    
+
     #
     # Execute converge() inside a mock environment
     #
@@ -214,7 +211,7 @@ class status_(Spec):
             )
             for part in parts:
                 parts[part] = re.escape(parts[part])
-            parts['header_footer' ] = r'-+ +-+'
+            parts['header_footer'] = r'-+ +-+'
             regex = r"""
 {header_footer}
 Changelog +{changelog}
@@ -242,7 +239,7 @@ Version +{version}
 
             class file_version_equals_latest_in_changelog:
                 _version = '1.1.1'
-                
+
                 def changelog_release_version_update(self):
                     _expect_actions(self,
                         Changelog.NEEDS_RELEASE,

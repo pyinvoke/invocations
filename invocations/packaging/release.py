@@ -134,7 +134,8 @@ def converge(c):
           ``OKAY``.
         - ``version``: members of `.VersionFile`.
 
-        ``state`` contains the data used to calculate the actions, in case the caller wants to do further analysis:
+        ``state`` contains the data used to calculate the actions, in case the
+        caller wants to do further analysis:
 
         - ``branch``: the name of the checked-out Git branch.
         - ``changelog``: the parsed project changelog, a `dict` of releases.
@@ -171,7 +172,7 @@ def converge(c):
     # ditch this explicit one instead. (and the docstring above)
     changelog = parse_changelog(c.packaging.changelog_file)
     # Get latest changelog release and any unreleased issues, for current line
-    release, issues = release_and_issues( changelog, branch, release_type)
+    release, issues = release_and_issues(changelog, branch, release_type)
     # Obtain the project's main package & its version data
     # TODO: explode nicely if it lacks a _version
     package = __import__(find_package(c), fromlist=['_version'])
@@ -243,11 +244,11 @@ def all_(c):
     # converge() twice (bad)?
 
     # TODO: add a step for checking reqs.txt / setup.py vs virtualenv contents
-    #version(c)
-    #tag(c)
-    #push(c)
-    #build(c)
-    #publish(c)
+    # version(c)
+    # tag(c)
+    # push(c)
+    # build(c)
+    # publish(c)
 
 
 def release_line(c):
@@ -668,7 +669,7 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
             c.run(cmd)
 
 
-ns = Collection('release')#,
+ns = Collection('release') # ,
 #    build,
 #    changelog,
 #    #dry_run,
@@ -678,7 +679,7 @@ ns = Collection('release')#,
 #    should_version,
 #    tag,
 #    version,
-#)
+# )
 # TODO: why are we doing this this way exactly? Issues when importing it into
 # external namespaces? Feels bad.
 # TODO: even if this is somehow necessary, it should ride on top of the
