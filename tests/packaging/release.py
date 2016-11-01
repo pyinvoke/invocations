@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from contextlib import nested
+from contextlib import nested, contextmanager
 from os import path
 import re
 import sys
@@ -125,8 +125,10 @@ class changelog_needs_release_(Spec):
 
 # NOTE: can't slap this on the test class itself due to how Spec has to handle
 # inner classes (basically via getattr chain). If that can be converted to true
-# inheritance (seems unlikely), we can organize more "naturally".
-def _mock_status(self):
+# inheritance (seems unlikely), we could organize more "naturally".
+# NOTE: OTOH, it's actually nice to use this in >1 top level class, so...meh?
+@contextmanager
+def _mock_context(self):
     """
     Run `status` with a mocked Context & some external mocks where needed.
 
@@ -176,9 +178,14 @@ def _mock_status(self):
     patches.append(patch('__builtin__.__import__', side_effect=fake_import))
 
     with nested(*patches):
-        return status(context)
+        yield context
 
-# TODO: same as above re: integration w/ test class
+
+def _mock_status(self):
+    with _mock_context(self) as c:
+        return status(c)
+
+
 @trap
 def _expect_actions(self, *actions):
     _mock_status(self)
