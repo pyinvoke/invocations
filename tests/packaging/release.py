@@ -356,11 +356,20 @@ class component_state_enums_contain_human_readable_values(Spec):
             )
 
         def needs_release(self):
-            skip()
+            eq_(
+                Changelog.NEEDS_RELEASE.value,
+                "\x1b[31m\u2718 needs :release: entry\x1b(B\x1b[m",
+            )
 
     class version_file:
         def okay(self):
-            skip()
+            eq_(
+                VersionFile.OKAY.value,
+                "\x1b[32m\u2714 version up to date\x1b(B\x1b[m",
+            )
 
         def needs_bump(self):
-            skip()
+            eq_(
+                VersionFile.NEEDS_BUMP.value,
+                "\x1b[31m\u2718 needs version bump\x1b(B\x1b[m",
+            )
