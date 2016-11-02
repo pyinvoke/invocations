@@ -98,6 +98,27 @@ class release_and_issues_(Spec):
         skip()
 
 
+class find_package_(Spec):
+    def can_be_short_circuited_with_config_value(self):
+        # TODO: should we just bundle this + the version part into one
+        # function and setting? do we ever peep into the package for anything
+        # else besides version module?
+        skip()
+
+    def seeks_directories_with_init_py_in_em(self):
+        skip()
+
+    def blacklists_common_non_public_modules(self):
+        skip()
+
+    def errors_if_cannot_find_anything(self):
+        skip()
+
+    def errors_if_ambiguous_results(self):
+        # I.e. >1 possible result
+        skip()
+
+
 # TODO: chop up into more converge() tests
 class changelog_needs_release_(Spec):
     class true:
