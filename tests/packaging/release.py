@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from contextlib import nested, contextmanager
-from os import path
+from os import path, getcwd, chdir
 import re
 import sys
 
@@ -12,7 +12,7 @@ from invoke import MockContext, Result, Config
 
 from invocations.packaging.release import (
     release_line, latest_feature_bucket, release_and_issues, all_, status,
-    Changelog, Release, VersionFile, UndefinedReleaseType,
+    Changelog, Release, VersionFile, UndefinedReleaseType, load_version
 )
 
 
@@ -120,8 +120,19 @@ class find_package_(Spec):
 
 
 class load_version_(Spec):
+    def setup(self):
+        sys.path.insert(0, support_dir)
+
+    def teardown(self):
+        sys.path.remove(support_dir)
+
     def defaults_to_underscore_version(self):
-        skip()
+        config = {
+            'package': 'fakepackage',
+            # No version_module
+        }
+        c = MockContext(Config(overrides={'packaging': config}))
+        eq_(load_version(c), '1.0.0')
 
     def can_configure_which_module_holds_version_data(self):
         skip()
@@ -155,6 +166,7 @@ class changelog_needs_release_(Spec):
 # - comparison of version file contents w/ latest release in changelog
 # TODO: ... (git tag, pypi release, etc)
 
+support_dir = path.join(path.dirname(__file__), '_support')
 
 # NOTE: can't slap this on the test class itself due to how Spec has to handle
 # inner classes (basically via getattr chain). If that can be converted to true
@@ -190,7 +202,6 @@ def _mock_context(self):
     # Generate config & context from attrs
     #
 
-    support_dir = path.join(path.dirname(__file__), '_support')
     changelog_file = '{0}.rst'.format(self._changelog)
     config = Config(overrides={
         'packaging': {
