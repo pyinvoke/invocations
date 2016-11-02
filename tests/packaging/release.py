@@ -129,20 +129,24 @@ class load_version_(Spec):
     def teardown(self):
         sys.path.remove(support_dir)
 
-    def defaults_to_underscore_version(self):
+    def _expect_version(self, expected, config_val=None):
         config = {
             'package': 'fakepackage',
-            # No version_module
         }
+        if config_val is not None:
+            config['version_module'] = config_val
         c = MockContext(Config(overrides={'packaging': config}))
-        eq_(load_version(c), '1.0.0')
+        eq_(load_version(c), expected)
+
+    # NOTE: these all also happen to test the Python bug re: a unicode value
+    # given to `__import__(xxx, fromlist=[u'onoz'])`. No real point making
+    # another one.
+
+    def defaults_to_underscore_version(self):
+        self._expect_version('1.0.0')
 
     def can_configure_which_module_holds_version_data(self):
-        skip()
-
-    def can_load_unicode_version_module_name(self):
-        # Re: Python bug 21720 - call real __import__ here!
-        skip()
+        self._expect_version('1.0.1', config_val='otherversion')
 
     def errors_usefully_if_version_module_not_found(self):
         skip()
