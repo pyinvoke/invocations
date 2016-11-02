@@ -1,9 +1,12 @@
 from __future__ import unicode_literals
 
-from contextlib import nested, contextmanager
+from contextlib import contextmanager
 from os import path, getcwd, chdir
 import re
 import sys
+
+from invoke.vendor.six import PY2
+from invoke.vendor.six.moves import reduce
 
 from mock import Mock, patch
 from spec import Spec, trap, skip, eq_, ok_, raises
@@ -230,17 +233,20 @@ def _mock_context(self):
     # Execute converge() inside a mock environment
     #
 
-    patches = []
-
     # Allow targeted import mocking, leaving regular imports alone.
     real_import = __import__
     def fake_import(*args, **kwargs):
         if args[0] is not PACKAGE:
             return real_import(*args, **kwargs)
         return Mock(_version=Mock(__version__=self._version))
-    patches.append(patch('__builtin__.__import__', side_effect=fake_import))
+    # Because I can't very well patch six.moves.builtins itself, can I? =/
+    builtins = '__builtin__' if PY2 else 'builtins'
+    import_patcher = patch(
+        '{0}.__import__'.format(builtins),
+        side_effect=fake_import,
+    )
 
-    with nested(*patches):
+    with import_patcher:
         yield context
 
 

@@ -422,7 +422,7 @@ def load_version(c):
     version_module = c.packaging.get('version_module', '_version')
     # NOTE: have to explicitly give it a bytestr (Python 2) or unicode (Python
     # 3) because https://bugs.python.org/issue21720 HOORAY
-    cast = binary_type if PY2 else text_Type
+    cast = binary_type if PY2 else text_type
     package = __import__(package_name, fromlist=[cast(version_module)])
     # TODO: explode nicely if it lacks a _version/etc, or a __version__
     # TODO: make this a Version()?
