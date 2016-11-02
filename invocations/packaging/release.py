@@ -175,15 +175,7 @@ def converge(c):
     # Get latest changelog release and any unreleased issues, for current line
     release, issues = release_and_issues(changelog, branch, release_type)
     # Obtain the project's main package & its version data
-    # TODO: explode nicely if it lacks a _version
-    package_name = find_package(c)
-    version_module = c.packaging.get('version_module', '_version')
-    # NOTE: have to explicitly give it a bytestr (Python 2) or unicode (Python
-    # 3) because https://bugs.python.org/issue21720 HOORAY
-    cast = binary_type if PY2 else text_Type
-    package = __import__(package_name, fromlist=[cast(version_module)])
-    # TODO: probably make this & 'release' Version()s here
-    current_version = getattr(package, version_module).__version__
+    current_version = load_version(c)
 
     #
     # Logic determination / convergence
@@ -438,6 +430,18 @@ def find_package(c):
     if len(packages) > 1:
         sys.exit("Found multiple Python packages: {0!r}".format(packages))
     return packages[0]
+
+
+def load_version(c):
+    package_name = find_package(c)
+    version_module = c.packaging.get('version_module', '_version')
+    # NOTE: have to explicitly give it a bytestr (Python 2) or unicode (Python
+    # 3) because https://bugs.python.org/issue21720 HOORAY
+    cast = binary_type if PY2 else text_Type
+    package = __import__(package_name, fromlist=[cast(version_module)])
+    # TODO: explode nicely if it lacks a _version/etc, or a __version__
+    # TODO: make this a Version()?
+    return getattr(package, version_module).__version__
 
 
 @task

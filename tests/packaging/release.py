@@ -119,6 +119,21 @@ class find_package_(Spec):
         skip()
 
 
+class load_version_(Spec):
+    def defaults_to_underscore_version(self):
+        skip()
+
+    def can_configure_which_module_holds_version_data(self):
+        skip()
+
+    def can_load_unicode_version_module_name(self):
+        # Re: Python bug 21720 - call real __import__ here!
+        skip()
+
+    def errors_usefully_if_version_module_not_found(self):
+        skip()
+
+
 # TODO: chop up into more converge() tests
 class changelog_needs_release_(Spec):
     class true:
