@@ -23,26 +23,11 @@ from invoke.vendor.six import StringIO
 from invoke.vendor.six import text_type, binary_type, iteritems, PY2
 
 from blessings import Terminal
-from tabulate import tabulate
-
-# TODO: really not a fan of these optional requirements. Given nothing so far
-# is C-extension based, maybe just suck it up & add them all as true
-# requirements?
-
-try:
-    from enum import Enum
-except ImportError:
-    sys.exit("Need the 'enum' library and you seem to be on Python<3.4; please 'pip install enum34'!") # noqa
-
+from enum import Enum
 from invoke import Collection, task
-try:
-    from semantic_version import Version
-except ImportError:
-    sys.exit("Use of the packaging.release collection requires the `semantic_version` package; please install it!") # noqa
-try:
-    from releases.util import parse_changelog
-except ImportError:
-    sys.exit("Use of the packaging.release collection requires the `releases` package; please install it!") # noqa
+from releases.util import parse_changelog
+from semantic_version import Version
+from tabulate import tabulate
 
 from ..util import tmpdir
 from ..console import confirm
