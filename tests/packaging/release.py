@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from contextlib import contextmanager
-from os import path, getcwd, chdir
+from os import path
 import re
 import sys
 
