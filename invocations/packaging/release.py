@@ -20,7 +20,7 @@ from shutil import rmtree
 
 from invoke.vendor.six import StringIO
 
-from invoke.vendor.six import text_type, iteritems
+from invoke.vendor.six import text_type, binary_type, iteritems, PY2
 
 from blessings import Terminal
 from tabulate import tabulate
@@ -176,9 +176,14 @@ def converge(c):
     release, issues = release_and_issues(changelog, branch, release_type)
     # Obtain the project's main package & its version data
     # TODO: explode nicely if it lacks a _version
-    package = __import__(find_package(c), fromlist=['_version'])
+    package_name = find_package(c)
+    version_module = c.packaging.get('version_module', '_version')
+    # NOTE: have to explicitly give it a bytestr (Python 2) or unicode (Python
+    # 3) because https://bugs.python.org/issue21720 HOORAY
+    cast = binary_type if PY2 else text_Type
+    package = __import__(package_name, fromlist=[cast(version_module)])
     # TODO: probably make this & 'release' Version()s here
-    current_version = package._version.__version__ # buffalo buffalo
+    current_version = getattr(package, version_module).__version__
 
     #
     # Logic determination / convergence
