@@ -290,6 +290,24 @@ def latest_feature_bucket(changelog):
 
 # TODO: may want to live in releases.util eventually
 def release_and_issues(changelog, branch, release_type):
+    """
+    Return most recent branch-appropriate release, if any, and its contents.
+
+    :param dict changelog:
+        Changelog contents, as returned by `releases.util.parse_changelog`.
+
+    :param str branch:
+        Branch name.
+
+    :param release_type:
+        Member of `Release`, e.g. `Release.FEATURE`.
+
+    :returns:
+        Two-tuple of release (`str`) and issues (`list` of issue numbers.)
+
+        If there is no latest release for the given branch (e.g. if it's a
+        feature or master branch), it will be ``None``.
+    """
     # Bugfix lines just use the branch to find issues
     bucket = branch
     # Features need a bit more logic
