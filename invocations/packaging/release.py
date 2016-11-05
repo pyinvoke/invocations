@@ -176,7 +176,7 @@ def converge(c):
 
     # Version file: more complex - see subroutine.
     actions['version'] = VersionFile.OKAY
-    if should_version(release, issues, current_version):
+    if should_update_version(release, issues, current_version):
         actions['version'] = VersionFile.NEEDS_BUMP
 
     #
@@ -336,7 +336,7 @@ def tags(c):
     return sorted(tags_)
 
 
-def should_version(latest_release, issues, current_version):
+def should_update_version(latest_release, issues, current_version):
     """
     Whether the project's packaging version needs to be updated.
     """
@@ -674,7 +674,7 @@ ns = Collection('release') # ,
 #    publish,
 #    push,
 #    should_changelog,
-#    should_version,
+#    should_update_version,
 #    tag,
 #    version,
 # )
