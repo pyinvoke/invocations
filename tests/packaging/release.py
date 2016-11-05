@@ -164,21 +164,6 @@ class load_version_(Spec):
         skip()
 
 
-# TODO: chop up into more converge() tests
-class changelog_needs_release_(Spec):
-    class true:
-        def master_branch_and_issues_in_unreleased_feature_bucket(self):
-            skip()
-            c = self._context("master", 'unreleased_1.x_features')
-            eq_(changelog_up_to_date(c), True)
-
-    class false:
-        def master_branch_and_empty_unreleased_feature_bucket(self):
-            skip()
-            c = self._context("master", 'no_unreleased_1.x_features')
-            eq_(changelog_up_to_date(c), False)
-
-
 # Multi-dimensional scenarios, in relatively arbitrary nesting order:
 # - what type of release we're talking about (based on branch name)
 # - whether there appear to be unreleased issues in the changelog
@@ -383,7 +368,48 @@ Version +{version}
                     )
 
     class master_branch:
-        pass
+        _branch = 'master'
+
+        class unreleased_issues:
+            _changelog = 'unreleased_1.x_features'
+
+            class file_version_equals_latest_in_changelog:
+                _version = '1.0.1'
+
+                def changelog_release_version_update(self):
+                    # TODO: do we want some sort of "and here's _what_ you
+                    # ought to be adding as the new release and/or version
+                    # value" aspect to the actions? can leave up to user for
+                    # now, but, more automation is better.
+                    _expect_actions(self,
+                        Changelog.NEEDS_RELEASE,
+                        VersionFile.NEEDS_BUMP,
+                    )
+
+            # TODO: what if the version file is newer _but not what it needs to
+            # be for the branch_? e.g. if it was 1.0.2 here (where latest
+            # release is 1.0.1 but branch (master) implies desire is 1.1.0)?
+
+            class version_file_is_newer:
+                _version = '1.1.0'
+
+                def changelog_release_version_okay(self):
+                    _expect_actions(self,
+                        # TODO: same as above re: suggesting the release value
+                        # to the edit step
+                        Changelog.NEEDS_RELEASE,
+                        VersionFile.OKAY,
+                    )
+
+            class changelog_version_is_newer:
+                _version = '1.2.0'
+                # TODO: as with bugfix branches, this is undefined, except here
+                # it's even moreso because...well it's even more wacky. why
+                # would we have anything >1.1.0 when the changelog itself only
+                # even goes up to 1.0.x??
+
+        class no_unreleased_issues:
+            _changelog = 'no_unreleased_1.x_features'
 
     class undefined_branch:
         _branch = "whatever"
