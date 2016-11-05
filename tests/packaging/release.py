@@ -91,11 +91,23 @@ class release_and_issues_(Spec):
     class feature:
         def no_unreleased(self):
             # release is None, issues is empty list
-            skip()
+            release, issues = release_and_issues(
+                changelog={'1.0.1': [1], 'unreleased_1_feature': []},
+                branch='master',
+                release_type=Release.FEATURE,
+            )
+            eq_(release, None)
+            eq_(issues, [])
 
         def has_unreleased(self):
             # release is still None, issues is nonempty list
-            skip()
+            release, issues = release_and_issues(
+                changelog={'1.0.1': [1], 'unreleased_1_feature': [2, 3]},
+                branch='master',
+                release_type=Release.FEATURE,
+            )
+            eq_(release, None)
+            eq_(issues, [2, 3])
 
     def undefined_always_returns_None_and_empty_list(self):
         skip()
