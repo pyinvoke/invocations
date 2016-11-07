@@ -21,6 +21,7 @@ from shutil import rmtree
 from invoke.vendor.six import StringIO
 
 from invoke.vendor.six import text_type, binary_type, iteritems, PY2
+from invoke.vendor.lexicon import Lexicon
 
 from blessings import Terminal
 from enum import Enum
@@ -127,8 +128,10 @@ def converge(c):
         - ``changelog``: the parsed project changelog, a `dict` of releases.
         - ``release_type``: what type of release the branch appears to be (will
           be a member of `.Release` such as ``Release.BUGFIX``.)
-        - ``latest_release``: the latest changelog release found for current
-          release type/line.
+        - ``latest_line_release``: the latest changelog release found for
+          current release type/line.
+        - ``latest_overall_release``: the absolute most recent release entry.
+          Useful for determining next minor/feature release.
         - ``current_version``: the version string as found in the package's
           ``__version__``.
     """
@@ -157,15 +160,30 @@ def converge(c):
     # releases_changelog_name - that way it will honor that setting and we can
     # ditch this explicit one instead. (and the docstring above)
     changelog = parse_changelog(c.packaging.changelog_file)
-    # Get latest changelog release and any unreleased issues, for current line
-    release, issues = release_and_issues(changelog, branch, release_type)
+    # Get latest appropriate changelog release and any unreleased issues, for
+    # current line
+    line_release, issues = release_and_issues(changelog, branch, release_type)
+    # Also get latest overall release, sometimes that matters (usually only
+    # when latest *appropriate* release doesn't exist yet)
+    overall_release = versions_from_changelog(changelog)[-1]
     # Obtain the project's main package & its version data
     current_version = load_version(c)
+
+    state = Lexicon({
+        'branch': branch,
+        'release_type': release_type,
+        'changelog': changelog,
+        'latest_line_release': line_release,
+        'latest_overall_release': overall_release,
+        'unreleased_issues': issues,
+        'current_version': current_version,
+    })
 
     #
     # Logic determination / convergence
     #
 
+    # TODO: lexicon
     actions = {}
 
     # Changelog: needs new release entry if there are any unreleased issues for
@@ -176,20 +194,12 @@ def converge(c):
 
     # Version file: more complex - see subroutine.
     actions['version'] = VersionFile.OKAY
-    if should_update_version(release, issues, current_version):
+    if should_update_version(state):
         actions['version'] = VersionFile.NEEDS_BUMP
 
     #
     # Return
     #
-
-    state = {
-        'branch': branch,
-        'release_type': release_type,
-        'changelog': changelog,
-        'latest_release': release,
-        'unreleased_issues': issues,
-    }
 
     return actions, state
 
@@ -288,6 +298,21 @@ def latest_feature_bucket(changelog):
     )[0]
 
 
+# TODO: this feels like it should live in Releases, though that would imply
+# adding semantic_version as a dep there, grump
+def versions_from_changelog(changelog):
+    """
+    Return all released versions from given ``changelog``, sorted.
+
+    :param dict changelog:
+        A changelog dict as returned by ``releases.util.parse_changelog`.
+
+    :returns: A sorted list of `semantic_version.Version` objects.
+    """
+    versions = [Version(x) for x in changelog if BUGFIX_RELEASE_RE.match(x)]
+    return sorted(versions)
+
+
 # TODO: may want to live in releases.util eventually
 def release_and_issues(changelog, branch, release_type):
     """
@@ -319,11 +344,8 @@ def release_and_issues(changelog, branch, release_type):
     release = None
     # And requires scanning changelog, for bugfix lines
     if release_type is Release.BUGFIX:
-        versions = []
-        for x in changelog:
-            if x.startswith(bucket) and BUGFIX_RELEASE_RE.match(x):
-                versions.append(Version(x))
-        release = text_type(sorted(versions)[-1]) # TODO: unicode-friendly?
+        versions = [text_type(x) for x in versions_from_changelog(changelog)]
+        release = [x for x in versions if x.startswith(bucket)][-1]
     return release, issues
 
 
@@ -354,14 +376,35 @@ def tags(c):
     return sorted(tags_)
 
 
-def should_update_version(latest_release, issues, current_version):
+def should_update_version(state):
     """
     Whether the project's packaging version needs to be updated.
+
+    :param dict state:
+        The ``state`` dict as returned by / generated within `converge`.
+
+    :returns: `bool`
     """
-    latest_release = Version(latest_release)
-    current_version = Version(current_version)
+    current_version = Version(state.current_version)
+    # Special-ish case: latest_release is None, usually indicating
+    # master/feature branch.
+    if state.latest_line_release is None:
+        # TODO: don't see a more elegant way to do this offhand, but...
+        # Determine what the next feature version would/should be
+        next_feature = Version(text_type(state.latest_overall_release))
+        next_feature.minor += 1
+        next_feature.patch = 0
+        print("version file says {0!r}, latest CL release is {1!r}, next feature release would be {2!r}".format(current_version, state.latest_overall_release, next_feature))
+        # Doesn't actually matter if there's unreleased issues or not; from
+        # perspective of version file, all we care about is if it reflects the
+        # next feature release, given we're on master.
+        # TODO: maybe handle 'current > next' sometime, shrug
+        return not (current_version == next_feature)
+    # Otherwise, probably on bugfix branch, so both versions should be
+    # non-empty and thus comparable.
+    latest_release = Version(state.latest_line_release)
     # When the changelog is 'dirty' and there are unreleased issues
-    if issues:
+    if state.unreleased_issues:
         # Both versions match -> both are outdated, so version needs bump
         if latest_release == current_version:
             return True
