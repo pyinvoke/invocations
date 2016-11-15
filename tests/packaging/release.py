@@ -477,7 +477,6 @@ class All(Spec):
         # I.e. you might have screwed up editing one of the files...
         skip()
 
-
     # Don't want a full re-enactment of status_ test tree, but do want to spot
     # check that actions not needing to be taken, aren't...
     class lack_of_action:
