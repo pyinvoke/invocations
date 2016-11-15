@@ -6,7 +6,6 @@ import re
 import sys
 
 from invoke.vendor.six import PY2
-from invoke.vendor.six.moves import reduce
 
 from mock import Mock, patch
 from spec import Spec, trap, skip, eq_, ok_, raises
