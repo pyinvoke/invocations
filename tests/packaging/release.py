@@ -419,6 +419,10 @@ Version +{version}
             _mock_status(self)
 
 
+_confirm = 'invocations.packaging.release.confirm'
+_confirm_false = patch(_confirm, return_value=False)
+_confirm_true = patch(_confirm, return_value=True)
+
 
 class All(Spec):
     "all_" # mehhh
@@ -428,7 +432,7 @@ class All(Spec):
     _version = '1.1.1'
 
     @trap
-    @patch('invocations.packaging.release.confirm', return_value=False)
+    @_confirm_false
     def displays_status_output(self, _):
         with _mock_context(self) as c:
             all_(c)
@@ -446,8 +450,8 @@ class All(Spec):
         eq_(mock_input.call_args[0][0], "Take the above actions? [Y/n] ")
 
     @trap
-    @patch('invocations.packaging.release.confirm', return_value=False)
-    def if_prompt_response_negative_no_action_taken(self, mock_confirm):
+    @_confirm_false
+    def if_prompt_response_negative_no_action_taken(self, _):
         with _mock_context(self) as c:
             all_(c)
         # TODO: move all action-y code into subroutines, then mock them and
@@ -457,7 +461,7 @@ class All(Spec):
         ok_(c.run.call_args[0][0].startswith('git rev-parse'))
 
     @trap
-    @patch('invocations.packaging.release.confirm', return_value=True)
+    @_confirm_true
     def opens_EDITOR_with_changelog_when_it_needs_update(self, _):
         with _mock_context(self) as c:
             all_(c)
@@ -481,7 +485,7 @@ class All(Spec):
         _changelog = 'no_unreleased_1.1_bugs'
 
         @trap
-        @patch('invocations.packaging.release.confirm', return_value=True)
+        @_confirm_true
         def no_changelog_update_needed_means_no_changelog_edit(self, _):
             with _mock_context(self) as c:
                 all_(c)
