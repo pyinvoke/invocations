@@ -466,8 +466,6 @@ class All(Spec):
             # TODO: real code should probs expand EDITOR explicitly so it can
             # run w/o a shell wrap / require a full env?
             cmd = "$EDITOR {0}".format(path)
-            # NOTE: most editors want pty=True, and certainly they won't like
-            # having their output hidden...
             c.run.assert_any_call(cmd, pty=True, hide=False)
 
     def opens_EDITOR_with_version_file_when_it_needs_update(self):
