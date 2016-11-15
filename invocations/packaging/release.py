@@ -34,6 +34,44 @@ from ..util import tmpdir
 from ..console import confirm
 
 
+# I really don't like doing this but it gets really annoying cargo culting this
+# crap all over the module...
+
+def clone(self):
+    """
+    Return a new copy of this Version object.
+
+    Useful when you need to generate a new object that can be mutated
+    separately from the original.
+    """
+    return Version(text_type(self))
+Version.clone = clone
+
+def next_minor(self):
+    """
+    Return a Version whose minor number is one greater than self's.
+
+    .. note::
+        The new Version will always have a zeroed-out bugfix/tertiary version
+        number, because the "next minor release" of e.g. 1.2.1 is 1.3.0, not
+        1.3.1.
+    """
+    clone = self.clone()
+    clone.minor += 1
+    clone.bugfix = 0
+    return clone
+Version.next_minor = next_minor
+
+def next_patch(self):
+    """
+    Return a Version whose patch/bugfix number is one greater than self's.
+    """
+    clone = self.clone()
+    clone.patch += 1
+    return clone
+Version.next_patch = next_patch
+
+
 # TODO: this could be a good module to test out a more class-centric method of
 # organizing tasks. E.g.:
 # - 'Checks'/readonly things like 'should_changelog' live in a base class
@@ -174,10 +212,10 @@ def converge(c):
         'branch': branch,
         'release_type': release_type,
         'changelog': changelog,
-        'latest_line_release': line_release,
-        'latest_overall_release': overall_release,
+        'latest_line_release': Version(line_release) if line_release else None,
+        'latest_overall_release': overall_release, # already a Version
         'unreleased_issues': issues,
-        'current_version': current_version,
+        'current_version': Version(current_version),
     })
 
     #
@@ -409,48 +447,26 @@ def should_update_version(state):
 
     :returns: `bool`
     """
-    current_version = Version(state.current_version)
-    # Special-ish case: latest_release is None, usually indicating
-    # master/feature branch.
-    if state.latest_line_release is None:
-        # Determine what the next feature version would/should be
-        # TODO: don't see a more elegant way to do this offhand, but...
-        next_feature = Version(text_type(state.latest_overall_release))
-        next_feature.minor += 1
-        next_feature.patch = 0
-        # Doesn't actually matter if there's unreleased issues or not; from
-        # perspective of version file, all we care about is if it reflects the
-        # next feature release, given we're on master.
-        # TODO: maybe handle 'current > next' sometime, shrug
-        return not (current_version == next_feature)
-    # Otherwise, probably on bugfix branch, so both versions should be
-    # non-empty and thus comparable.
-    latest_release = Version(state.latest_line_release)
-    # When the changelog is 'dirty' and there are unreleased issues
+    # If we've got unreleased issues, determine what our release number
+    # would/will be upon release, and see if we're at (or above...heh) it.
+    # TODO: ditto...could be derived earlier, right?
     if state.unreleased_issues:
-        # Both versions match -> both are outdated, so version needs bump
-        if latest_release == current_version:
-            return True
-        # Version is newer -> was pre-emptively bumped, no updated needed
-        elif latest_release < current_version:
-            return False
-        # else: # latest release > current_version
-        # Should not ever get here, implies the version is 2+ releases out of
-        # date. wat??
-    # Changelog looks up to date / no unreleased issues
-    else:
-        # Versions match -> probably just cut a release, no update needed
-        if latest_release == current_version:
-            return False
-        # Changelog has a newer version not seen in version file: version file
-        # needs update (presumably, to that specific version)
-        elif latest_release > current_version:
-            return True
-        # Version is newer than changelog: implies version got bumped by the
-        # dev but nothing's been worked on yet (or at least not added to
-        # changelog). No update required.
+        if state.release_type == Release.BUGFIX:
+            next_version = state.latest_line_release.next_patch()
         else:
-            return False
+            next_version = state.latest_overall_release.next_minor()
+        version_okay = state.current_version >= next_version
+        return not version_okay
+    # If there are NO unreleased issues, simply compare the latest appropriate
+    # changelog version (matching the type of branch we're on) with what's in
+    # the version file.
+    # TODO: shouldn't this logic happen in the state-obtaining part of
+    # converge()?
+    changelog_version = state.latest_line_release
+    if state.release_type == Release.FEATURE:
+        changelog_version = state.latest_overall_release
+    version_okay = state.current_version >= changelog_version
+    return not version_okay
 
 
 @task
