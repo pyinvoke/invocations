@@ -237,7 +237,6 @@ def all_(c):
     if not confirm("Take the above actions?"):
         return
     # Changelog! (pty for non shite editing, eg vim sure won't like non-pty)
-    # TODO: turn 'actions' into a Lexicon for attr access
     if actions.changelog is Changelog.NEEDS_RELEASE:
         cmd = "$EDITOR {0.packaging.changelog_file}".format(c)
         c.run(cmd, pty=True, hide=False)
