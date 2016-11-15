@@ -428,7 +428,7 @@ class All(Spec):
     _version = '1.1.1'
 
     @trap
-    @patch('invocations.packaging.release.confirm')
+    @patch('invocations.packaging.release.confirm', return_value=False)
     def displays_status_output(self, _):
         with _mock_context(self) as c:
             all_(c)
@@ -457,7 +457,7 @@ class All(Spec):
         ok_(c.run.call_args[0][0].startswith('git rev-parse'))
 
     @trap
-    @patch('invocations.packaging.release.confirm', return_value='yes')
+    @patch('invocations.packaging.release.confirm', return_value=True)
     def opens_EDITOR_with_changelog_when_it_needs_update(self, _):
         with _mock_context(self) as c:
             all_(c)
