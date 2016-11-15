@@ -414,6 +414,15 @@ Version +{version}
         class no_unreleased_issues:
             _changelog = 'no_unreleased_1.x_features'
 
+            class file_version_equals_latest_in_changelog:
+                _version = '1.1.0'
+
+                def changelog_okay_version_okay(self):
+                    _expect_actions(self,
+                        Changelog.OKAY,
+                        VersionFile.OKAY,
+                    )
+
     class undefined_branch:
         _branch = "whatever"
         _changelog = "nah"
