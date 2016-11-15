@@ -413,8 +413,8 @@ def should_update_version(state):
     # Special-ish case: latest_release is None, usually indicating
     # master/feature branch.
     if state.latest_line_release is None:
-        # TODO: don't see a more elegant way to do this offhand, but...
         # Determine what the next feature version would/should be
+        # TODO: don't see a more elegant way to do this offhand, but...
         next_feature = Version(text_type(state.latest_overall_release))
         next_feature.minor += 1
         next_feature.patch = 0
