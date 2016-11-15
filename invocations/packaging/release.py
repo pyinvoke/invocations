@@ -232,16 +232,37 @@ def all_(c):
     # TODO: maybe expand the enum-based stuff to have values that split up
     # textual description, command string, etc. See the TODO up by their
     # definition too, re: just making them non-enum classes period.
+    # TODO: otherwise, we at least want derived eg changelog/version/etc paths
+    # transmitted from status() into here...
     actions = status(c)
     # TODO: unless nothing-to-do in which case just say that & exit 0
     if not confirm("Take the above actions?"):
         return
+
+    # TODO: factor out what it means to edit a file:
+    # - $EDITOR or explicit expansion of it in case no shell involved
+    # - pty=True and hide=False, because otherwise things can be bad
+    # - what else?
+
     # Changelog! (pty for non shite editing, eg vim sure won't like non-pty)
     if actions.changelog is Changelog.NEEDS_RELEASE:
+        # TODO: identify top of list and inject a ready-made line? Requires vim
+        # assumption...
         cmd = "$EDITOR {0.packaging.changelog_file}".format(c)
         c.run(cmd, pty=True, hide=False)
     # TODO: add a step for checking reqs.txt / setup.py vs virtualenv contents
-    # version(c)
+    # Version file!
+    if actions.version == VersionFile.NEEDS_BUMP:
+        # TODO: suggest the bump and/or overwrite the entire file? Assumes a
+        # specific file format. Could be bad for users which expose __version__
+        # but have other contents as well.
+        version_file = os.path.join(
+            find_package(c),
+            c.packaging.get('version_module', '_version') + ".py",
+        )
+        cmd = "$EDITOR {0}".format(version_file)
+        c.run(cmd, pty=True, hide=False)
+
     # tag(c)
     # push(c)
     # build(c)

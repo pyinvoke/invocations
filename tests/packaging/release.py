@@ -171,6 +171,11 @@ class load_version_(Spec):
 
 support_dir = path.join(path.dirname(__file__), '_support')
 
+# Sentinel for targeted __import__ mocking. Is a string so that it can be
+# expected in tests about the version file, etc.
+# NOTE: needs to not shadow any real imported module name!
+FAKE_PACKAGE = 'fakey_mcfakerson_not_real_in_any_way'
+
 # NOTE: can't slap this on the test class itself due to how Spec has to handle
 # inner classes (basically via getattr chain). If that can be converted to true
 # inheritance (seems unlikely), we could organize more "naturally".
@@ -198,9 +203,6 @@ def _mock_context(self):
     :yields:
         an `invoke.context.MockContext` created & modified as described above.
     """
-    # Sentinel for targeted __import__ mocking
-    PACKAGE = object()
-
     #
     # Generate config & context from attrs
     #
@@ -209,7 +211,7 @@ def _mock_context(self):
     config = Config(overrides={
         'packaging': {
             'changelog_file': path.join(support_dir, changelog_file),
-            'package': PACKAGE,
+            'package': FAKE_PACKAGE,
         },
     })
     # TODO: if/when regex implemented for MockContext, make these keys less
@@ -219,6 +221,8 @@ def _mock_context(self):
         "git rev-parse --abbrev-ref HEAD": Result(self._branch),
         # Changelog update action - just here so it can be called
         "$EDITOR {0.packaging.changelog_file}".format(config): Result(),
+        # Version file update - ditto
+        "$EDITOR {0}/_version.py".format(FAKE_PACKAGE): Result(),
     }
     context = MockContext(config=config, run=run_results)
     # Wrap run() in a Mock too.
@@ -236,7 +240,7 @@ def _mock_context(self):
     # Allow targeted import mocking, leaving regular imports alone.
     real_import = __import__
     def fake_import(*args, **kwargs):
-        if args[0] is not PACKAGE:
+        if args[0] is not FAKE_PACKAGE:
             return real_import(*args, **kwargs)
         return Mock(_version=Mock(__version__=self._version))
     # Because I can't very well patch six.moves.builtins itself, can I? =/
@@ -473,8 +477,15 @@ class All(Spec):
             cmd = "$EDITOR {0}".format(path)
             c.run.assert_any_call(cmd, pty=True, hide=False)
 
-    def opens_EDITOR_with_version_file_when_it_needs_update(self):
-        skip()
+    @_confirm_true
+    def opens_EDITOR_with_version_file_when_it_needs_update(self, _):
+        with _mock_context(self) as c:
+            all_(c)
+            path = "{0}/_version.py".format(FAKE_PACKAGE)
+            # TODO: real code should probs expand EDITOR explicitly so it can
+            # run w/o a shell wrap / require a full env?
+            cmd = "$EDITOR {0}".format(path)
+            c.run.assert_any_call(cmd, pty=True, hide=False)
 
     def reruns_status_at_end_as_sanity_check(self):
         # I.e. you might have screwed up editing one of the files...
