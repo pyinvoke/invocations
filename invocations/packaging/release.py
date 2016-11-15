@@ -418,7 +418,6 @@ def should_update_version(state):
         next_feature = Version(text_type(state.latest_overall_release))
         next_feature.minor += 1
         next_feature.patch = 0
-        print("version file says {0!r}, latest CL release is {1!r}, next feature release would be {2!r}".format(current_version, state.latest_overall_release, next_feature))
         # Doesn't actually matter if there's unreleased issues or not; from
         # perspective of version file, all we care about is if it reflects the
         # next feature release, given we're on master.
