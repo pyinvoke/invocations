@@ -58,7 +58,7 @@ def next_minor(self):
     """
     clone = self.clone()
     clone.minor += 1
-    clone.bugfix = 0
+    clone.patch = 0
     return clone
 Version.next_minor = next_minor
 
