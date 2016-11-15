@@ -419,9 +419,13 @@ Version +{version}
             _mock_status(self)
 
 
-_confirm = 'invocations.packaging.release.confirm'
-_confirm_false = patch(_confirm, return_value=False)
-_confirm_true = patch(_confirm, return_value=True)
+def _confirm(which):
+    path = 'invocations.packaging.release.confirm'
+    def _wrapper(f):
+        return trap(patch(path, return_value=which)(f))
+    return _wrapper
+_confirm_true = _confirm(True)
+_confirm_false = _confirm(False)
 
 
 class All(Spec):
@@ -431,7 +435,6 @@ class All(Spec):
     _changelog = 'unreleased_1.1_bugs'
     _version = '1.1.1'
 
-    @trap
     @_confirm_false
     def displays_status_output(self, _):
         with _mock_context(self) as c:
@@ -449,7 +452,6 @@ class All(Spec):
             all_(c)
         eq_(mock_input.call_args[0][0], "Take the above actions? [Y/n] ")
 
-    @trap
     @_confirm_false
     def if_prompt_response_negative_no_action_taken(self, _):
         with _mock_context(self) as c:
@@ -460,7 +462,6 @@ class All(Spec):
         eq_(c.run.call_count, 1)
         ok_(c.run.call_args[0][0].startswith('git rev-parse'))
 
-    @trap
     @_confirm_true
     def opens_EDITOR_with_changelog_when_it_needs_update(self, _):
         with _mock_context(self) as c:
@@ -484,7 +485,6 @@ class All(Spec):
     class lack_of_action:
         _changelog = 'no_unreleased_1.1_bugs'
 
-        @trap
         @_confirm_true
         def no_changelog_update_needed_means_no_changelog_edit(self, _):
             with _mock_context(self) as c:
