@@ -63,8 +63,8 @@ from ..console import confirm
 # one of "define a bunch of module level constants as integers". Feels
 # non-Pythonic. But not sure what's truly better given the pitfalls of
 # comparing strings as values. (String *keys* are typically much safer thanks
-# to KeyError, but "if actions['changelog'] == 'needs_releas'" [note typo] is
-# far easier to run into.)
+# to KeyError, but "if actions.changelog == 'needs_releas'" [note typo] is far
+# easier to run into.)
 
 # TODO: these enums kinda-sorta wants to grow and eat related functionality,
 # e.g. Changelog.update(), Changelog.determine_state(), etc etc. In that case,
@@ -112,7 +112,8 @@ def converge(c):
     :param c: Invoke ``Context`` object or subclass.
 
     :returns:
-        Two dicts, ``actions`` and ``state`` (in that order.)
+        Two dicts (technically, dict subclasses, which allow attribute access),
+        ``actions`` and ``state`` (in that order.)
 
         ``actions`` maps release component names to variables (usually class
         constants) determining what action should be taken for that component:
@@ -183,19 +184,18 @@ def converge(c):
     # Logic determination / convergence
     #
 
-    # TODO: lexicon
-    actions = {}
+    actions = Lexicon()
 
     # Changelog: needs new release entry if there are any unreleased issues for
     # current branch's line.
-    actions['changelog'] = Changelog.OKAY
+    actions.changelog = Changelog.OKAY
     if release_type in (Release.BUGFIX, Release.FEATURE) and issues:
-        actions['changelog'] = Changelog.NEEDS_RELEASE
+        actions.changelog = Changelog.NEEDS_RELEASE
 
     # Version file: more complex - see subroutine.
-    actions['version'] = VersionFile.OKAY
+    actions.version = VersionFile.OKAY
     if should_update_version(state):
-        actions['version'] = VersionFile.NEEDS_BUMP
+        actions.version = VersionFile.NEEDS_BUMP
 
     #
     # Return
@@ -237,8 +237,10 @@ def all_(c):
     if not confirm("Take the above actions?"):
         return
     # Changelog! (pty for non shite editing, eg vim sure won't like non-pty)
-    cmd = "$EDITOR {0.packaging.changelog_file}".format(c)
-    c.run(cmd, pty=True, hide=False)
+    # TODO: turn 'actions' into a Lexicon for attr access
+    if actions.changelog is Changelog.NEEDS_RELEASE:
+        cmd = "$EDITOR {0.packaging.changelog_file}".format(c)
+        c.run(cmd, pty=True, hide=False)
     # TODO: add a step for checking reqs.txt / setup.py vs virtualenv contents
     # version(c)
     # tag(c)

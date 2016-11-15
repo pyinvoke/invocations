@@ -477,6 +477,27 @@ class All(Spec):
         # I.e. you might have screwed up editing one of the files...
         skip()
 
+
+    # Don't want a full re-enactment of status_ test tree, but do want to spot
+    # check that actions not needing to be taken, aren't...
+    class lack_of_action:
+        _changelog = 'no_unreleased_1.1_bugs'
+
+        @trap
+        @patch('invocations.packaging.release.confirm', return_value=True)
+        def no_changelog_update_needed_means_no_changelog_edit(self, _):
+            with _mock_context(self) as c:
+                all_(c)
+                # TODO: as with the 'took no actions at all' test above,
+                # proving a negative sucks - eventually make this subroutine
+                # assert based. Meh.
+                path = c.config.packaging.changelog_file
+                cmd = "$EDITOR {0}".format(path)
+                err = "Saw {0!r} despite changelog not needing update!".format(
+                    cmd
+                )
+                ok_(cmd not in [x[0][0] for x in c.run.call_args_list], err)
+
     # TODO: rest...
 
 
