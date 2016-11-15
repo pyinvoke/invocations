@@ -291,7 +291,7 @@ def all_(c):
     # Changelog! (pty for non shite editing, eg vim sure won't like non-pty)
     if actions.changelog is Changelog.NEEDS_RELEASE:
         # TODO: identify top of list and inject a ready-made line? Requires vim
-        # assumption...
+        # assumption...GREAT opportunity for class/method based tasks!
         cmd = "$EDITOR {0.packaging.changelog_file}".format(c)
         c.run(cmd, pty=True, hide=False)
     # TODO: add a step for checking reqs.txt / setup.py vs virtualenv contents
