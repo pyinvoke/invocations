@@ -12,6 +12,7 @@ from __future__ import unicode_literals
 
 import getpass
 import itertools
+import logging
 import os
 import re
 import sys
@@ -32,6 +33,9 @@ from tabulate import tabulate
 
 from ..util import tmpdir
 from ..console import confirm
+
+
+debug = logging.getLogger('invocations.packaging.release').debug
 
 
 # I really don't like doing this but it gets really annoying cargo culting this
@@ -451,10 +455,13 @@ def should_update_version(state):
     # would/will be upon release, and see if we're at (or above...heh) it.
     # TODO: ditto...could be derived earlier, right?
     if state.unreleased_issues:
+        debug("Unreleased changelog issues found")
         if state.release_type == Release.BUGFIX:
             next_version = state.latest_line_release.next_patch()
+            debug("Release is BUGFIX type; latest release for line is {0}; so next release should be {1}".format(state.latest_line_release, next_version))
         else:
             next_version = state.latest_overall_release.next_minor()
+            debug("Release is FEATURE type; latest overall release is {0}; so next release should be {1}".format(state.latest_overall_release, next_version))
         version_okay = state.current_version >= next_version
         return not version_okay
     # If there are NO unreleased issues, simply compare the latest appropriate
