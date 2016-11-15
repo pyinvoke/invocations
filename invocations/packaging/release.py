@@ -229,16 +229,16 @@ def all_(c):
     Catchall version-bump/tag/changelog/PyPI upload task.
     """
     # Print dry-run/status/actions-to-take data & grab programmatic result
-    actions = status(c)
-    # TODO: then prompt going "should I do this?" default Y
-    confirm("Take the above actions?")
-    # TODO: unless nothing-to-do in which case just say that & exit 0
-    # Changelog!
     # TODO: maybe expand the enum-based stuff to have values that split up
     # textual description, command string, etc. See the TODO up by their
     # definition too, re: just making them non-enum classes period.
-    c.run("$EDITOR {0.packaging.changelog_file}".format(c))
-
+    actions = status(c)
+    # TODO: unless nothing-to-do in which case just say that & exit 0
+    if not confirm("Take the above actions?"):
+        return
+    # Changelog! (pty for non shite editing, eg vim sure won't like non-pty)
+    cmd = "$EDITOR {0.packaging.changelog_file}".format(c)
+    c.run(cmd, pty=True, hide=False)
     # TODO: add a step for checking reqs.txt / setup.py vs virtualenv contents
     # version(c)
     # tag(c)
