@@ -188,6 +188,8 @@ def converge(c):
 
     # Changelog: needs new release entry if there are any unreleased issues for
     # current branch's line.
+    # TODO: annotate with number of released issues [of each type?] - so not
+    # just "up to date!" but "all set (will release 3 features & 5 bugs)"
     actions.changelog = Changelog.OKAY
     if release_type in (Release.BUGFIX, Release.FEATURE) and issues:
         actions.changelog = Changelog.NEEDS_RELEASE
