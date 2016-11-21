@@ -240,8 +240,12 @@ def _mock_context(self):
             'package': FAKE_PACKAGE,
         },
     })
+    tag_output = ""
+    if hasattr(self, '_tags'):
+        tag_output = "\n".join(self._tags) + "\n"
     # TODO: if/when regex implemented for MockContext, make these keys less
     # strictly tied to the real implementation.
+    # NOTE: Result first posarg is stdout string data.
     run_results = {
         # Branch detection
         "git rev-parse --abbrev-ref HEAD": Result(self._branch),
@@ -249,6 +253,8 @@ def _mock_context(self):
         "$EDITOR {0.packaging.changelog_file}".format(config): Result(),
         # Version file update - ditto
         "$EDITOR {0}/_version.py".format(FAKE_PACKAGE): Result(),
+        # Git tags
+        "git tag": Result(tag_output),
     }
     context = MockContext(config=config, run=run_results)
     # Wrap run() in a Mock too.
@@ -303,6 +309,7 @@ class status_(Spec):
         _branch = '1.1'
         _changelog = 'unreleased_1.1_bugs'
         _version = '1.1.1'
+        _tags = ('1.1.0', '1.1.1')
 
         @trap
         def displays_statuses_in_a_table(self):
@@ -310,14 +317,17 @@ class status_(Spec):
             parts = dict(
                 changelog=Changelog.NEEDS_RELEASE.value,
                 version=VersionFile.NEEDS_BUMP.value,
+                tag=Tag.NEEDS_CUTTING.value,
             )
             for part in parts:
                 parts[part] = re.escape(parts[part])
             parts['header_footer'] = r'-+ +-+'
+            # NOTE: forces impl to follow specific order, which is good
             regex = r"""
 {header_footer}
 Changelog +{changelog}
 Version +{version}
+Tag +{tag}
 {header_footer}
 """.format(**parts).strip()
             output = sys.stdout.getvalue()
@@ -330,6 +340,7 @@ Version +{version}
             expected = dict(
                 changelog=Changelog.NEEDS_RELEASE,
                 version=VersionFile.NEEDS_BUMP,
+                tag=Tag.NEEDS_CUTTING,
             )
             eq_(_mock_status(self), expected)
 
@@ -355,12 +366,15 @@ Version +{version}
             class version_file_is_newer:
                 _version = '1.1.2'
 
-                def changelog_release_version_okay_tag_update(self):
-                    _expect_actions(self,
-                        Changelog.NEEDS_RELEASE,
-                        VersionFile.OKAY,
-                        Tag.NEEDS_CUTTING,
-                    )
+                class tags_only_exist_for_past_releases:
+                    _tags = ('1.1.0', '1.1.1')
+
+                    def changelog_release_version_okay_tag_update(self):
+                        _expect_actions(self,
+                            Changelog.NEEDS_RELEASE,
+                            VersionFile.OKAY,
+                            Tag.NEEDS_CUTTING,
+                        )
 
             class changelog_version_is_newer:
                 _version = '1.1.0'
@@ -459,13 +473,17 @@ Version +{version}
             class version_file_is_newer:
                 _version = '1.1.0'
 
-                def changelog_release_version_okay(self):
-                    _expect_actions(self,
-                        # TODO: same as above re: suggesting the release value
-                        # to the edit step
-                        Changelog.NEEDS_RELEASE,
-                        VersionFile.OKAY,
-                    )
+                class new_tag_not_present:
+                    _tags = ('1.0.1',)
+
+                    def changelog_release_version_okay(self):
+                        _expect_actions(self,
+                            # TODO: same as above re: suggesting the release
+                            # value to the edit step
+                            Changelog.NEEDS_RELEASE,
+                            VersionFile.OKAY,
+                            Tag.NEEDS_CUTTING,
+                        )
 
             class changelog_version_is_newer:
                 _version = '1.2.0'
@@ -503,6 +521,7 @@ Version +{version}
     class undefined_branch:
         _branch = "whatever"
         _changelog = "nah"
+        _tags = ('nope',)
 
         @raises(UndefinedReleaseType)
         def raises_exception(self):
@@ -549,8 +568,10 @@ class All(Spec):
         # TODO: move all action-y code into subroutines, then mock them and
         # assert they were never called?
         # Expect that only the status-y run() calls were made.
-        eq_(c.run.call_count, 1)
-        ok_(c.run.call_args[0][0].startswith('git rev-parse'))
+        eq_(c.run.call_count, 2)
+        commands = [x[0][0] for x in c.run.call_args_list]
+        ok_(commands[0].startswith('git rev-parse'))
+        ok_(commands[1].startswith('git tag'))
 
     @_confirm_true
     def opens_EDITOR_with_changelog_when_it_needs_update(self, _):

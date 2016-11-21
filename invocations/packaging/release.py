@@ -21,7 +21,7 @@ from shutil import rmtree
 
 from invoke.vendor.six import StringIO
 
-from invoke.vendor.six import text_type, binary_type, iteritems, PY2
+from invoke.vendor.six import text_type, binary_type, PY2
 from invoke.vendor.lexicon import Lexicon
 
 from blessings import Terminal
@@ -178,6 +178,8 @@ def converge(c):
     overall_release = versions_from_changelog(changelog)[-1]
     # Obtain the project's main package & its version data
     current_version = load_version(c)
+    # Grab all git tags
+    tags = get_tags(c)
 
     state = Lexicon({
         'branch': branch,
@@ -187,6 +189,7 @@ def converge(c):
         'latest_overall_release': overall_release, # already a Version
         'unreleased_issues': issues,
         'current_version': Version(current_version),
+        'tags': tags,
     })
 
     #
@@ -215,6 +218,13 @@ def converge(c):
     if state.current_version != expected_version:
         actions.version = VersionFile.NEEDS_BUMP
 
+    # Git tag: similar to version file, except the check is existence of tag
+    # instead of comparison to file contents. We even reuse the
+    # 'expected_version' variable wholesale.
+    actions.tag = Tag.OKAY
+    if expected_version not in state.tags:
+        actions.tag = Tag.NEEDS_CUTTING
+
     #
     # Return
     #
@@ -234,9 +244,10 @@ def status(c):
     # release" final status - i.e. all steps were at no-op status.
     actions, state = converge(c)
     table = []
-    # TODO: lexical sort on component names? Explicit sort?
-    for component, action in sorted(iteritems(actions), key=lambda x: x[0]):
-        table.append((component.capitalize(), action.value))
+    # NOTE: explicit 'sensible' sort (in rough order of how things are usually
+    # modified, and/or which depend on one another, e.g. tags are near the end)
+    for component in "changelog version tag".split():
+        table.append((component.capitalize(), actions[component].value))
     print(tabulate(table))
     return actions
 
@@ -398,7 +409,7 @@ def changelog(c, target='docs/changelog.rst'):
     pass
 
 
-def tags(c):
+def get_tags(c):
     """
     Return sorted list of release-style tags as semver objects.
     """
@@ -515,7 +526,7 @@ def tag(c, dry_run=False):
     msg = "Found package {0.__name__!r} at version {1}"
     # TODO: use logging for this sometime
     print(msg.format(package, current_version))
-    latest_tag = tags(c)[-1]
+    latest_tag = get_tags(c)[-1]
     # TODO: pre-task/call to version() task; perhaps use its return value to
     # determine whether it got updated or not.
     if latest_tag != current_version:
