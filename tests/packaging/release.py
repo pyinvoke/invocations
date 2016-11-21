@@ -17,7 +17,7 @@ from invoke import MockContext, Result, Config
 
 from invocations.packaging.release import (
     release_line, latest_feature_bucket, release_and_issues, all_, status,
-    Changelog, Release, VersionFile, UndefinedReleaseType, load_version,
+    Changelog, Release, VersionFile, UndefinedReleaseType, Tag, load_version,
     latest_and_next_version,
 )
 
@@ -193,7 +193,7 @@ class latest_and_next_version_(Spec):
 # - what type of release we're talking about (based on branch name)
 # - whether there appear to be unreleased issues in the changelog
 # - comparison of version file contents w/ latest release in changelog
-# TODO: ... (git tag, pypi release, etc)
+# TODO: ... (pypi release, etc)
 
 support_dir = path.join(path.dirname(__file__), '_support')
 
@@ -342,19 +342,24 @@ Version +{version}
             class file_version_equals_latest_in_changelog:
                 _version = '1.1.1'
 
-                def changelog_release_version_update(self):
-                    _expect_actions(self,
-                        Changelog.NEEDS_RELEASE,
-                        VersionFile.NEEDS_BUMP,
-                    )
+                class tags_only_exist_for_past_releases:
+                    _tags = ('1.1.0', '1.1.1')
+
+                    def changelog_release_version_update_tag_update(self):
+                        _expect_actions(self,
+                            Changelog.NEEDS_RELEASE,
+                            VersionFile.NEEDS_BUMP,
+                            Tag.NEEDS_CUTTING,
+                        )
 
             class version_file_is_newer:
                 _version = '1.1.2'
 
-                def changelog_release_version_okay(self):
+                def changelog_release_version_okay_tag_update(self):
                     _expect_actions(self,
                         Changelog.NEEDS_RELEASE,
                         VersionFile.OKAY,
+                        Tag.NEEDS_CUTTING,
                     )
 
             class changelog_version_is_newer:
@@ -367,20 +372,43 @@ Version +{version}
             class file_version_equals_latest_in_changelog:
                 _version = '1.1.2'
 
-                def no_updates_necessary(self):
-                    _expect_actions(self,
-                        Changelog.OKAY,
-                        VersionFile.OKAY,
-                    )
+                class tag_for_new_version_present:
+                    _tags = ('1.1.0', '1.1.1', '1.1.2')
 
-            class changelog_is_newer:
+                    def no_updates_necessary(self):
+                        _expect_actions(self,
+                            Changelog.OKAY,
+                            VersionFile.OKAY,
+                            Tag.OKAY,
+                        )
+
+                class tag_for_new_version_missing:
+                    _tags = ('1.1.0', '1.1.1')
+
+                    def tag_needs_cutting_still(self):
+                        _expect_actions(self,
+                            Changelog.OKAY,
+                            VersionFile.OKAY,
+                            Tag.NEEDS_CUTTING,
+                        )
+
+            class version_file_out_of_date:
                 _version = '1.1.1'
 
-                def changelog_okay_version_needs_bump(self):
-                    _expect_actions(self,
-                        Changelog.OKAY,
-                        VersionFile.NEEDS_BUMP,
-                    )
+                class tag_missing:
+                    _tags = ('1.1.0', '1.1.1') # no 1.1.2
+
+                    def changelog_okay_version_needs_bump_tag_needs_cut(self):
+                        _expect_actions(self,
+                            Changelog.OKAY,
+                            VersionFile.NEEDS_BUMP,
+                            Tag.NEEDS_CUTTING,
+                        )
+
+                # TODO: as in other TODOs, tag can't be expected to exist/be up
+                # to date if any other files are also not up to date. so tag
+                # present but version file out of date, makes no sense, would
+                # be an error.
 
             class version_file_is_newer:
                 _version = '1.1.3'
@@ -406,15 +434,23 @@ Version +{version}
             class file_version_equals_latest_in_changelog:
                 _version = '1.0.1'
 
-                def changelog_release_version_update(self):
-                    # TODO: do we want some sort of "and here's _what_ you
-                    # ought to be adding as the new release and/or version
-                    # value" aspect to the actions? can leave up to user for
-                    # now, but, more automation is better.
-                    _expect_actions(self,
-                        Changelog.NEEDS_RELEASE,
-                        VersionFile.NEEDS_BUMP,
-                    )
+                class latest_tag_same_as_file_version:
+                    _tags = ('1.0.0', '1.0.1')
+
+                    def changelog_release_version_update_tag_cut(self):
+                        # TODO: do we want some sort of "and here's _what_ you
+                        # ought to be adding as the new release and/or version
+                        # value" aspect to the actions? can leave up to user
+                        # for now, but, more automation is better.
+                        _expect_actions(self,
+                            Changelog.NEEDS_RELEASE,
+                            VersionFile.NEEDS_BUMP,
+                            Tag.NEEDS_CUTTING,
+                        )
+
+                # TODO: if there's somehow a tag present for a release as yet
+                # uncut...which makes no sense as changelog still has no
+                # release. Would represent error state!
 
             # TODO: what if the version file is newer _but not what it needs to
             # be for the branch_? e.g. if it was 1.0.2 here (where latest
@@ -444,11 +480,25 @@ Version +{version}
             class file_version_equals_latest_in_changelog:
                 _version = '1.1.0'
 
-                def changelog_okay_version_okay(self):
-                    _expect_actions(self,
-                        Changelog.OKAY,
-                        VersionFile.OKAY,
-                    )
+                class tag_present:
+                    _tags = ('1.0.2', '1.1.0')
+
+                    def all_okay(self):
+                        _expect_actions(self,
+                            Changelog.OKAY,
+                            VersionFile.OKAY,
+                            Tag.OKAY,
+                        )
+
+                class tag_missing:
+                    _tags = ('1.0.2')
+
+                    def changelog_and_version_okay_tag_needs_cut(self):
+                        _expect_actions(self,
+                            Changelog.OKAY,
+                            VersionFile.OKAY,
+                            Tag.NEEDS_CUTTING,
+                        )
 
     class undefined_branch:
         _branch = "whatever"
@@ -578,4 +628,17 @@ class component_state_enums_contain_human_readable_values(Spec):
             eq_(
                 VersionFile.NEEDS_BUMP.value,
                 "\x1b[31m\u2718 needs version bump\x1b(B\x1b[m",
+            )
+
+    class tag:
+        def okay(self):
+            eq_(
+                Tag.OKAY.value,
+                "\x1b[32m\u2714 all set\x1b(B\x1b[m",
+            )
+
+        def needs_cutting(self):
+            eq_(
+                Tag.NEEDS_CUTTING.value,
+                "\x1b[31m\u2718 needs cutting\x1b(B\x1b[m",
             )

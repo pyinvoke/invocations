@@ -99,6 +99,10 @@ class VersionFile(Enum):
     OKAY = t.green(check + " version up to date")
     NEEDS_BUMP = t.red(ex + " needs version bump")
 
+class Tag(Enum):
+    OKAY = t.green(check + " all set")
+    NEEDS_CUTTING = t.red(ex + " needs cutting")
+
 BUGFIX_RE = re.compile("^\d+\.\d+$")
 BUGFIX_RELEASE_RE = re.compile("^\d+\.\d+\.\d+$")
 # TODO: allow tweaking this if folks use different branch methodology:
