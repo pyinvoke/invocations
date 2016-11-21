@@ -9,8 +9,9 @@ from invoke.vendor.six import PY2
 from invoke.vendor.lexicon import Lexicon
 
 from mock import Mock, patch
-from semantic_version import Version
 from spec import Spec, trap, skip, eq_, ok_, raises
+
+from invocations.packaging.semantic_version_monkey import Version
 
 from invoke import MockContext, Result, Config
 
