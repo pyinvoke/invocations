@@ -227,6 +227,7 @@ def converge(c):
     #
 
     actions = Lexicon()
+    latest_version, next_version = latest_and_next_version(state)
 
     # Changelog: needs new release entry if there are any unreleased issues for
     # current branch's line.
@@ -236,9 +237,15 @@ def converge(c):
     if release_type in (Release.BUGFIX, Release.FEATURE) and issues:
         actions.changelog = Changelog.NEEDS_RELEASE
 
-    # Version file: more complex - see subroutine.
+    # Version file: simply whether version file equals the latest version (if
+    # no unreleased issues) or the next version (if unreleased issues).
+    # TODO: corner case of 'version file is >1 release in the future', but
+    # that's still wrong, just would be a different 'bad' status output.
     actions.version = VersionFile.OKAY
-    if should_update_version(state):
+    expected_version = next_version
+    if not state.unreleased_issues:
+        expected_version = latest_version
+    if state.current_version != expected_version:
         actions.version = VersionFile.NEEDS_BUMP
 
     #
@@ -442,38 +449,27 @@ def tags(c):
     return sorted(tags_)
 
 
-def should_update_version(state):
+def latest_and_next_version(state):
     """
-    Whether the project's packaging version needs to be updated.
+    Determine latest version for current branch, and its increment.
+
+    E.g. on the ``1.2`` branch, we take the latest ``1.2.x`` release and
+    increment its tertiary number, so e.g. if the previous release was
+    ``1.2.2``, this function returns ``1.2.3``. If on ``master`` and latest
+    overall release was ``1.2.2``, it returns ``1.3.0``.
 
     :param dict state:
         The ``state`` dict as returned by / generated within `converge`.
 
-    :returns: `bool`
+    :returns: 2-tuple of ``semantic_version.Version``.
     """
-    # If we've got unreleased issues, determine what our release number
-    # would/will be upon release, and see if we're at (or above...heh) it.
-    # TODO: ditto...could be derived earlier, right?
-    if state.unreleased_issues:
-        debug("Unreleased changelog issues found")
-        if state.release_type == Release.BUGFIX:
-            next_version = state.latest_line_release.next_patch()
-            debug("Release is BUGFIX type; latest release for line is {0}; so next release should be {1}".format(state.latest_line_release, next_version))
-        else:
-            next_version = state.latest_overall_release.next_minor()
-            debug("Release is FEATURE type; latest overall release is {0}; so next release should be {1}".format(state.latest_overall_release, next_version))
-        version_okay = state.current_version >= next_version
-        return not version_okay
-    # If there are NO unreleased issues, simply compare the latest appropriate
-    # changelog version (matching the type of branch we're on) with what's in
-    # the version file.
-    # TODO: shouldn't this logic happen in the state-obtaining part of
-    # converge()?
-    changelog_version = state.latest_line_release
     if state.release_type == Release.FEATURE:
-        changelog_version = state.latest_overall_release
-    version_okay = state.current_version >= changelog_version
-    return not version_okay
+        previous_version = state.latest_overall_release
+        next_version = previous_version.next_minor()
+    else:
+        previous_version = state.latest_line_release
+        next_version = previous_version.next_patch()
+    return previous_version, next_version
 
 
 @task

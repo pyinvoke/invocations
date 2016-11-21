@@ -6,15 +6,18 @@ import re
 import sys
 
 from invoke.vendor.six import PY2
+from invoke.vendor.lexicon import Lexicon
 
 from mock import Mock, patch
+from semantic_version import Version
 from spec import Spec, trap, skip, eq_, ok_, raises
 
 from invoke import MockContext, Result, Config
 
 from invocations.packaging.release import (
     release_line, latest_feature_bucket, release_and_issues, all_, status,
-    Changelog, Release, VersionFile, UndefinedReleaseType, load_version
+    Changelog, Release, VersionFile, UndefinedReleaseType, load_version,
+    latest_and_next_version,
 )
 
 
@@ -161,6 +164,28 @@ class load_version_(Spec):
 
     def errors_usefully_if_version_module_not_found(self):
         skip()
+
+
+class latest_and_next_version_(Spec):
+    def next_patch_of_bugfix_release(self):
+        eq_(
+            latest_and_next_version(Lexicon({
+                'release_type': Release.BUGFIX,
+                'latest_line_release': Version('1.2.2'),
+                'latest_overall_release': Version('1.4.1'), # realism!
+            })),
+            (Version('1.2.2'), Version('1.2.3')),
+        )
+
+    def next_minor_of_feature_release(self):
+        eq_(
+            latest_and_next_version(Lexicon({
+                'release_type': Release.FEATURE,
+                'latest_line_release': None, # realism!
+                'latest_overall_release': Version('1.2.2'),
+            })),
+            (Version('1.2.2'), Version('1.3.0')),
+        )
 
 
 # Multi-dimensional scenarios, in relatively arbitrary nesting order:
@@ -360,6 +385,7 @@ Version +{version}
                 _version = '1.1.3'
 
                 def both_technically_okay(self):
+                    skip() # see TODO below
                     _expect_actions(self,
                         # TODO: display a 'warning' state noting that your
                         # version outpaces your changelog despite your
