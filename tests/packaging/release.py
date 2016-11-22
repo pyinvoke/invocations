@@ -552,17 +552,23 @@ _confirm_false = _confirm(False)
 class All(Spec):
     "all_" # mehhh
 
+    # NOTE: just testing the base case of 'everything needs updating',
+    # all the permutations are tested elsewhere.
     _branch = '1.1'
     _changelog = 'unreleased_1.1_bugs'
     _version = '1.1.1'
+    _tags = ('1.1.0',)
 
     @_confirm_false
     def displays_status_output(self, _):
         with _mock_context(self) as c:
             all_(c)
         output = sys.stdout.getvalue()
-        # Basic spot checks suffice; we test status() explicitly elsewhere.
-        for action in (Changelog.NEEDS_RELEASE, VersionFile.NEEDS_BUMP):
+        for action in (
+            Changelog.NEEDS_RELEASE,
+            VersionFile.NEEDS_BUMP,
+            Tag.NEEDS_CUTTING,
+        ):
             err = "Didn't see '{0}' text in status output!".format(action.name)
             ok_(action.value in output, err)
 
@@ -605,6 +611,14 @@ class All(Spec):
             # run w/o a shell wrap / require a full env?
             cmd = "$EDITOR {0}".format(path)
             c.run.assert_any_call(cmd, pty=True, hide=False)
+
+    @_confirm_true
+    def adds_git_tag_when_needs_cutting(self, _):
+        with _mock_context(self) as c:
+            all_(c)
+            # TODO: annotated, signed, etc?
+            cmd = "git tag 1.1.1"
+            c.run.assert_any_call(cmd, hide=False)
 
     def reruns_status_at_end_as_sanity_check(self):
         # I.e. you might have screwed up editing one of the files...
