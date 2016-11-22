@@ -348,13 +348,18 @@ Tag +{tag}
             ok_(re.match(regex, output), err)
 
         @trap # just for cleaner test output
-        def returns_actions_dict_for_reuse(self):
-            expected = dict(
+        def returns_lexica_for_reuse(self):
+            actions = Lexicon(
                 changelog=Changelog.NEEDS_RELEASE,
                 version=VersionFile.NEEDS_BUMP,
                 tag=Tag.NEEDS_CUTTING,
             )
-            eq_(_mock_status(self), expected)
+            found_actions, found_state = _mock_status(self)
+            eq_(found_actions, actions)
+            # Spot check state, don't need to check whole thing...
+            eq_(found_state.branch, self._branch)
+            eq_(found_state.latest_version, Version('1.1.1'))
+            eq_(found_state.tags, [Version(x) for x in self._tags])
 
     class release_line_branch:
         _branch = '1.1'

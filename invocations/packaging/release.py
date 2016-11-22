@@ -237,8 +237,8 @@ def status(c):
     """
     Print current release (version, changelog, tag, etc) status.
 
-    Doubles as a subroutine, returning the ``actions`` dict from its inner call
-    to `converge`.
+    Doubles as a subroutine, returning the return values from its inner call
+    to `converge` (the ``(actions, state)`` two-tuple of Lexicons).
     """
     # TODO: wants some holistic "you don't actually HAVE any changes to
     # release" final status - i.e. all steps were at no-op status.
@@ -249,7 +249,7 @@ def status(c):
     for component in "changelog version tag".split():
         table.append((component.capitalize(), actions[component].value))
     print(tabulate(table))
-    return actions
+    return actions, state
 
 
 @task(name='all')
@@ -263,7 +263,7 @@ def all_(c):
     # definition too, re: just making them non-enum classes period.
     # TODO: otherwise, we at least want derived eg changelog/version/etc paths
     # transmitted from status() into here...
-    actions = status(c)
+    actions, state = status(c)
     # TODO: unless nothing-to-do in which case just say that & exit 0
     if not confirm("Take the above actions?"):
         return
