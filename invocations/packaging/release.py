@@ -286,11 +286,14 @@ def all_(c):
         cmd = "$EDITOR {0}".format(version_file)
         c.run(cmd, pty=True, hide=False)
     if actions.tag == Tag.NEEDS_CUTTING:
-        # Commit! Otherwise the tag will be wrong!
-        c.run(
-            "git commit -am \"Cut {0}\"".format(state.expected_version),
-            hide=False,
-        )
+        # Commit, if necessary, so the tag includes everything.
+        # NOTE: this strips out untracked files. effort.
+        cmd = "git status --porcelain | egrep -v \"^\\?\""
+        if c.run(cmd, hide=True, warn=True).ok:
+            c.run(
+                "git commit -am \"Cut {0}\"".format(state.expected_version),
+                hide=False,
+            )
         # Tag!
         c.run("git tag {0}".format(state.expected_version), hide=False)
 

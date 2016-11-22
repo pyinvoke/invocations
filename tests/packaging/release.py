@@ -255,10 +255,15 @@ def _mock_context(self):
         "$EDITOR {0}/_version.py".format(FAKE_PACKAGE): Result(),
         # Git tags
         "git tag": Result(tag_output),
-        # Git commit & tagging
+        # Git status/commit/tagging
         # TODO: yea I'd really like regexen now plz sigh
         "git tag 1.1.2": Result(""),
         "git commit -am \"Cut 1.1.2\"": Result(""),
+        # NOTE: some tests will need to override this, for now default to a
+        # result that implies a commit is needed
+        "git status --porcelain | egrep -v \"^\\?\"": Result(
+            "M somefile", exited=0
+        ),
     }
     context = MockContext(config=config, run=run_results)
     # Wrap run() in a Mock too.
@@ -626,13 +631,28 @@ class All(Spec):
         with _mock_context(self) as c:
             all_(c)
             version = "1.1.2" # as changelog has issues & prev was 1.1.1
-            # TODO: handle already-committed-just-not-tagged use case (git
-            # commit exits 1 if there was nothing in index)
+            # Ensure the commit necessity test happened. (Default mock_context
+            # sets it up to result in a commit being necessary.)
+            check = "git status --porcelain | egrep -v \"^\\?\""
+            c.run.assert_any_call(check, hide=True, warn=True)
             commit = "git commit -am \"Cut {0}\"".format(version)
             # TODO: annotated, signed, etc?
             tag = "git tag {0}".format(version)
             for cmd in (commit, tag):
                 c.run.assert_any_call(cmd, hide=False)
+
+    @_confirm_true
+    def does_not_commit_if_no_commit_necessary(self, _):
+        with _mock_context(self) as c:
+            # Set up for a no-commit-necessary result to check command
+            check = "git status --porcelain | egrep -v \"^\\?\""
+            c._run[check] = Result("", exited=1)
+            all_(c)
+            # Expect NO git commit
+            commands = [x[0][0] for x in c.run.call_args_list]
+            ok_(not any(x.startswith("git commit") for x in commands))
+            # Expect git tag
+            c.run.assert_any_call("git tag 1.1.2", hide=False)
 
     def reruns_status_at_end_as_sanity_check(self):
         # I.e. you might have screwed up editing one of the files...
