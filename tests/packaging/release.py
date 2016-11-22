@@ -255,8 +255,10 @@ def _mock_context(self):
         "$EDITOR {0}/_version.py".format(FAKE_PACKAGE): Result(),
         # Git tags
         "git tag": Result(tag_output),
+        # Git commit & tagging
         # TODO: yea I'd really like regexen now plz sigh
         "git tag 1.1.2": Result(""),
+        "git commit -am \"Cut 1.1.2\"": Result(""),
     }
     context = MockContext(config=config, run=run_results)
     # Wrap run() in a Mock too.
@@ -620,12 +622,17 @@ class All(Spec):
             c.run.assert_any_call(cmd, pty=True, hide=False)
 
     @_confirm_true
-    def adds_git_tag_when_needs_cutting(self, _):
+    def commits_and_adds_git_tag_when_needs_cutting(self, _):
         with _mock_context(self) as c:
             all_(c)
+            version = "1.1.2" # as changelog has issues & prev was 1.1.1
+            # TODO: handle already-committed-just-not-tagged use case (git
+            # commit exits 1 if there was nothing in index)
+            commit = "git commit -am \"Cut {0}\"".format(version)
             # TODO: annotated, signed, etc?
-            cmd = "git tag 1.1.2" # as changelog has issues & prev was 1.1.1
-            c.run.assert_any_call(cmd, hide=False)
+            tag = "git tag {0}".format(version)
+            for cmd in (commit, tag):
+                c.run.assert_any_call(cmd, hide=False)
 
     def reruns_status_at_end_as_sanity_check(self):
         # I.e. you might have screwed up editing one of the files...
