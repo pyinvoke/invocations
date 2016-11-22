@@ -285,12 +285,12 @@ def all_(c):
         )
         cmd = "$EDITOR {0}".format(version_file)
         c.run(cmd, pty=True, hide=False)
-    # TODO: if necessary - git commit!
+    # TODO: if necessary - git commit! Otherwise the tag will be wrong!
     # Tag!
     if actions.tag == Tag.NEEDS_CUTTING:
         c.run("git tag {0}".format(state.expected_version), hide=False)
 
-
+    # TODO: vvv
     # push(c)
     # build(c)
     # publish(c)
