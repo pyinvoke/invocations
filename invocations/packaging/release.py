@@ -296,6 +296,8 @@ def all_(c):
             )
         # Tag!
         c.run("git tag {0}".format(state.expected_version), hide=False)
+        # TODO: print something to clarify/confirm tag was cut, if not just
+        # adding echo=True to above
 
     # TODO: vvv
     # push(c)
