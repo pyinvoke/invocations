@@ -312,8 +312,20 @@ class status_(Spec):
         _tags = ('1.1.0', '1.1.1')
 
         @trap
-        def displays_statuses_in_a_table(self):
+        def displays_expectations_and_component_statuses(self):
             _mock_status(self)
+
+            # TODO: make things more organic/specific/less tabular:
+            #
+            # current git branch: xxx (implies type yyy)
+            # changelog: xxx
+            # so the next release would be: a.b.c (or: 'so the release we're
+            # cutting/expecting is a.b.c')
+            # version file: <status output including current value>
+            # git tag: <status output saying found/not found> (maybe including
+            # latest that is found? that's extra logic...)
+            # etc...
+
             parts = dict(
                 changelog=Changelog.NEEDS_RELEASE.value,
                 version=VersionFile.NEEDS_BUMP.value,
