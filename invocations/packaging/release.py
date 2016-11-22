@@ -291,6 +291,7 @@ def all_(c):
         )
         cmd = "$EDITOR {0}".format(version_file)
         c.run(cmd, pty=True, hide=False)
+    # TODO: if necessary - git commit!
 
     # tag(c)
     # push(c)
