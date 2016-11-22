@@ -255,6 +255,8 @@ def _mock_context(self):
         "$EDITOR {0}/_version.py".format(FAKE_PACKAGE): Result(),
         # Git tags
         "git tag": Result(tag_output),
+        # TODO: yea I'd really like regexen now plz sigh
+        "git tag 1.1.2": Result(""),
     }
     context = MockContext(config=config, run=run_results)
     # Wrap run() in a Mock too.
@@ -622,7 +624,7 @@ class All(Spec):
         with _mock_context(self) as c:
             all_(c)
             # TODO: annotated, signed, etc?
-            cmd = "git tag 1.1.1"
+            cmd = "git tag 1.1.2" # as changelog has issues & prev was 1.1.1
             c.run.assert_any_call(cmd, hide=False)
 
     def reruns_status_at_end_as_sanity_check(self):

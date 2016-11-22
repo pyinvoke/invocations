@@ -8,7 +8,7 @@ This module assumes:
   conventions (``__version_info__`` tuple and ``__version__`` string).
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 
 import getpass
 import itertools
@@ -64,32 +64,19 @@ debug = logging.getLogger('invocations.packaging.release').debug
 # State junk
 #
 
-# TODO: I always feel a bit icky when I see the enum pattern, or the related
-# one of "define a bunch of module level constants as integers". Feels
-# non-Pythonic. But not sure what's truly better given the pitfalls of
-# comparing strings as values. (String *keys* are typically much safer thanks
-# to KeyError, but "if actions.changelog == 'needs_releas'" [note typo] is far
-# easier to run into.)
-
-# TODO: these enums kinda-sorta wants to grow and eat related functionality,
-# e.g. Changelog.update(), Changelog.determine_state(), etc etc. In that case,
-# probably switch (back) to regular classes with constants equal to their name
-# strings (for debugging etc, as Enum does).
+# Blessings Terminal object for ANSI colorization.
+# NOTE: mildly uncomfortable with the instance living at module level, but also
+# pretty sure it's unlikely to change meaningfully over time, between
+# threads/etc - and it'd be otherwise a PITA to cart around/re-instantiate.
+t = Terminal()
+check = "\u2714"
+ex = "\u2718"
 
 # Types of releases/branches
 Release = Enum('Release', "BUGFIX FEATURE UNDEFINED")
 
-# Actions necessary on each release component. Defined as explicit/class enums
-# so we can store their "human-readable" display as the value. Thus:
-# - enum members themselves act as constants for comparison's sake, as usual
-# - member .name acts as its shorthand, well, name
-# - member .value acts as longhand status display
-
-# NOTE: mildly uncomfortable with this living here but also pretty sure it's
-# unlikely to change meaningfully over time, between threads/etc.
-t = Terminal()
-check = "\u2714"
-ex = "\u2718"
+# Actions to take for various components - done as enums whose values are
+# useful one-line status outputs.
 
 class Changelog(Enum):
     OKAY = t.green(check + " no unreleased issues")
@@ -103,6 +90,7 @@ class Tag(Enum):
     OKAY = t.green(check + " all set")
     NEEDS_CUTTING = t.red(ex + " needs cutting")
 
+# Bits for testing branch names to determine release type
 BUGFIX_RE = re.compile("^\d+\.\d+$")
 BUGFIX_RELEASE_RE = re.compile("^\d+\.\d+\.\d+$")
 # TODO: allow tweaking this if folks use different branch methodology:
@@ -191,13 +179,23 @@ def converge(c):
         'current_version': Version(current_version),
         'tags': tags,
     })
+    # Version number determinations:
+    # - latest actually-released version
+    # - the next version after that for current branch
+    # - which of the two is the actual version we're looking to converge on,
+    # depends on current changelog state.
+    latest_version, next_version = latest_and_next_version(state)
+    state.latest_version = latest_version
+    state.next_version = next_version
+    state.expected_version = latest_version
+    if state.unreleased_issues:
+        state.expected_version = next_version
 
     #
     # Logic determination / convergence
     #
 
     actions = Lexicon()
-    latest_version, next_version = latest_and_next_version(state)
 
     # Changelog: needs new release entry if there are any unreleased issues for
     # current branch's line.
@@ -207,22 +205,18 @@ def converge(c):
     if release_type in (Release.BUGFIX, Release.FEATURE) and issues:
         actions.changelog = Changelog.NEEDS_RELEASE
 
-    # Version file: simply whether version file equals the latest version (if
-    # no unreleased issues) or the next version (if unreleased issues).
+    # Version file: simply whether version file equals the target version.
     # TODO: corner case of 'version file is >1 release in the future', but
     # that's still wrong, just would be a different 'bad' status output.
     actions.version = VersionFile.OKAY
-    expected_version = next_version
-    if not state.unreleased_issues:
-        expected_version = latest_version
-    if state.current_version != expected_version:
+    if state.current_version != state.expected_version:
         actions.version = VersionFile.NEEDS_BUMP
 
     # Git tag: similar to version file, except the check is existence of tag
     # instead of comparison to file contents. We even reuse the
     # 'expected_version' variable wholesale.
     actions.tag = Tag.OKAY
-    if expected_version not in state.tags:
+    if state.expected_version not in state.tags:
         actions.tag = Tag.NEEDS_CUTTING
 
     #
@@ -292,8 +286,11 @@ def all_(c):
         cmd = "$EDITOR {0}".format(version_file)
         c.run(cmd, pty=True, hide=False)
     # TODO: if necessary - git commit!
+    # Tag!
+    if actions.tag == Tag.NEEDS_CUTTING:
+        c.run("git tag {0}".format(state.expected_version), hide=False)
 
-    # tag(c)
+
     # push(c)
     # build(c)
     # publish(c)
