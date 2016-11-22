@@ -646,6 +646,10 @@ class All(Spec):
         with _mock_context(self) as c:
             # Set up for a no-commit-necessary result to check command
             check = "git status --porcelain | egrep -v \"^\\?\""
+            # TODO: update MockContext so modifying it post-instantiation feels
+            # cleaner. Modifying 'private' attrs feels bad. (Though in this
+            # case, can't really make it public, as that risks clashing with
+            # "real" members of the context/config...?)
             c._run[check] = Result("", exited=1)
             all_(c)
             # Expect NO git commit
