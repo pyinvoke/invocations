@@ -10,7 +10,7 @@ from invoke.vendor.six.moves import input
 
 
 # NOTE: originally cribbed from fab 1's contrib.console.confirm
-def confirm(question, affirmative=True):
+def confirm(question, assume_yes=True):
     """
     Ask user a yes/no question and return their response as a boolean.
 
@@ -27,14 +27,14 @@ def confirm(question, affirmative=True):
         to "y", "yes", "n" or "no", they will be re-prompted until they do.
 
     :param unicode question: The question part of the prompt.
-    :param bool affirmative:
+    :param bool assume_yes:
         Whether to assume the affirmative answer by default. Default value:
         ``True``.
 
     :returns: A `bool`.
     """
     # Set up suffix
-    if affirmative:
+    if assume_yes:
         suffix = "Y/n"
     else:
         suffix = "y/N"
@@ -47,7 +47,7 @@ def confirm(question, affirmative=True):
         response = response.lower().strip() # Normalize
         # Default
         if not response:
-            return affirmative
+            return assume_yes
         # Yes
         if response in ['y', 'yes']:
             return True
