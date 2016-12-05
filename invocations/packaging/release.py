@@ -302,7 +302,8 @@ def all_(c):
     # TODO: vvv
     # push(c)
     # build(c)
-    # publish(c)
+    # publish(c) # TODO: update publish() to accept some of our state and do
+    # things with it like be idempotent?
 
 
 def release_line(c):
@@ -552,15 +553,6 @@ def tag(c, dry_run=False):
 
 
 @task
-def push(c):
-    """
-    Push tag/changelog/version changes to Git origin.
-    """
-    # TODO: or should this be distributed amongst the appropriate tasks?
-    pass
-
-
-@task
 def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
     """
     Build sdist and/or wheel archives, optionally in a temp base directory.
@@ -641,6 +633,9 @@ def find_gpg(c):
 
 # TODO: open some PRs for twine to push things like dual wheels, better
 # dry-run/cleanroom directory concerns, etc into it.
+# TODO: consider making this idempotent re: checking if the 'current release'
+# already exists on PyPI. Or just hope PyPI response on error is sufficiently
+# useful and trap/print that.
 @task(aliases=['upload'])
 def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
     directory=None, dual_wheels=False, alt_python=None):
