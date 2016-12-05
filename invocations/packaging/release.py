@@ -408,15 +408,6 @@ def release_and_issues(changelog, branch, release_type):
     return release, issues
 
 
-@task
-def changelog(c, target='docs/changelog.rst'):
-    """
-    Update changelog with new release entry.
-    """
-    # TODO: work in should_changelog() so we short-circuit unless needed.
-    pass
-
-
 def get_tags(c):
     """
     Return sorted list of release-style tags as semver objects.
@@ -456,20 +447,6 @@ def latest_and_next_version(state):
         previous_version = state.latest_line_release
         next_version = previous_version.next_patch()
     return previous_version, next_version
-
-
-@task
-def version(c):
-    """
-    Update stored project version (e.g. a ``_version.py``.)
-    """
-    # - version already > latest release-style tag
-    #   - typically means we can no-op/short-circuit
-    # tags_ =
-    # - version == latest tag, & there's commits since then
-    #   - implies version needs bump
-    #   - likely has some annoying false positives...?
-    pass
 
 
 def find_package(c):
@@ -516,40 +493,6 @@ def load_version(c):
     # TODO: explode nicely if it lacks a _version/etc, or a __version__
     # TODO: make this a Version()?
     return getattr(package, version_module).__version__
-
-
-@task
-def tag(c, dry_run=False):
-    """
-    Create a release tag in git, if one doesn't appear to already exist.
-
-    You should already have 'bumped' your version prior to calling this - it
-    compares to your existing list of git tags.
-
-    :param bool dry_run: Whether to dry-run instead of actually tagging.
-    """
-    name = find_package(c)
-    package = __import__("{0}".format(name), fromlist=['_version'])
-    current_version = Version(package._version.__version__) # buffalo buffalo
-    msg = "Found package {0.__name__!r} at version {1}"
-    # TODO: use logging for this sometime
-    print(msg.format(package, current_version))
-    latest_tag = get_tags(c)[-1]
-    # TODO: pre-task/call to version() task; perhaps use its return value to
-    # determine whether it got updated or not.
-    if latest_tag != current_version:
-        msg = "Current version {0} != latest tag {1}, creating new tag"
-        print(msg.format(current_version, latest_tag))
-        # TODO: annotate!! -a or even GPG sign
-        cmd = "git tag {0}".format(current_version)
-        # TODO: use eventual run() dry-run feature
-        if dry_run:
-            print("Would run: {0}".format(cmd))
-        else:
-            c.run(cmd)
-    else:
-        msg = "Already see a tag for {0}, doing nothing"
-        print(msg.format(current_version))
 
 
 @task
@@ -750,17 +693,7 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
             c.run(cmd)
 
 
-ns = Collection('release') # ,
-#    build,
-#    changelog,
-#    #dry_run,
-#    publish,
-#    push,
-#    should_changelog,
-#    should_update_version,
-#    tag,
-#    version,
-# )
+ns = Collection('release')
 # TODO: why are we doing this this way exactly? Issues when importing it into
 # external namespaces? Feels bad.
 # TODO: even if this is somehow necessary, it should ride on top of the
