@@ -33,8 +33,8 @@ class confirm_(Spec):
         assert_contains(sys.stderr.getvalue(), "I didn't understand you")
 
     @patch('invocations.console.input', return_value='y')
-    def suffix_changes_when_affirmative_False(self, mock_input):
-        confirm("Are you sure?", affirmative=False)
+    def suffix_changes_when_assume_yes_False(self, mock_input):
+        confirm("Are you sure?", assume_yes=False)
         eq_(mock_input.call_args[0][0], "Are you sure? [y/N] ")
 
     @patch('invocations.console.input', return_value='')
@@ -42,10 +42,10 @@ class confirm_(Spec):
         ok_(confirm("Are you sure?") is True)
 
     @patch('invocations.console.input', return_value='')
-    def default_on_empty_response_is_False_if_affirmative_False(
+    def default_on_empty_response_is_False_if_assume_yes_False(
         self, mock_input
     ):
-        ok_(confirm("Are you sure?", affirmative=False) is False)
+        ok_(confirm("Are you sure?", assume_yes=False) is False)
 
     @patch('invocations.console.input', return_value=' y ')
     def whitespace_is_trimmed(self, mock_input):
