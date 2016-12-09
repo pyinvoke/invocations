@@ -2,11 +2,7 @@
 
 import sys
 
-# Support setuptools or distutils
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup, find_packages
 
 # Version info -- read without importing
 _locals = {}
@@ -46,7 +42,7 @@ setup(
     # Release requirements. See dev-requirements.txt for dev version reqs.
     install_requires=requirements,
 
-    packages=['invocations'],
+    packages=find_packages(),
 
     classifiers=[
         'Development Status :: 3 - Alpha',
