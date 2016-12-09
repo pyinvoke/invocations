@@ -246,7 +246,7 @@ def status(c):
     return actions, state
 
 
-@task(name='all')
+@task(default=True)
 def all_(c):
     """
     Catchall version-bump/tag/changelog/PyPI upload task.
@@ -693,13 +693,8 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
             c.run(cmd)
 
 
-ns = Collection('release')
-# TODO: why are we doing this this way exactly? Issues when importing it into
-# external namespaces? Feels bad.
-# TODO: even if this is somehow necessary, it should ride on top of the
-# "generate collection from this module" feature and then just rename 'all' or
-# whatever.
-ns.add_task(all_, default=True)
-ns.add_task(status)
+# Stitch together current partway-rewritten stuff into public namespace.
+# TODO: reconsider once fully done; may end up looking a lot like this anyways.
+ns = Collection('release', all_, status, build, publish)
 # Hide stdout by default, preferring to explicitly enable it when necessary.
 ns.configure({'run': {'hide': 'stdout'}})
