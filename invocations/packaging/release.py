@@ -638,6 +638,8 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
         When ``None`` (the default) will be ``python3`` or ``python2``,
         depending on the currently active interpreter.
     """
+    # Don't hide by default, this step likes to be verbose most of the time.
+    c.config.run.hide = False
     # Config hooks
     config = c.config.get('packaging', {})
     index = config.get('index', index)
