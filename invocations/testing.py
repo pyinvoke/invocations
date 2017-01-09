@@ -1,6 +1,7 @@
 import sys
 
 from invoke import task
+from tqdm import tqdm
 
 from .watch import watch
 
@@ -89,3 +90,17 @@ def coverage(c, html=True, integration_=True):
         integration(c, opts=test_opts)
     if html:
         c.run("coverage html && open htmlcov/index.html")
+
+
+@task
+def count_errors(c, command, trials=10):
+    """
+    Run ``command`` ``trials`` times and tally how many times it errored.
+    """
+    # TODO: allow defining failure as something besides "exited 0", e.g.
+    # "stdout contained <sentinel>" or whatnot
+    errors = 0
+    for _ in tqdm(range(trials), unit='trial'):
+        if c.run(command, hide=True, warn=True).failed:
+            errors += 1
+    print("{}/{} trials failed".format(errors, trials))

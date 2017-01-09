@@ -26,6 +26,7 @@ requirements = [
     'releases>=1.2,<2',
     'semantic_version>=2.4,<3',
     'tabulate>=0.7,<0.8',
+    'tqdm>=4.8.1',
 ]
 if sys.version_info < (3, 4): # which is when stdlib.enum arrived
     requirements.append('enum34>=1.1,<2')
