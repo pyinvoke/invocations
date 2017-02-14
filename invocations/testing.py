@@ -93,14 +93,24 @@ def coverage(c, html=True, integration_=True):
 
 
 @task
-def count_errors(c, command, trials=10):
+def count_errors(c, command, trials=10, verbose=False):
     """
     Run ``command`` ``trials`` times and tally how many times it errored.
+
+    Say ``verbose=True`` to see stderr from failed runs at the end.
     """
     # TODO: allow defining failure as something besides "exited 0", e.g.
     # "stdout contained <sentinel>" or whatnot
-    errors = 0
+    bad_runs = []
     for _ in tqdm(range(trials), unit='trial'):
-        if c.run(command, hide=True, warn=True).failed:
-            errors += 1
-    print("{}/{} trials failed".format(errors, trials))
+        result = c.run(command, hide=True, warn=True)
+        if result.failed:
+            bad_runs.append(result)
+    if verbose:
+        # TODO: would be nice to show interwoven stdout/err but I don't believe
+        # we track that at present...
+        for result in bad_runs:
+            print("")
+            print(result.stdout)
+            print(result.stderr)
+    print("{}/{} trials failed".format(len(bad_runs), trials))
