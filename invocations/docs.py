@@ -36,7 +36,14 @@ def _browse(c):
     'source': "Source directory; overrides config setting",
     'target': "Output directory; overrides config setting",
 })
-def build(c, clean=False, browse=False, warn=False, opts=None, source=None, target=None):
+def build(c,
+    clean=False,
+    browse=False,
+    warn=False,
+    opts=None,
+    source=None,
+    target=None,
+):
     """
     Build the project's Sphinx docs.
     """
