@@ -41,10 +41,10 @@ def build(c, clean=False, browse=False, warn=False, opts=None):
         opts = ""
     if warn:
         opts += " -n -W"
-    cmd = "sphinx-build{2} {0} {1}".format(
+    cmd = "sphinx-build{0} {1} {2}".format(
+        (" " + opts) if opts else "",
         c.sphinx.source,
         c.sphinx.target,
-        (" " + opts) if opts else "",
     )
     c.run(cmd, pty=True)
     if browse:
