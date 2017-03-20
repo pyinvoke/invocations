@@ -1,4 +1,6 @@
-from os.path import join
+from os.path import join, isdir
+from tempfile import mkdtemp
+from shutil import rmtree
 import sys
 
 from invoke import task, Collection, Context
@@ -12,7 +14,8 @@ def _clean(c):
     """
     Nuke docs build target directory so next build is clean.
     """
-    c.run("rm -rf {0}".format(c.sphinx.target))
+    if isdir(c.sphinx.target):
+        rmtree(c.sphinx.target)
 
 
 # Ditto
@@ -30,8 +33,10 @@ def _browse(c):
     'clean': "Remove build tree before building",
     'browse': "Open docs index in browser after building",
     'warn': "Build with stricter warnings/errors enabled",
+    'source': "Source directory; overrides config setting",
+    'target': "Output directory; overrides config setting",
 })
-def build(c, clean=False, browse=False, warn=False, opts=None):
+def build(c, clean=False, browse=False, warn=False, opts=None, source=None, target=None):
     """
     Build the project's Sphinx docs.
     """
@@ -43,12 +48,32 @@ def build(c, clean=False, browse=False, warn=False, opts=None):
         opts += " -n -W"
     cmd = "sphinx-build{0} {1} {2}".format(
         (" " + opts) if opts else "",
-        c.sphinx.source,
-        c.sphinx.target,
+        source or c.sphinx.source,
+        target or c.sphinx.target,
     )
     c.run(cmd, pty=True)
     if browse:
         _browse(c)
+
+
+@task
+def doctest(c):
+    """
+    Run Sphinx' doctest builder.
+
+    This will act like a test run, displaying test results & exiting nonzero if
+    all tests did not pass.
+
+    A temporary directory is used for the build target, as the only output is
+    the text file which is automatically printed.
+    """
+    tmpdir = mkdtemp()
+    try:
+        opts = "-b doctest"
+        target = tmpdir
+        build(c, clean=True, target=target, opts=opts)
+    finally:
+        rmtree(tmpdir)
 
 
 @task
@@ -58,7 +83,7 @@ def tree(c):
 
 
 # Vanilla/default/parameterized collection for normal use
-ns = Collection(_clean, _browse, build, tree)
+ns = Collection(_clean, _browse, build, tree, doctest)
 ns.configure({
     'sphinx': {
         'source': 'docs',
