@@ -130,16 +130,28 @@ def sites(c):
     """
     Build both doc sites w/ maxed nitpicking.
     """
-    # Turn warnings into errors, emit warnings about missing references.
-    # This gives us a maximally noisy docs build.
-    # Also enable tracebacks for easier debuggage.
-    opts = "-W -n -T"
-    # This is super lolzy but we haven't actually tackled nontrivial in-Python
-    # task calling yet, so...
+    # TODO: This is super lolzy but we haven't actually tackled nontrivial
+    # in-Python task calling yet, so we do this to get a copy of 'our' context,
+    # which has been updated with the per-collection config data of the
+    # docs/www subcollections.
     docs_c = Context(config=c.config.clone())
     www_c = Context(config=c.config.clone())
     docs_c.update(**docs.configuration())
     www_c.update(**www.configuration())
+    # Must build both normally first to ensure good intersphinx inventory files
+    # exist =/ circular dependencies ahoy! Do it quietly to avoid pulluting
+    # output; only super-serious errors will bubble up.
+    # TODO: wants a 'temporarily tweak context settings' contextmanager
+    docs_c['run'].hide = True
+    www_c['run'].hide = True
+    docs['build'](docs_c)
+    www['build'](www_c)
+    docs_c['run'].hide = False
+    www_c['run'].hide = False
+    # Then build with special nitpicking options: turn warnings into errors,
+    # emit warnings about missing references.
+    # Also enable tracebacks for easier debuggery.
+    opts = "-W -n -T"
     docs['build'](docs_c, opts=opts)
     www['build'](www_c, opts=opts)
 
