@@ -581,7 +581,7 @@ def find_gpg(c):
 # useful and trap/print that.
 @task(aliases=['upload'])
 def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
-    directory=None, dual_wheels=False, alt_python=None):
+    directory=None, dual_wheels=False, alt_python=None, check_desc=False):
     """
     Publish code to PyPI or index of choice.
 
@@ -637,6 +637,11 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
 
         When ``None`` (the default) will be ``python3`` or ``python2``,
         depending on the currently active interpreter.
+
+    :param bool check_desc:
+        Whether to run ``setup.py check -r -s`` (uses ``readme_renderer``)
+        before trying to publish - catches long_description bugs. Default:
+        ``False``.
     """
     # Don't hide by default, this step likes to be verbose most of the time.
     c.config.run.hide = False
@@ -645,6 +650,10 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
     index = config.get('index', index)
     sign = config.get('sign', sign)
     dual_wheels = config.get('dual_wheels', dual_wheels)
+    check_desc = config.get('check_desc', check_desc)
+    # Initial sanity check, if needed. Will die usefully
+    if check_desc:
+        c.run("python setup.py -r -s")
     # Build, into controlled temp dir (avoids attempting to re-upload old
     # files)
     with tmpdir(skip_cleanup=dry_run, explicit=directory) as tmp:
@@ -684,7 +693,9 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
             index_arg = "-r {0}".format(index)
         if index:
             parts.append(index_arg)
-        paths = archives + [os.path.join(tmp, 'dist', "*.asc")]
+        paths = archives[:]
+        if sign:
+            paths.append(os.path.join(tmp, 'dist', "*.asc"))
         parts.extend(paths)
         cmd = " ".join(parts)
         if dry_run:
