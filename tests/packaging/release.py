@@ -563,6 +563,15 @@ _confirm_true = _confirm(True)
 _confirm_false = _confirm(False)
 
 
+# This is shit but I'm too tired and angry right now to give a fuck.
+def _run_all(c, mute=True):
+    try:
+        return all_(c)
+    except SystemExit:
+        if not mute:
+            raise
+
+
 class All(Spec):
     "all_" # mehhh
 
@@ -576,7 +585,7 @@ class All(Spec):
     @_confirm_false
     def displays_status_output(self, _):
         with _mock_context(self) as c:
-            all_(c)
+            _run_all(c)
         output = sys.stdout.getvalue()
         for action in (
             Changelog.NEEDS_RELEASE,
@@ -590,13 +599,13 @@ class All(Spec):
     @patch('invocations.console.input', return_value='no')
     def prompts_before_taking_action(self, mock_input):
         with _mock_context(self) as c:
-            all_(c)
+            _run_all(c)
         eq_(mock_input.call_args[0][0], "Take the above actions? [Y/n] ")
 
     @_confirm_false
     def if_prompt_response_negative_no_action_taken(self, _):
         with _mock_context(self) as c:
-            all_(c)
+            _run_all(c)
         # TODO: move all action-y code into subroutines, then mock them and
         # assert they were never called?
         # Expect that only the status-y run() calls were made.
@@ -608,7 +617,7 @@ class All(Spec):
     @_confirm_true
     def opens_EDITOR_with_changelog_when_it_needs_update(self, _):
         with _mock_context(self) as c:
-            all_(c)
+            _run_all(c)
             # Grab changelog path from the context config, why not
             path = c.config.packaging.changelog_file
             # TODO: real code should probs expand EDITOR explicitly so it can
@@ -619,7 +628,7 @@ class All(Spec):
     @_confirm_true
     def opens_EDITOR_with_version_file_when_it_needs_update(self, _):
         with _mock_context(self) as c:
-            all_(c)
+            _run_all(c)
             path = "{0}/_version.py".format(FAKE_PACKAGE)
             # TODO: real code should probs expand EDITOR explicitly so it can
             # run w/o a shell wrap / require a full env?
@@ -629,7 +638,7 @@ class All(Spec):
     @_confirm_true
     def commits_and_adds_git_tag_when_needs_cutting(self, _):
         with _mock_context(self) as c:
-            all_(c)
+            _run_all(c)
             version = "1.1.2" # as changelog has issues & prev was 1.1.1
             # Ensure the commit necessity test happened. (Default mock_context
             # sets it up to result in a commit being necessary.)
@@ -651,7 +660,7 @@ class All(Spec):
             # case, can't really make it public, as that risks clashing with
             # "real" members of the context/config...?)
             c._run[check] = Result("", exited=1)
-            all_(c)
+            _run_all(c)
             # Expect NO git commit
             commands = [x[0][0] for x in c.run.call_args_list]
             ok_(not any(x.startswith("git commit") for x in commands))
@@ -670,7 +679,7 @@ class All(Spec):
         @_confirm_true
         def no_changelog_update_needed_means_no_changelog_edit(self, _):
             with _mock_context(self) as c:
-                all_(c)
+                _run_all(c)
                 # TODO: as with the 'took no actions at all' test above,
                 # proving a negative sucks - eventually make this subroutine
                 # assert based. Meh.
