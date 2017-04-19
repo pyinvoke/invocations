@@ -92,25 +92,36 @@ def coverage(c, html=True, integration_=True):
         c.run("coverage html && open htmlcov/index.html")
 
 
+# TODO: rename to like find_errors or something more generic
 @task
-def count_errors(c, command, trials=10, verbose=False):
+def count_errors(c, command, trials=10, verbose=False, fail_fast=False):
     """
     Run ``command`` ``trials`` times and tally how many times it errored.
 
     Say ``verbose=True`` to see stderr from failed runs at the end.
+
+    Say ``--fail-fast`` to error out, with error output, on the first error.
     """
-    # TODO: allow defining failure as something besides "exited 0", e.g.
+    # TODO: allow defining failure as something besides "exited 1", e.g.
     # "stdout contained <sentinel>" or whatnot
     bad_runs = []
+    successes = 0
     for _ in tqdm(range(trials), unit='trial'):
         result = c.run(command, hide=True, warn=True)
         if result.failed:
             bad_runs.append(result)
-    if verbose:
+            if fail_fast:
+                break
+        else:
+            successes += 1
+    if verbose or fail_fast:
         # TODO: would be nice to show interwoven stdout/err but I don't believe
         # we track that at present...
         for result in bad_runs:
             print("")
             print(result.stdout)
             print(result.stderr)
-    print("{}/{} trials failed".format(len(bad_runs), trials))
+    if fail_fast:
+        print("First failure occurred after {} successes".format(successes))
+    else:
+        print("{}/{} trials failed".format(len(bad_runs), trials))
