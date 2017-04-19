@@ -260,7 +260,7 @@ def all_(c):
     actions, state = status(c)
     # TODO: unless nothing-to-do in which case just say that & exit 0
     if not confirm("Take the above actions?"):
-        return
+        sys.exit("Aborting.")
 
     # TODO: factor out what it means to edit a file:
     # - $EDITOR or explicit expansion of it in case no shell involved
