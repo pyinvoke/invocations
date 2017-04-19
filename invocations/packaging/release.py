@@ -653,7 +653,7 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
     check_desc = config.get('check_desc', check_desc)
     # Initial sanity check, if needed. Will die usefully
     if check_desc:
-        c.run("python setup.py -r -s")
+        c.run("python setup.py check -r -s")
     # Build, into controlled temp dir (avoids attempting to re-upload old
     # files)
     with tmpdir(skip_cleanup=dry_run, explicit=directory) as tmp:
