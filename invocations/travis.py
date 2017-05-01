@@ -48,3 +48,17 @@ def make_sshable(c):
     user = c.travis.sudo.user
     c.sudo('ssh-keygen -f ~/.ssh/id_rsa -N ""', user=user)
     c.sudo('cp ~/.ssh/{id_rsa.pub,authorized_keys}', user=user)
+
+
+@task
+def sudo_coverage(c):
+    """
+    Execute the local ``coverage`` task as the configured Travis sudo user.
+
+    Ensures the virtualenv is sourced and that coverage is run in a mode
+    suitable for headless/API consumtion (e.g. no HTML report, etc.)
+    """
+    # TODO: do we need an explicit sh wrapper??
+    # TODO: is workon available?
+    cmd = "source $VIRTUAL_ENV/bin/activate && inv coverage --no-html"
+    c.sudo(cmd, user=c.travis.sudo.user)
