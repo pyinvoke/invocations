@@ -66,6 +66,4 @@ def sudo_coverage(c):
     suitable for headless/API consumtion (e.g. no HTML report, etc.)
     """
     # TODO: do we need an explicit sh wrapper??
-    # TODO: is workon available?
-    cmd = "source $VIRTUAL_ENV/bin/activate && inv coverage --no-html"
-    c.sudo(cmd, user=c.travis.sudo.user)
+    c.sudo("$VIRTUAL_ENV/bin/inv coverage --no-html", user=c.travis.sudo.user)
