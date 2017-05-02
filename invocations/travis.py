@@ -74,24 +74,16 @@ def sudo_coverage(c):
 
 
 @task
-def test_installation(c, package, sanity=None):
+def test_installation(c, package, sanity):
     """
     Test a non-editable pip install of source checkout.
 
     Catches high level setup.py bugs.
 
-    :param str package:
-        Package name to uninstall.
-
-    :param str sanity:
-        Sanity-check command string to run. Optional.
-
-        If given, will be appended to ``$VIRTUAL_ENV/bin/`` so it runs in the
-        Travis test virtualenv.
+    :param str package: Package name to uninstall.
+    :param str sanity: Sanity-check command string to run.
     """
-    c.run("echo echoing VIRTUAL_ENV: $VIRTUAL_ENV")
-    pip = "$VIRTUAL_ENV/bin/pip"
-    c.run("{0} uninstall -y {1}".format(pip, package))
-    c.run("{0} install .".format(pip))
+    c.run("pip uninstall -y {0}".format(package))
+    c.run("pip install .")
     if sanity:
-        c.run("$VIRTUAL_ENV/bin/{0}".format(sanity))
+        c.run(sanity)
