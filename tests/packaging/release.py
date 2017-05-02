@@ -697,6 +697,9 @@ class All(Spec):
 # NOTE: possible that the actual codes blessings emits differ based on
 # termcap/etc; consider sucking it up and just calling blessings directly in
 # that case, even though it makes the tests kinda tautological.
+# TODO: yes, when I personally went from TERM=xterm-256color to
+# TERM=screen-256color, that made these tests break! Updating test machinery to
+# account for now, but...not ideal!
 class component_state_enums_contain_human_readable_values(Spec):
     class changelog:
         def okay(self):

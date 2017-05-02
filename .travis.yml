@@ -10,6 +10,6 @@ python:
 install:
   - pip install -r dev-requirements.txt
 script:
-  - inv test
+  - TERM=xterm-256color inv test
   # I have this in my git pre-push hook, but contributors probably don't
   - flake8
