@@ -89,6 +89,7 @@ def test_installation(c, package, sanity=None):
         If given, will be appended to ``$VIRTUAL_ENV/bin/`` so it runs in the
         Travis test virtualenv.
     """
+    c.run("echo echoing VIRTUAL_ENV: $VIRTUAL_ENV")
     pip = "$VIRTUAL_ENV/bin/pip"
     c.run("{0} uninstall -y {1}".format(pip, package))
     c.run("{0} install .".format(pip))
