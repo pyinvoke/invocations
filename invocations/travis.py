@@ -121,7 +121,7 @@ def test_packaging(c, package, sanity, alt_python=None):
     publish(c, dry_run=True, directory=path, alt_python=alt_python)
     # Various permutations of nuke->install->sanity test, as needed
     # TODO: normalize sdist so it's actually a config option, rn is kwarg-only
-    exts = ['tar.gz']
+    globs = ['*.tar.gz']
     if c.packaging.wheel:
         if alt_python:
             # TODO: the original .travis.yml was structured with logic this
@@ -129,12 +129,12 @@ def test_packaging(c, package, sanity, alt_python=None):
             # suffice instead.
             travis_ver = os.environ['TRAVIS_PYTHON_VERSION']
             if travis_ver.startswith('3') or travis_ver == 'pypy3':
-                exts.append('*py3*.whl')
+                globs.append('*py3*.whl')
             if travis_ver.startswith('2') or travis_ver == 'pypy':
-                exts.append('*py2*.whl')
+                globs.append('*py2*.whl')
         else:
-            exts.append('*.whl')
-    for ext in exts:
+            globs.append('*.whl')
+    for glob in globs:
         c.run("pip uninstall -y {0}".format(package), warn=True)
-        c.run("pip install tmp/dist/*.{0}".format(ext))
+        c.run("pip install tmp/dist/{0}".format(glob))
         c.run(sanity)
