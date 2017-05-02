@@ -118,6 +118,6 @@ def test_packaging(c, package, sanity):
     if c.packaging.wheel:
         exts.append('*.whl')
     for ext in exts:
-        c.run("pip uninstall -y {0}".format(package))
+        c.run("pip uninstall -y {0}".format(package), warn=True)
         c.run("pip install tmp/dist/*.{0}".format(ext))
         c.run(sanity)
