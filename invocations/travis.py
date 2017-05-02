@@ -111,11 +111,10 @@ def test_packaging(c, package, sanity):
     # Publish in dry-run context, to explicit (non-tmp) directory.
     publish(c, dry_run=True, directory=path)
     # Various permutations of nuke->install->sanity test, as needed
-    exts = []
+    # TODO: normalize sdist so it's actually a config option, rn is kwarg-only
+    exts = ['tar.gz']
     if c.packaging.wheel:
         exts.append('*.whl')
-    if c.packaging.sdist:
-        exts.append('*.tar.gz')
     for ext in exts:
         c.run("pip uninstall -y {0}".format(package))
         c.run("pip install tmp/dist/*.{0}".format(ext))
