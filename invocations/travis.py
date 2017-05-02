@@ -65,5 +65,9 @@ def sudo_coverage(c):
     Ensures the virtualenv is sourced and that coverage is run in a mode
     suitable for headless/API consumtion (e.g. no HTML report, etc.)
     """
-    # TODO: do we need an explicit sh wrapper??
-    c.sudo("$VIRTUAL_ENV/bin/inv coverage --no-html", user=c.travis.sudo.user)
+    # NOTE: explicit shell wrapper because sourcing the venv works best here;
+    # test tasks currently use their own subshell to call e.g. 'spec --blah',
+    # so the tactic of '$VIRTUAL_ENV/bin/inv coverage' doesn't help - only that
+    # intermediate process knows about the venv!
+    cmd = "source $VIRTUAL_ENV/bin/activate && inv coverage --no-html"
+    c.sudo('bash -c "{0}"'.format(cmd), user=c.travis.sudo.user)
