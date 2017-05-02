@@ -10,6 +10,8 @@ somewhere in your config setup:
 
 from invoke import task
 
+from ..packaging.release import publish
+
 
 @task
 def make_sudouser(c):
@@ -86,4 +88,35 @@ def test_installation(c, package, sanity):
     c.run("pip uninstall -y {0}".format(package))
     c.run("pip install .")
     if sanity:
+        c.run(sanity)
+    # TODO: merge with test_packaging below somehow, e.g. a subroutine
+
+
+@task
+def test_packaging(c, package, sanity):
+    """
+    Execute a wipe-build-install-test cycle for a given packaging config.
+
+    Ideally, tests everything but actual upload to package index.
+
+    When possible, leverages in-process calls to other packaging tasks.
+
+    :param str package: Package name to uninstall before testing installation.
+    :param str sanity: Sanity-check command string to run.
+    """
+    # Use an explicit directory for building so we can reference after
+    path = 'tmp'
+    # Ensure no GPG signing is attempted.
+    c.packaging.sign = False
+    # Publish in dry-run context, to explicit (non-tmp) directory.
+    publish(c, dry_run=True, directory=path)
+    # Various permutations of nuke->install->sanity test, as needed
+    exts = []
+    if c.packaging.wheel:
+        exts.append('*.whl')
+    if c.packaging.sdist:
+        exts.append('*.tar.gz')
+    for ext in exts:
+        c.run("pip uninstall -y {0}".format(package))
+        c.run("pip install tmp/dist/*.{0}".format(ext))
         c.run(sanity)
