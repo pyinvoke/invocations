@@ -8,6 +8,8 @@ somewhere in your config setup:
 - ``travis.sudo.password``: Their password.
 """
 
+import os
+
 from invoke import task
 
 from .packaging.release import publish
@@ -93,7 +95,7 @@ def test_installation(c, package, sanity):
 
 
 @task
-def test_packaging(c, package, sanity):
+def test_packaging(c, package, sanity, alt_python=None):
     """
     Execute a wipe-build-install-test cycle for a given packaging config.
 
@@ -103,6 +105,11 @@ def test_packaging(c, package, sanity):
 
     :param str package: Package name to uninstall before testing installation.
     :param str sanity: Sanity-check command string to run.
+    :param str alt_python:
+        Path to alternate virtualenv's Python interpreter. If given, will also
+        enable a "2 vs 3" mode during wheel installation testing, which will
+        select only the interpreter-family-appropriate wheel (going by
+        ``$TRAVIS_PYTHON_VERSION``.)
     """
     # Use an explicit directory for building so we can reference after
     path = 'tmp'
@@ -111,12 +118,22 @@ def test_packaging(c, package, sanity):
     # Ensure no GPG signing is attempted.
     c.packaging.sign = False
     # Publish in dry-run context, to explicit (non-tmp) directory.
-    publish(c, dry_run=True, directory=path)
+    publish(c, dry_run=True, directory=path, alt_python=alt_python)
     # Various permutations of nuke->install->sanity test, as needed
     # TODO: normalize sdist so it's actually a config option, rn is kwarg-only
     exts = ['tar.gz']
     if c.packaging.wheel:
-        exts.append('*.whl')
+        if alt_python:
+            # TODO: the original .travis.yml was structured with logic this
+            # way; I don't recall if it was purposeful or if an 'if/else' would
+            # suffice instead.
+            travis_ver = os.environ['TRAVIS_PYTHON_VERSION']
+            if travis_ver.startswith('3') or travis_ver == 'pypy3':
+                exts.append('*py3*.whl')
+            if travis_ver.startswith('2') or travis_ver == 'pypy':
+                exts.append('*py2*.whl')
+        else:
+            exts.append('*.whl')
     for ext in exts:
         c.run("pip uninstall -y {0}".format(package), warn=True)
         c.run("pip install tmp/dist/*.{0}".format(ext))
