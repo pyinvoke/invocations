@@ -10,7 +10,7 @@ somewhere in your config setup:
 
 from invoke import task
 
-from ..packaging.release import publish
+from .packaging.release import publish
 
 
 @task
