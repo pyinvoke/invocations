@@ -107,7 +107,7 @@ def test_packaging(c, package, sanity):
     # Use an explicit directory for building so we can reference after
     path = 'tmp'
     # Echo on please
-    c.run.echo = True
+    c.config.run.echo = True
     # Ensure no GPG signing is attempted.
     c.packaging.sign = False
     # Publish in dry-run context, to explicit (non-tmp) directory.
