@@ -71,3 +71,26 @@ def sudo_coverage(c):
     # intermediate process knows about the venv!
     cmd = "source $VIRTUAL_ENV/bin/activate && inv coverage --no-html"
     c.sudo('bash -c "{0}"'.format(cmd), user=c.travis.sudo.user)
+
+
+@task
+def test_installation(c, package, sanity=None):
+    """
+    Test a non-editable pip install of source checkout.
+
+    Catches high level setup.py bugs.
+
+    :param str package:
+        Package name to uninstall.
+
+    :param str sanity:
+        Sanity-check command string to run. Optional.
+
+        If given, will be appended to ``$VIRTUAL_ENV/bin/`` so it runs in the
+        Travis test virtualenv.
+    """
+    pip = "$VIRTUAL_ENV/bin/pip"
+    c.run("{0} uninstall -y {1}".format(pip, package))
+    c.run("{0} install .".format(pip))
+    if sanity:
+        c.run("$VIRTUAL_ENV/bin/{0}".format(sanity))
