@@ -25,7 +25,7 @@ requirements = [
     # that time, make this optional again.
     'releases>=1.2,<2',
     'semantic_version>=2.4,<3',
-    'tabulate>=0.7,<0.8',
+    'tabulate==0.7.5',
     'tqdm>=4.8.1',
 ]
 if sys.version_info < (3, 4): # which is when stdlib.enum arrived
