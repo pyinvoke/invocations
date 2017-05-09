@@ -15,6 +15,8 @@ matrix:
     - python: pypy3
   fast_finish: true
 install:
+  # TODO: removeme
+  - pip install -e https://github.com/bitprophet/pytest-relaxed
   - pip install -r dev-requirements.txt
 script:
   - inv coverage --report=xml
