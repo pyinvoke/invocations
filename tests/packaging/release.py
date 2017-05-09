@@ -7,16 +7,12 @@ import sys
 
 from invoke.vendor.six import PY2
 from invoke.vendor.lexicon import Lexicon
-
+from invoke import MockContext, Result, Config
 from mock import Mock, patch
-# TODO: trap might work as-is but should still be migrated into pytest-relaxed
-# (or find/use existing pytest functionality for same)
-from spec import trap, skip, eq_, ok_, raises
+from pytest import skip
+from pytest_relaxed import trap, raises
 
 from invocations.packaging.semantic_version_monkey import Version
-
-from invoke import MockContext, Result, Config
-
 from invocations.packaging.release import (
     release_line, latest_feature_bucket, release_and_issues, all_, status,
     Changelog, Release, VersionFile, UndefinedReleaseType, Tag, load_version,
@@ -27,53 +23,47 @@ from invocations.packaging.release import (
 class release_line_:
     def assumes_bugfix_if_release_branch(self):
         c = MockContext(run=Result("2.7"))
-        eq_(release_line(c)[1], Release.BUGFIX)
+        assert release_line(c)[1] == Release.BUGFIX
 
     def assumes_feature_if_master(self):
         c = MockContext(run=Result("master"))
-        eq_(release_line(c)[1], Release.FEATURE)
+        assert release_line(c)[1] == Release.FEATURE
 
     def is_undefined_if_arbitrary_branch_name(self):
         c = MockContext(run=Result("yea-whatever"))
-        eq_(release_line(c)[1], Release.UNDEFINED)
+        assert release_line(c)[1] == Release.UNDEFINED
 
     def is_undefined_if_specific_commit_checkout(self):
         # Just a sanity check; current logic doesn't differentiate between e.g.
         # 'gobbledygook' and 'HEAD'.
         c = MockContext(run=Result("HEAD"))
-        eq_(release_line(c)[1], Release.UNDEFINED)
+        assert release_line(c)[1] == Release.UNDEFINED
 
 
 class latest_feature_bucket_:
     def base_case_of_single_release_family(self):
-        eq_(
-            latest_feature_bucket(dict.fromkeys(['unreleased_1_feature'])),
-            'unreleased_1_feature'
-        )
+        bucket = latest_feature_bucket(dict.fromkeys(['unreleased_1_feature']))
+        assert bucket == 'unreleased_1_feature'
 
     def simple_ordering_by_bucket_number(self):
-        eq_(
-            latest_feature_bucket(dict.fromkeys([
-                'unreleased_1_feature',
-                'unreleased_2_feature',
-            ])),
-            'unreleased_2_feature'
-        )
+        bucket = latest_feature_bucket(dict.fromkeys([
+            'unreleased_1_feature',
+            'unreleased_2_feature',
+        ]))
+        assert bucket == 'unreleased_2_feature'
 
     def ordering_goes_by_numeric_not_lexical_order(self):
-        eq_(
-            latest_feature_bucket(dict.fromkeys([
-                'unreleased_1_feature',
-                # Yes, releases like 10.x or 17.x are unlikely, but definitely
-                # plausible - think modern Firefox for example.
-                'unreleased_10_feature',
-                'unreleased_23_feature',
-                'unreleased_202_feature',
-                'unreleased_17_feature',
-                'unreleased_2_feature',
-            ])),
-            'unreleased_202_feature'
-        )
+        bucket = latest_feature_bucket(dict.fromkeys([
+            'unreleased_1_feature',
+            # Yes, releases like 10.x or 17.x are unlikely, but definitely
+            # plausible - think modern Firefox for example.
+            'unreleased_10_feature',
+            'unreleased_23_feature',
+            'unreleased_202_feature',
+            'unreleased_17_feature',
+            'unreleased_2_feature',
+        ]))
+        assert bucket == 'unreleased_202_feature'
 
 
 class release_and_issues_:
@@ -87,8 +77,8 @@ class release_and_issues_:
                 branch='1.1',
                 release_type=Release.BUGFIX,
             )
-            eq_(release, '1.1.0')
-            eq_(issues, [])
+            assert release == '1.1.0'
+            assert issues == []
 
         def has_unreleased(self):
             skip()
@@ -101,8 +91,8 @@ class release_and_issues_:
                 branch='master',
                 release_type=Release.FEATURE,
             )
-            eq_(release, None)
-            eq_(issues, [])
+            assert release is None
+            assert issues == []
 
         def has_unreleased(self):
             # release is still None, issues is nonempty list
@@ -111,8 +101,8 @@ class release_and_issues_:
                 branch='master',
                 release_type=Release.FEATURE,
             )
-            eq_(release, None)
-            eq_(issues, [2, 3])
+            assert release is None
+            assert issues == [2, 3]
 
     def undefined_always_returns_None_and_empty_list(self):
         skip()
@@ -153,7 +143,7 @@ class load_version_:
         if config_val is not None:
             config['version_module'] = config_val
         c = MockContext(Config(overrides={'packaging': config}))
-        eq_(load_version(c), expected)
+        assert load_version(c) == expected
 
     # NOTE: these all also happen to test the Python bug re: a unicode value
     # given to `__import__(xxx, fromlist=[u'onoz'])`. No real point making
@@ -171,24 +161,20 @@ class load_version_:
 
 class latest_and_next_version_:
     def next_patch_of_bugfix_release(self):
-        eq_(
-            latest_and_next_version(Lexicon({
-                'release_type': Release.BUGFIX,
-                'latest_line_release': Version('1.2.2'),
-                'latest_overall_release': Version('1.4.1'), # realism!
-            })),
-            (Version('1.2.2'), Version('1.2.3')),
-        )
+        versions = latest_and_next_version(Lexicon({
+            'release_type': Release.BUGFIX,
+            'latest_line_release': Version('1.2.2'),
+            'latest_overall_release': Version('1.4.1'), # realism!
+        }))
+        assert versions == (Version('1.2.2'), Version('1.2.3'))
 
     def next_minor_of_feature_release(self):
-        eq_(
-            latest_and_next_version(Lexicon({
-                'release_type': Release.FEATURE,
-                'latest_line_release': None, # realism!
-                'latest_overall_release': Version('1.2.2'),
-            })),
-            (Version('1.2.2'), Version('1.3.0')),
-        )
+        versions = latest_and_next_version(Lexicon({
+            'release_type': Release.FEATURE,
+            'latest_line_release': None, # realism!
+            'latest_overall_release': Version('1.2.2'),
+        }))
+        assert versions == (Version('1.2.2'), Version('1.3.0'))
 
 
 # Multi-dimensional scenarios, in relatively arbitrary nesting order:
@@ -204,9 +190,9 @@ support_dir = path.join(path.dirname(__file__), '_support')
 # NOTE: needs to not shadow any real imported module name!
 FAKE_PACKAGE = 'fakey_mcfakerson_not_real_in_any_way'
 
-# NOTE: can't slap this on the test class itself due to how Spec has to handle
-# inner classes (basically via getattr chain). If that can be converted to true
-# inheritance (seems unlikely), we could organize more "naturally".
+# NOTE: can't easily slap this on the test class itself due to using inner
+# classes. If we can get the inner classes to not only copy attributes but also
+# decorators (seems unlikely?), we could organize more "naturally".
 # NOTE: OTOH, it's actually nice to use this in >1 top level class, so...meh?
 @contextmanager
 def _mock_context(self):
@@ -309,10 +295,8 @@ def _expect_actions(self, *actions):
     for action in actions:
         # Check for action's text value in the table which gets printed.
         # (Actual table formatting is tested in an individual test.)
-        ok_(
-            action.value in stdout,
-            "Didn't find {0} in stdout:\n\n{1}".format(action, stdout),
-        )
+        err = "Didn't find {0} in stdout:\n\n{1}".format(action, stdout)
+        assert action.value in stdout, err
 
 
 class status_:
@@ -356,7 +340,7 @@ Tag +{tag}
             output = sys.stdout.getvalue()
             err = "Expected:\n\n{0}\n\nGot:\n\n{1}".format(regex, output)
             err += "\n\nRepr edition...\n\nExpected:\n\n{0!r}\n\nGot:\n\n{1!r}".format(regex, output) # noqa
-            ok_(re.match(regex, output), err)
+            assert re.match(regex, output), err
 
         @trap # just for cleaner test output
         def returns_lexica_for_reuse(self):
@@ -366,11 +350,11 @@ Tag +{tag}
                 tag=Tag.NEEDS_CUTTING,
             )
             found_actions, found_state = _mock_status(self)
-            eq_(found_actions, actions)
+            assert found_actions == actions
             # Spot check state, don't need to check whole thing...
-            eq_(found_state.branch, self._branch)
-            eq_(found_state.latest_version, Version('1.1.1'))
-            eq_(found_state.tags, [Version(x) for x in self._tags])
+            assert found_state.branch == self._branch
+            assert found_state.latest_version == Version('1.1.1')
+            assert found_state.tags == [Version(x) for x in self._tags]
 
     # TODO: I got this attribute jazz working in pytest but see if there is a
     # 'native' pytest feature that works better (while still in conjunction
@@ -598,14 +582,14 @@ class All:
             Tag.NEEDS_CUTTING,
         ):
             err = "Didn't see '{0}' text in status output!".format(action.name)
-            ok_(action.value in output, err)
+            assert action.value in output, err
 
     @trap
     @patch('invocations.console.input', return_value='no')
     def prompts_before_taking_action(self, mock_input):
         with _mock_context(self) as c:
             _run_all(c)
-        eq_(mock_input.call_args[0][0], "Take the above actions? [Y/n] ")
+        assert mock_input.call_args[0][0] == "Take the above actions? [Y/n] "
 
     @_confirm_false
     def if_prompt_response_negative_no_action_taken(self, _):
@@ -614,10 +598,10 @@ class All:
         # TODO: move all action-y code into subroutines, then mock them and
         # assert they were never called?
         # Expect that only the status-y run() calls were made.
-        eq_(c.run.call_count, 2)
+        assert c.run.call_count == 2
         commands = [x[0][0] for x in c.run.call_args_list]
-        ok_(commands[0].startswith('git rev-parse'))
-        ok_(commands[1].startswith('git tag'))
+        assert commands[0].startswith('git rev-parse')
+        assert commands[1].startswith('git tag')
 
     @_confirm_true
     def opens_EDITOR_with_changelog_when_it_needs_update(self, _):
@@ -668,7 +652,7 @@ class All:
             _run_all(c)
             # Expect NO git commit
             commands = [x[0][0] for x in c.run.call_args_list]
-            ok_(not any(x.startswith("git commit") for x in commands))
+            assert not any(x.startswith("git commit") for x in commands)
             # Expect git tag
             c.run.assert_any_call("git tag 1.1.2", hide=False)
 
@@ -693,7 +677,7 @@ class All:
                 err = "Saw {0!r} despite changelog not needing update!".format(
                     cmd
                 )
-                ok_(cmd not in [x[0][0] for x in c.run.call_args_list], err)
+                assert cmd not in [x[0][0] for x in c.run.call_args_list], err
 
     # TODO: rest...
 
@@ -708,39 +692,26 @@ class All:
 class component_state_enums_contain_human_readable_values:
     class changelog:
         def okay(self):
-            eq_(
-                Changelog.OKAY.value,
-                "\x1b[32m\u2714 no unreleased issues\x1b(B\x1b[m",
-            )
+            expected = "\x1b[32m\u2714 no unreleased issues\x1b(B\x1b[m"
+            assert Changelog.OKAY.value == expected
 
         def needs_release(self):
-            eq_(
-                Changelog.NEEDS_RELEASE.value,
-                "\x1b[31m\u2718 needs :release: entry\x1b(B\x1b[m",
-            )
+            expected = "\x1b[31m\u2718 needs :release: entry\x1b(B\x1b[m"
+            assert Changelog.NEEDS_RELEASE.value == expected
 
     class version_file:
         def okay(self):
-            eq_(
-                VersionFile.OKAY.value,
-                "\x1b[32m\u2714 version up to date\x1b(B\x1b[m",
-            )
+            expected = "\x1b[32m\u2714 version up to date\x1b(B\x1b[m"
+            assert VersionFile.OKAY.value == expected
 
         def needs_bump(self):
-            eq_(
-                VersionFile.NEEDS_BUMP.value,
-                "\x1b[31m\u2718 needs version bump\x1b(B\x1b[m",
-            )
+            expected = "\x1b[31m\u2718 needs version bump\x1b(B\x1b[m"
+            assert VersionFile.NEEDS_BUMP.value == expected
 
     class tag:
         def okay(self):
-            eq_(
-                Tag.OKAY.value,
-                "\x1b[32m\u2714 all set\x1b(B\x1b[m",
-            )
+            assert Tag.OKAY.value == "\x1b[32m\u2714 all set\x1b(B\x1b[m"
 
         def needs_cutting(self):
-            eq_(
-                Tag.NEEDS_CUTTING.value,
-                "\x1b[31m\u2718 needs cutting\x1b(B\x1b[m",
-            )
+            expected = "\x1b[31m\u2718 needs cutting\x1b(B\x1b[m"
+            assert Tag.NEEDS_CUTTING.value == expected
