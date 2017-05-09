@@ -1,10 +1,10 @@
 from invoke import Collection, task
 
 from invocations.packaging import release
-from invocations import pytest as pytests
+from invocations.pytest import test, coverage
 
 
-ns = Collection(release, pytests.test, pytests.coverage)
+ns = Collection(release, test, coverage)
 ns.configure({
     'packaging': {
         'sign': True,
