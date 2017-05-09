@@ -43,17 +43,19 @@ def test(c, verbose=True, color=True, capture='sys', opts=''):
 
 
 @task
-def coverage(c, html=True, opts=''):
+def coverage(c, report='term', opts=''):
     """
     Run pytest with coverage enabled.
 
     Assumes the ``pytest-cov`` pytest plugin is installed.
 
-    :param bool html: Run HTML report & open in browser.
-    :param str opts: Extra runtime opts to pass to pytest.
+    :param str report:
+        Coverage report style to use. If 'html', will also open in browser.
+
+    :param str opts:
+        Extra runtime opts to pass to pytest.
     """
-    type_ = "html" if html else "annotated"
-    opts += "--cov --no-cov-on-fail --cov-report={}".format(type_)
+    opts += "--cov --no-cov-on-fail --cov-report={}".format(report)
     test(c, opts=opts)
-    if html:
+    if report is 'html':
         c.run("open htmlcov/index.html")
