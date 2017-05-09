@@ -2,7 +2,7 @@
 Pytest-using variant of testing.py. Will eventually replace the latter.
 """
 
-from invoke import Collection, task
+from invoke import task
 
 
 @task

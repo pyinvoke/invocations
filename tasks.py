@@ -1,4 +1,4 @@
-from invoke import Collection, task
+from invoke import Collection
 
 from invocations.packaging import release
 from invocations.pytest import test, coverage
