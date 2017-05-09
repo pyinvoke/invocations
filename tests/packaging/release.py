@@ -9,7 +9,9 @@ from invoke.vendor.six import PY2
 from invoke.vendor.lexicon import Lexicon
 
 from mock import Mock, patch
-from spec import Spec, trap, skip, eq_, ok_, raises
+# TODO: trap might work as-is but should still be migrated into pytest-relaxed
+# (or find/use existing pytest functionality for same)
+from spec import trap, skip, eq_, ok_, raises
 
 from invocations.packaging.semantic_version_monkey import Version
 
@@ -22,7 +24,7 @@ from invocations.packaging.release import (
 )
 
 
-class release_line_(Spec):
+class release_line_:
     def assumes_bugfix_if_release_branch(self):
         c = MockContext(run=Result("2.7"))
         eq_(release_line(c)[1], Release.BUGFIX)
@@ -42,7 +44,7 @@ class release_line_(Spec):
         eq_(release_line(c)[1], Release.UNDEFINED)
 
 
-class latest_feature_bucket_(Spec):
+class latest_feature_bucket_:
     def base_case_of_single_release_family(self):
         eq_(
             latest_feature_bucket(dict.fromkeys(['unreleased_1_feature'])),
@@ -74,7 +76,7 @@ class latest_feature_bucket_(Spec):
         )
 
 
-class release_and_issues_(Spec):
+class release_and_issues_:
     class bugfix:
         # TODO: factor out into setup() so each test has some excluded/ignored
         # data in it - helps avoid naive implementation returning x[0] etc.
@@ -116,7 +118,7 @@ class release_and_issues_(Spec):
         skip()
 
 
-class find_package_(Spec):
+class find_package_:
     def can_be_short_circuited_with_config_value(self):
         # TODO: should we just bundle this + the version part into one
         # function and setting? do we ever peep into the package for anything
@@ -137,7 +139,7 @@ class find_package_(Spec):
         skip()
 
 
-class load_version_(Spec):
+class load_version_:
     def setup(self):
         sys.path.insert(0, support_dir)
 
@@ -167,7 +169,7 @@ class load_version_(Spec):
         skip()
 
 
-class latest_and_next_version_(Spec):
+class latest_and_next_version_:
     def next_patch_of_bugfix_release(self):
         eq_(
             latest_and_next_version(Lexicon({
@@ -313,7 +315,7 @@ def _expect_actions(self, *actions):
         )
 
 
-class status_(Spec):
+class status_:
     class overall_behavior:
         _branch = '1.1'
         _changelog = 'unreleased_1.1_bugs'
@@ -370,6 +372,9 @@ Tag +{tag}
             eq_(found_state.latest_version, Version('1.1.1'))
             eq_(found_state.tags, [Version(x) for x in self._tags])
 
+    # TODO: I got this attribute jazz working in pytest but see if there is a
+    # 'native' pytest feature that works better (while still in conjunction
+    # with nested tasks, ideally)
     class release_line_branch:
         _branch = '1.1'
 
@@ -572,7 +577,7 @@ def _run_all(c, mute=True):
             raise
 
 
-class All(Spec):
+class All:
     "all_" # mehhh
 
     # NOTE: just testing the base case of 'everything needs updating',
@@ -700,7 +705,7 @@ class All(Spec):
 # TODO: yes, when I personally went from TERM=xterm-256color to
 # TERM=screen-256color, that made these tests break! Updating test machinery to
 # account for now, but...not ideal!
-class component_state_enums_contain_human_readable_values(Spec):
+class component_state_enums_contain_human_readable_values:
     class changelog:
         def okay(self):
             eq_(
