@@ -36,10 +36,10 @@ def test(c, verbose=True, color=True, capture='sys', opts=''):
         flags.append('--verbose')
     if color:
         flags.append('--color=yes')
-    flags.append('--capture={}'.format(capture))
+    flags.append('--capture={0}'.format(capture))
     if opts is not None:
         flags.append(opts)
-    c.run("pytest {}".format(" ".join(flags)), pty=True)
+    c.run("pytest {0}".format(" ".join(flags)), pty=True)
 
 
 @task
@@ -55,7 +55,7 @@ def coverage(c, report='term', opts=''):
     :param str opts:
         Extra runtime opts to pass to pytest.
     """
-    opts += "--cov --no-cov-on-fail --cov-report={}".format(report)
+    opts += "--cov --no-cov-on-fail --cov-report={0}".format(report)
     test(c, opts=opts)
     if report is 'html':
         c.run("open htmlcov/index.html")

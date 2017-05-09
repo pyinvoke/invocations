@@ -122,6 +122,6 @@ def count_errors(c, command, trials=10, verbose=False, fail_fast=False):
             print(result.stdout)
             print(result.stderr)
     if fail_fast:
-        print("First failure occurred after {} successes".format(successes))
+        print("First failure occurred after {0} successes".format(successes))
     else:
-        print("{}/{} trials failed".format(len(bad_runs), trials))
+        print("{0}/{1} trials failed".format(len(bad_runs), trials))
