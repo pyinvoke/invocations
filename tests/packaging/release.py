@@ -648,7 +648,7 @@ class All:
             # cleaner. Modifying 'private' attrs feels bad. (Though in this
             # case, can't really make it public, as that risks clashing with
             # "real" members of the context/config...?)
-            c._run[check] = Result("", exited=1)
+            c.set_result_for('run', check, Result("", exited=1))
             _run_all(c)
             # Expect NO git commit
             commands = [x[0][0] for x in c.run.call_args_list]
