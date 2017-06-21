@@ -28,6 +28,9 @@ requirements = [
     'tabulate==0.7.5',
     'tqdm>=4.8.1',
 ]
+# TODO: unfortunately, this means that e.g. wheels built under Python <3.4 will
+# 'statically' require enum34, even if they are being installed under Python
+# >=3.4. This can blow up under e.g. Python 3.6.
 if sys.version_info < (3, 4): # which is when stdlib.enum arrived
     requirements.append('enum34>=1.1,<2')
 
