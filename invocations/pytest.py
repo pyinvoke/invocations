@@ -42,6 +42,17 @@ def test(c, verbose=True, color=True, capture='sys', opts=''):
     c.run("pytest {0}".format(" ".join(flags)), pty=True)
 
 
+@task(help=test.help)
+def integration(c, opts=None, pty=True):
+    """
+    Run the integration test suite. May be slow!
+    """
+    opts = opts or ""
+    override = " --tests=integration/"
+    opts += override
+    test(c, opts=opts, pty=pty)
+
+
 @task
 def coverage(c, report='term', opts=''):
     """
