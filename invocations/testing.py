@@ -96,7 +96,22 @@ def coverage(c, html=True, integration_=True):
 @task
 def count_errors(c, command, trials=10, verbose=False, fail_fast=False):
     """
-    Run ``command`` ``trials`` times and tally how many times it errored.
+    Run ``command`` multiple times and tally statistics about failures.
+
+    :param str command:
+        The command to execute. Make sure to escape special shell characters!
+
+    :param int trials:
+        Number of trials to execute (default 10.) Give 0 for infinite execution
+        (use Ctrl-C or other SIGINT to abort.)
+
+    :param bool verbose:
+        Whether to emit stderr from failed runs at end of execution. Default:
+        ``False``.
+
+    :param bool fail_fast:
+        Whether to exit after the first error (i.e. "count runs til error is
+        exhibited" mode.) Default: ``False``.
 
     Say ``verbose=True`` to see stderr from failed runs at the end.
 
