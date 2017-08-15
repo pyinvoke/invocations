@@ -1,4 +1,9 @@
 import sys
+import time
+from collections import defaultdict
+from itertools import count
+from invoke.vendor.six import iteritems
+from invoke.vendor.six.moves import range
 
 from invoke import task
 from tqdm import tqdm
@@ -98,16 +103,17 @@ def count_errors(c, command, trials=10, verbose=False, fail_fast=False):
     """
     Run ``command`` multiple times and tally statistics about failures.
 
+    Use Ctrl-C or other SIGINT to abort early (also see ``fail_fast``.)
+
     :param str command:
         The command to execute. Make sure to escape special shell characters!
 
     :param int trials:
-        Number of trials to execute (default 10.) Give 0 for infinite execution
-        (use Ctrl-C or other SIGINT to abort.)
+        Number of trials to execute (default 10.)
 
     :param bool verbose:
-        Whether to emit stderr from failed runs at end of execution. Default:
-        ``False``.
+        Whether to emit stdout/err from failed runs at end of execution.
+        Default: ``False``.
 
     :param bool fail_fast:
         Whether to exit after the first error (i.e. "count runs til error is
@@ -119,24 +125,45 @@ def count_errors(c, command, trials=10, verbose=False, fail_fast=False):
     """
     # TODO: allow defining failure as something besides "exited 1", e.g.
     # "stdout contained <sentinel>" or whatnot
-    bad_runs = []
-    successes = 0
-    for _ in tqdm(range(trials), unit='trial'):
+    goods, bads = [], []
+    prev_error = time.time()
+    for num_runs in tqdm(range(trials), unit='trial'):
         result = c.run(command, hide=True, warn=True)
         if result.failed:
-            bad_runs.append(result)
-            if fail_fast:
+            now = time.time()
+            result.since_prev_error = int(now - prev_error)
+            prev_error = now
+            bads.append(result)
+            # -2 is typically indicative of SIGINT in most shells
+            if fail_fast or result.exited == -2:
                 break
         else:
-            successes += 1
+            goods.append(result)
+    num_runs += 1 # for count starting at 1, not 0
     if verbose or fail_fast:
         # TODO: would be nice to show interwoven stdout/err but I don't believe
         # we track that at present...
-        for result in bad_runs:
+        for result in bads:
             print("")
             print(result.stdout)
             print(result.stderr)
+    # Stats! TODO: errors only jeez
+    successes = len(goods)
+    failures = len(bads)
+    all_ = goods + bads
+    periods = [x.since_prev_error for x in bads]
+    # Period mean
+    mean = int(sum(periods) / float(len(periods)))
+    # Period mode
+    # TODO: use collections.Counter when we drop 2.6 support
+    counts = defaultdict(int)
+    for period in periods:
+        counts[period] += 1
+    mode = sorted((value, key) for key, value in iteritems(counts))[-1][1]
+    # Emission of stats!
     if fail_fast:
         print("First failure occurred after {0} successes".format(successes))
     else:
-        print("{0}/{1} trials failed".format(len(bad_runs), trials))
+        print("{0}/{1} trials failed".format(failures, num_runs))
+    print("Stats: min={0}s, mean={1}s, mode={2}s, max={3}s".format(
+        min(periods), mean, mode, max(periods)))
