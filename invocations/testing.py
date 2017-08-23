@@ -151,6 +151,11 @@ def count_errors(c, command, trials=10, verbose=False, fail_fast=False):
     successes = len(goods)
     failures = len(bads)
     all_ = goods + bads
+    overall = "{0}/{1} trials failed".format(failures, num_runs)
+    # Short-circuit if no errors
+    if not bads:
+        print(overall)
+        return
     periods = [x.since_prev_error for x in bads]
     # Period mean
     mean = int(sum(periods) / float(len(periods)))
@@ -164,6 +169,6 @@ def count_errors(c, command, trials=10, verbose=False, fail_fast=False):
     if fail_fast:
         print("First failure occurred after {0} successes".format(successes))
     else:
-        print("{0}/{1} trials failed".format(failures, num_runs))
+        print(overall)
     print("Stats: min={0}s, mean={1}s, mode={2}s, max={3}s".format(
         min(periods), mean, mode, max(periods)))
