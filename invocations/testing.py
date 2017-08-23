@@ -1,7 +1,6 @@
 import sys
 import time
 from collections import defaultdict
-from itertools import count
 from invoke.vendor.six import iteritems
 from invoke.vendor.six.moves import range
 
@@ -150,7 +149,6 @@ def count_errors(c, command, trials=10, verbose=False, fail_fast=False):
     # Stats! TODO: errors only jeez
     successes = len(goods)
     failures = len(bads)
-    all_ = goods + bads
     overall = "{0}/{1} trials failed".format(failures, num_runs)
     # Short-circuit if no errors
     if not bads:
