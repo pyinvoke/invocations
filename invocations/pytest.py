@@ -6,7 +6,7 @@ from invoke import task
 
 
 @task
-def test(c, verbose=True, color=True, capture='sys', opts=''):
+def test(c, verbose=True, color=True, capture='sys', module=None, opts=''):
     """
     Run pytest with given options.
 
@@ -22,6 +22,11 @@ def test(c, verbose=True, color=True, capture='sys', opts=''):
         ``sys`` since pytest's own default, ``fd``, tends to trip up
         subprocesses trying to detect PTY status. Can be set to ``no`` for no
         capturing / useful print-debugging / etc.
+
+    :param str module:
+        Select a specific test module to focus on, e.g. ``main`` to only run
+        ``tests/main.py``. (Note that this is a specific idiom aside from the
+        use of ``-o '-k pattern'``.) Default: ``None``.
 
     :param str opts:
         Extra runtime options to hand to ``pytest``.
@@ -39,7 +44,10 @@ def test(c, verbose=True, color=True, capture='sys', opts=''):
     flags.append('--capture={0}'.format(capture))
     if opts is not None:
         flags.append(opts)
-    c.run("pytest {0}".format(" ".join(flags)), pty=True)
+    modstr = ""
+    if module is not None:
+        modstr = " tests/{}.py".format(module)
+    c.run("pytest {}{}".format(" ".join(flags), modstr), pty=True)
 
 
 @task(help=test.help)
