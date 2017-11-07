@@ -4,7 +4,7 @@ invoke>=0.13.0,<2.0
 wheel==0.24
 twine==1.9.1
 # For testing
-pytest-relaxed>=0.1.0,<2
+pytest-relaxed>=1,<2
 pytest-cov==2.4.0
 mock==1.0.1
 watchdog==0.8.3
