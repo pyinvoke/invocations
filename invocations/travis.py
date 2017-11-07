@@ -73,7 +73,7 @@ def sudo_coverage(c):
     # test tasks currently use their own subshell to call e.g. 'spec --blah',
     # so the tactic of '$VIRTUAL_ENV/bin/inv coverage' doesn't help - only that
     # intermediate process knows about the venv!
-    cmd = "source $VIRTUAL_ENV/bin/activate && inv coverage --no-html"
+    cmd = "source $VIRTUAL_ENV/bin/activate && inv coverage"
     c.sudo('bash -c "{0}"'.format(cmd), user=c.travis.sudo.user)
 
 
