@@ -651,11 +651,8 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
     sign = config.get('sign', sign)
     dual_wheels = config.get('dual_wheels', dual_wheels)
     check_desc = config.get('check_desc', check_desc)
-    # Initial sanity check, if needed. Will die usefully. (Or, on Python 2.6 or
-    # 3.3, it will die no matter what, as they never got the fix from
-    # https://bugs.python.org/issue23063 ...so we gotta skip it there.)
-    ver = sys.version_info[:2]
-    if check_desc and ver not in [(2, 6), (3, 3)]:
+    # Initial sanity check, if needed. Will die usefully.
+    if check_desc:
         c.run("python setup.py check -r -s")
     # Build, into controlled temp dir (avoids attempting to re-upload old
     # files)

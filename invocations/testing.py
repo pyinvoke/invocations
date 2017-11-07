@@ -158,7 +158,7 @@ def count_errors(c, command, trials=10, verbose=False, fail_fast=False):
     # Period mean
     mean = int(sum(periods) / float(len(periods)))
     # Period mode
-    # TODO: use collections.Counter when we drop 2.6 support
+    # TODO: use collections.Counter now that we've dropped 2.6
     counts = defaultdict(int)
     for period in periods:
         counts[period] += 1
