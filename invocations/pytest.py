@@ -6,7 +6,10 @@ from invoke import task
 
 
 @task
-def test(c, verbose=True, color=True, capture='sys', module=None, opts=''):
+def test(
+    c, verbose=True, color=True, capture='sys', module=None, k=None,
+    x=False, opts='',
+):
     """
     Run pytest with given options.
 
@@ -28,6 +31,14 @@ def test(c, verbose=True, color=True, capture='sys', module=None, opts=''):
         ``tests/main.py``. (Note that this is a specific idiom aside from the
         use of ``-o '-k pattern'``.) Default: ``None``.
 
+    :param str k:
+        Convenience passthrough for ``pytest -k``, i.e. test selection.
+        Default: ``None``.
+
+    :param bool x:
+        Convenience passthrough for ``pytest -x``, i.e. fail-fast. Default:
+        ``False``.
+
     :param str opts:
         Extra runtime options to hand to ``pytest``.
     """
@@ -44,6 +55,10 @@ def test(c, verbose=True, color=True, capture='sys', module=None, opts=''):
     flags.append('--capture={0}'.format(capture))
     if opts is not None:
         flags.append(opts)
+    if k is not None and not ('-k' in opts if opts else False):
+        flags.append('-k {}'.format(k))
+    if x and not ('-x' in opts if opts else False):
+        flags.append('-x')
     modstr = ""
     if module is not None:
         modstr = " tests/{}.py".format(module)
