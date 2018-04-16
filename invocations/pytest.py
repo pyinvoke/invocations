@@ -8,7 +8,7 @@ from invoke import task
 @task
 def test(
     c, verbose=True, color=True, capture='sys', module=None, k=None,
-    x=False, opts='',
+    x=False, opts='', pty=True,
 ):
     """
     Run pytest with given options.
@@ -41,6 +41,9 @@ def test(
 
     :param str opts:
         Extra runtime options to hand to ``pytest``.
+
+    :param bool pty:
+        Whether to use a pty when executing pytest. Default: ``True``.
     """
     # TODO: really need better tooling around these patterns
     # TODO: especially the problem of wanting to be configurable, but
@@ -62,7 +65,7 @@ def test(
     modstr = ""
     if module is not None:
         modstr = " tests/{}.py".format(module)
-    c.run("pytest {}{}".format(" ".join(flags), modstr), pty=True)
+    c.run("pytest {}{}".format(" ".join(flags), modstr), pty=pty)
 
 
 @task(help=test.help)
@@ -71,13 +74,12 @@ def integration(c, opts=None, pty=True):
     Run the integration test suite. May be slow!
     """
     opts = opts or ""
-    override = " --tests=integration/"
-    opts += override
+    opts += " integration/"
     test(c, opts=opts, pty=pty)
 
 
 @task
-def coverage(c, report='term', opts=''):
+def coverage(c, report='term', opts='', tester=None):
     """
     Run pytest with coverage enabled.
 
@@ -88,8 +90,13 @@ def coverage(c, report='term', opts=''):
 
     :param str opts:
         Extra runtime opts to pass to pytest.
+
+    :param tester:
+        Specific test task object to invoke. If ``None`` (default), uses this
+        module's local `test`.
     """
     opts += "--cov --no-cov-on-fail --cov-report={0}".format(report)
-    test(c, opts=opts)
+    # TODO: call attached suite's test(), not the one in here, if they differ
+    (tester or test)(c, opts=opts)
     if report is 'html':
         c.run("open htmlcov/index.html")
