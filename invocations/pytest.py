@@ -59,7 +59,7 @@ def test(
     if opts is not None:
         flags.append(opts)
     if k is not None and not ('-k' in opts if opts else False):
-        flags.append('-k {}'.format(k))
+        flags.append("-k '{}'".format(k))
     if x and not ('-x' in opts if opts else False):
         flags.append('-x')
     modstr = ""
