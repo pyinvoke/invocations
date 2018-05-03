@@ -17,7 +17,8 @@ copyright = u'%d Jeff Forcier' % year
 # Ensure project directory is on PYTHONPATH for version, autodoc access
 sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), '..')))
 
-# Alabaster is the default theme; configure it here.
+# Enforce use of Alabaster (even on RTD) and configure it
+html_theme = 'alabaster'
 html_theme_options = {
     'description': "Common/best-practice Invoke tasks and collections",
     'github_user': 'pyinvoke',
