@@ -13,7 +13,8 @@ coverage==4.4.2
 flake8==2.4.0
 # For docs (explicit, even tho we currently commutatively require these
 # anyways, how meta)
-sphinx<1.7
+# NOTE: sphinx is busted for our releases tree in 1.6+
+sphinx<1.6
 alabaster==0.7.10
 releases>1.2,<2
 
