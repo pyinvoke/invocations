@@ -11,18 +11,14 @@ with open('invocations/_version.py') as fp:
 version = _locals['__version__']
 
 requirements = [
-    # Core dependency, obviously
+    # Core dependency
     'invoke>=1.0.0,<2.0',
-
     # Dependencies for various subpackages.
     # NOTE: these used to be all optional (only complained about at import
     # time if missing), but that got hairy fast, and these are all
     # pure-Python packages, so it shouldn't be a huge burden for users to
     # obtain them.
     'blessings>=1.6,<2',
-    # TODO: this pulls down Sphinx and its whole tree too, and eventually the
-    # release module will want Releases-specific changelogs to be optional. At
-    # that time, make this optional again.
     'releases>=1.2,<2',
     'semantic_version>=2.4,<3',
     'tabulate==0.7.5',
