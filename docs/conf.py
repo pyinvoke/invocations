@@ -23,7 +23,7 @@ html_theme_options = {
     'github_user': 'pyinvoke',
     'github_repo': 'invocations',
     # TODO: make new UA property? only good for full domains and not RTD.io?
-    # 'analytics_id': 'UA-18486793-X', 
+    # 'analytics_id': 'UA-18486793-X',
     'travis_button': True,
     # 'codecov_button': True, # TODO: get better coverage sometime, heh
 }
