@@ -42,7 +42,7 @@ setup(
     license='BSD',
     author='Jeff Forcier',
     author_email='jeff@bitprophet.org',
-    url='http://pyinvoke.org',
+    url='https://invocations.readthedocs.io',
 
     # Release requirements. See dev-requirements.txt for dev version reqs.
     install_requires=requirements,
