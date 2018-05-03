@@ -16,6 +16,10 @@ matrix:
 install:
   - pip install -r dev-requirements.txt
 script:
-  - inv coverage --report=xml
-  # I have this in my git pre-push hook, but contributors probably don't
+  # TODO: tighten up these install test tasks so they can be one-shotted
+  - inv test-installation --package=invocations --sanity="inv --list"
+  - inv test-packaging --package=invocations --sanity="inv --list"
+  - inv docs --warn
   - flake8
+  - inv coverage --report=xml
+# TODO: after_success -> codecov, once coverage sucks less XD
