@@ -17,8 +17,8 @@ install:
   - pip install -r dev-requirements.txt
 script:
   # TODO: tighten up these install test tasks so they can be one-shotted
-  - inv test-installation --package=invocations --sanity="inv --list"
-  - inv test-packaging --package=invocations --sanity="inv --list"
+  - inv travis.test-installation --package=invocations --sanity="inv --list"
+  - inv travis.test-packaging --package=invocations --sanity="inv --list"
   - inv docs --nitpick
   - flake8
   - inv coverage --report=xml
