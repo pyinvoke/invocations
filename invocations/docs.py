@@ -36,14 +36,14 @@ def _browse(c):
     'opts': "Extra sphinx-build options/args",
     'clean': "Remove build tree before building",
     'browse': "Open docs index in browser after building",
-    'warn': "Build with stricter warnings/errors enabled",
+    'nitpick': "Build with stricter warnings/errors enabled",
     'source': "Source directory; overrides config setting",
     'target': "Output directory; overrides config setting",
 })
 def build(c,
     clean=False,
     browse=False,
-    warn=False,
+    nitpick=False,
     opts=None,
     source=None,
     target=None,
@@ -55,8 +55,8 @@ def build(c,
         _clean(c)
     if opts is None:
         opts = ""
-    if warn:
-        opts += " -n -W"
+    if nitpick:
+        opts += " -n -W -T"
     cmd = "sphinx-build{0} {1} {2}".format(
         (" " + opts) if opts else "",
         source or c.sphinx.source,
@@ -153,12 +153,9 @@ def sites(c):
     www['build'](www_c)
     docs_c['run'].hide = False
     www_c['run'].hide = False
-    # Then build with special nitpicking options: turn warnings into errors,
-    # emit warnings about missing references.
-    # Also enable tracebacks for easier debuggery.
-    opts = "-W -n -T"
-    docs['build'](docs_c, opts=opts)
-    www['build'](www_c, opts=opts)
+    # Run the actual builds, with nitpick=True (nitpicks + tracebacks)
+    docs['build'](docs_c, nitpick=True)
+    www['build'](www_c, nitpick=True)
 
 
 @task
