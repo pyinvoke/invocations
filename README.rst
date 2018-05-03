@@ -13,6 +13,3 @@ Currently implemented topics include (but are not limited to):
 - console utilities such as confirmation prompts
 
 and more.
-
-For documentation, including detailed installation information, please see
-https://invocations.readthedocs.io.
