@@ -38,6 +38,7 @@ setup(
     name='invocations',
     version=version,
     description='Reusable Invoke tasks',
+    long_description=open('README.rst').read(),
     license='BSD',
     author='Jeff Forcier',
     author_email='jeff@bitprophet.org',
