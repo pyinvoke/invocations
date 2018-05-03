@@ -12,7 +12,7 @@ version = _locals['__version__']
 
 requirements = [
     # Core dependency, obviously
-    'invoke>=0.13,<2.0',
+    'invoke>=1.0.0,<2.0',
 
     # Dependencies for various subpackages.
     # NOTE: these used to be all optional (only complained about at import
