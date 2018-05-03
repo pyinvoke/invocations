@@ -1,3 +1,7 @@
+"""
+Tasks for managing Sphinx documentation trees.
+"""
+
 from os.path import join, isdir
 from tempfile import mkdtemp
 from shutil import rmtree
@@ -105,7 +109,7 @@ ns.configure({
 # Expects a tree like sites/www/<sphinx> + sites/docs/<sphinx>,
 # and that you want 'inline' html build dirs, e.g. sites/www/_build/index.html.
 
-def _site(name, build_help):
+def _site(name, help_part):
     _path = join('sites', name)
     # TODO: turn part of from_module into .clone(), heh.
     self = sys.modules[__name__]
@@ -115,14 +119,15 @@ def _site(name, build_help):
             'target': join(_path, '_build')
         }
     })
-    coll['build'].__doc__ = build_help
+    coll.__doc__ = "Tasks for building {}".format(help_part)
+    coll['build'].__doc__ = "Build {}".format(help_part)
     return coll
 
 
 # Usage doc/API site (published as e.g. docs.myproject.org)
-docs = _site('docs', "Build the API docs subsite.")
+docs = _site('docs', "the API docs subsite.")
 # Main/about/changelog site (e.g. (www.)?myproject.org)
-www = _site('www', "Build the main project website.")
+www = _site('www', "the main project website.")
 
 
 @task
