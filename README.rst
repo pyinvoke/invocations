@@ -1,9 +1,18 @@
-Invocations is a collection of reusable `Invoke <http://pyinvoke.org>`_
-tasks/task modules, including (but not limited to) Python project management
-tools such as documentation building and dependency organization.
+Invocations is a collection of reusable `Invoke <http://pyinvoke.org>`_ tasks,
+task collections and helper functions. Originally sourced from the Invoke
+project's own project-management tasks file, they are now highly configurable
+and used across a number of projects, with the intent to become a clearinghouse
+for implementing common best practices.
 
-It has no stand-alone components and is designed to be imported into your
-pre-existing Invoke task files.
+Currently implemented topics include (but are not limited to):
 
-Invocations is currently in pre-alpha status and is unsupported. Please follow
-the Invoke project's communication channels for updates. Thanks!
+- management of Sphinx documentation trees
+- Python project release lifecycles
+- dependency vendoring
+- running test suites (unit, integration, coverage-oriented, etc)
+- console utilities such as confirmation prompts
+
+and more.
+
+For documentation, including detailed installation information, please see
+https://invocations.readthedocs.io.

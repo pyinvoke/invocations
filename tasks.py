@@ -1,10 +1,11 @@
 from invoke import Collection
 
+from invocations import docs
 from invocations.packaging import release
 from invocations.pytest import test, coverage
 
 
-ns = Collection(release, test, coverage)
+ns = Collection(release, test, coverage, docs)
 ns.configure({
     'packaging': {
         'sign': True,
