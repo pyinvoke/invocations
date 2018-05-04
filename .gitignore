@@ -3,3 +3,4 @@ build
 htmlcov
 .cache
 docs/_build
+coverage.xml
