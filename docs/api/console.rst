@@ -1,0 +1,5 @@
+===========
+``console``
+===========
+
+.. automodule:: invocations.console
