@@ -10,7 +10,7 @@ from invoke import task
 from ..util import tmpdir
 
 
-def unpack(c, tmp, package, version, git_url=None):
+def _unpack(c, tmp, package, version, git_url=None):
     """
     Download + unpack given package into temp dir ``tmp``.
 
@@ -92,7 +92,7 @@ def vendorize(c, distribution, version, vendor_dir, package=None,
         package = package or distribution
         target = os.path.join(vendor_dir, package)
         # Unpack source
-        real_version, source = unpack(c, tmp, distribution, version, git_url)
+        real_version, source = _unpack(c, tmp, distribution, version, git_url)
         abs_source = os.path.join(tmp, source)
         source_package = os.path.join(abs_source, package)
         # Ensure source package exists

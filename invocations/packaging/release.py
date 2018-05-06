@@ -102,7 +102,7 @@ class UndefinedReleaseType(Exception):
     pass
 
 
-def converge(c):
+def _converge(c):
     """
     Examine world state, returning data on what needs updating for release.
 
@@ -139,7 +139,7 @@ def converge(c):
 
     # Get data about current repo context: what branch are we on & what kind of
     # release does it appear to represent?
-    branch, release_type = release_line(c)
+    branch, release_type = _release_line(c)
     # Short-circuit if type is undefined; we can't do useful work for that.
     if release_type is Release.UNDEFINED:
         raise UndefinedReleaseType("You don't seem to be on a release-related branch; why are you trying to cut a release?") # noqa
@@ -160,14 +160,14 @@ def converge(c):
     changelog = parse_changelog(c.packaging.changelog_file)
     # Get latest appropriate changelog release and any unreleased issues, for
     # current line
-    line_release, issues = release_and_issues(changelog, branch, release_type)
+    line_release, issues = _release_and_issues(changelog, branch, release_type)
     # Also get latest overall release, sometimes that matters (usually only
     # when latest *appropriate* release doesn't exist yet)
-    overall_release = versions_from_changelog(changelog)[-1]
+    overall_release = _versions_from_changelog(changelog)[-1]
     # Obtain the project's main package & its version data
     current_version = load_version(c)
     # Grab all git tags
-    tags = get_tags(c)
+    tags = _get_tags(c)
 
     state = Lexicon({
         'branch': branch,
@@ -184,7 +184,7 @@ def converge(c):
     # - the next version after that for current branch
     # - which of the two is the actual version we're looking to converge on,
     # depends on current changelog state.
-    latest_version, next_version = latest_and_next_version(state)
+    latest_version, next_version = _latest_and_next_version(state)
     state.latest_version = latest_version
     state.next_version = next_version
     state.expected_version = latest_version
@@ -231,12 +231,12 @@ def status(c):
     """
     Print current release (version, changelog, tag, etc) status.
 
-    Doubles as a subroutine, returning the return values from its inner call
-    to `converge` (the ``(actions, state)`` two-tuple of Lexicons).
+    Doubles as a subroutine, returning the return values from its inner call to
+    ``_converge`` (an ``(actions, state)`` two-tuple of Lexicons).
     """
     # TODO: wants some holistic "you don't actually HAVE any changes to
     # release" final status - i.e. all steps were at no-op status.
-    actions, state = converge(c)
+    actions, state = _converge(c)
     table = []
     # NOTE: explicit 'sensible' sort (in rough order of how things are usually
     # modified, and/or which depend on one another, e.g. tags are near the end)
@@ -280,7 +280,7 @@ def all_(c):
         # specific file format. Could be bad for users which expose __version__
         # but have other contents as well.
         version_file = os.path.join(
-            find_package(c),
+            _find_package(c),
             c.packaging.get('version_module', '_version') + ".py",
         )
         cmd = "$EDITOR {0}".format(version_file)
@@ -306,7 +306,7 @@ def all_(c):
     # things with it like be idempotent?
 
 
-def release_line(c):
+def _release_line(c):
     """
     Examine current repo state to determine what type of release to prep.
 
@@ -343,7 +343,7 @@ def release_line(c):
     return branch, type_
 
 
-def latest_feature_bucket(changelog):
+def _latest_feature_bucket(changelog):
     """
     Select 'latest'/'highest' unreleased feature bucket from changelog.
 
@@ -359,12 +359,12 @@ def latest_feature_bucket(changelog):
 
 # TODO: this feels like it should live in Releases, though that would imply
 # adding semantic_version as a dep there, grump
-def versions_from_changelog(changelog):
+def _versions_from_changelog(changelog):
     """
     Return all released versions from given ``changelog``, sorted.
 
     :param dict changelog:
-        A changelog dict as returned by ``releases.util.parse_changelog`.
+        A changelog dict as returned by ``releases.util.parse_changelog``.
 
     :returns: A sorted list of `semantic_version.Version` objects.
     """
@@ -373,12 +373,12 @@ def versions_from_changelog(changelog):
 
 
 # TODO: may want to live in releases.util eventually
-def release_and_issues(changelog, branch, release_type):
+def _release_and_issues(changelog, branch, release_type):
     """
     Return most recent branch-appropriate release, if any, and its contents.
 
     :param dict changelog:
-        Changelog contents, as returned by `releases.util.parse_changelog`.
+        Changelog contents, as returned by ``releases.util.parse_changelog``.
 
     :param str branch:
         Branch name.
@@ -387,7 +387,7 @@ def release_and_issues(changelog, branch, release_type):
         Member of `Release`, e.g. `Release.FEATURE`.
 
     :returns:
-        Two-tuple of release (`str`) and issues (`list` of issue numbers.)
+        Two-tuple of release (``str``) and issues (``list`` of issue numbers.)
 
         If there is no latest release for the given branch (e.g. if it's a
         feature or master branch), it will be ``None``.
@@ -396,19 +396,19 @@ def release_and_issues(changelog, branch, release_type):
     bucket = branch
     # Features need a bit more logic
     if release_type is Release.FEATURE:
-        bucket = latest_feature_bucket(changelog)
+        bucket = _latest_feature_bucket(changelog)
     # Issues is simply what's in the bucket
     issues = changelog[bucket]
     # Latest release is undefined for feature lines
     release = None
     # And requires scanning changelog, for bugfix lines
     if release_type is Release.BUGFIX:
-        versions = [text_type(x) for x in versions_from_changelog(changelog)]
+        versions = [text_type(x) for x in _versions_from_changelog(changelog)]
         release = [x for x in versions if x.startswith(bucket)][-1]
     return release, issues
 
 
-def get_tags(c):
+def _get_tags(c):
     """
     Return sorted list of release-style tags as semver objects.
     """
@@ -426,7 +426,7 @@ def get_tags(c):
     return sorted(tags_)
 
 
-def latest_and_next_version(state):
+def _latest_and_next_version(state):
     """
     Determine latest version for current branch, and its increment.
 
@@ -449,11 +449,11 @@ def latest_and_next_version(state):
     return previous_version, next_version
 
 
-def find_package(c):
+def _find_package(c):
     """
     Try to find 'the' One True Package for this project.
 
-    Mostly for obtaining the `_version` file within it.
+    Mostly for obtaining the ``_version`` file within it.
 
     Uses the ``packaging.package`` config setting if defined. If not defined,
     fallback is to look for a single top-level Python package (directory
@@ -484,7 +484,7 @@ def find_package(c):
 
 
 def load_version(c):
-    package_name = find_package(c)
+    package_name = _find_package(c)
     version_module = c.packaging.get('version_module', '_version')
     # NOTE: have to explicitly give it a bytestr (Python 2) or unicode (Python
     # 3) because https://bugs.python.org/issue21720 HOORAY

@@ -14,46 +14,46 @@ from pytest_relaxed import trap, raises
 
 from invocations.packaging.semantic_version_monkey import Version
 from invocations.packaging.release import (
-    release_line, latest_feature_bucket, release_and_issues, all_, status,
+    _release_line, _latest_feature_bucket, _release_and_issues, all_, status,
     Changelog, Release, VersionFile, UndefinedReleaseType, Tag, load_version,
-    latest_and_next_version,
+    _latest_and_next_version,
 )
 
 
-class release_line_:
+class _release_line_:
     def assumes_bugfix_if_release_branch(self):
         c = MockContext(run=Result("2.7"))
-        assert release_line(c)[1] == Release.BUGFIX
+        assert _release_line(c)[1] == Release.BUGFIX
 
     def assumes_feature_if_master(self):
         c = MockContext(run=Result("master"))
-        assert release_line(c)[1] == Release.FEATURE
+        assert _release_line(c)[1] == Release.FEATURE
 
     def is_undefined_if_arbitrary_branch_name(self):
         c = MockContext(run=Result("yea-whatever"))
-        assert release_line(c)[1] == Release.UNDEFINED
+        assert _release_line(c)[1] == Release.UNDEFINED
 
     def is_undefined_if_specific_commit_checkout(self):
         # Just a sanity check; current logic doesn't differentiate between e.g.
         # 'gobbledygook' and 'HEAD'.
         c = MockContext(run=Result("HEAD"))
-        assert release_line(c)[1] == Release.UNDEFINED
+        assert _release_line(c)[1] == Release.UNDEFINED
 
 
-class latest_feature_bucket_:
+class _latest_feature_bucket_:
     def base_case_of_single_release_family(self):
-        bucket = latest_feature_bucket(dict.fromkeys(['unreleased_1_feature']))
+        bucket = _latest_feature_bucket(dict.fromkeys(['unreleased_1_feature']))
         assert bucket == 'unreleased_1_feature'
 
     def simple_ordering_by_bucket_number(self):
-        bucket = latest_feature_bucket(dict.fromkeys([
+        bucket = _latest_feature_bucket(dict.fromkeys([
             'unreleased_1_feature',
             'unreleased_2_feature',
         ]))
         assert bucket == 'unreleased_2_feature'
 
     def ordering_goes_by_numeric_not_lexical_order(self):
-        bucket = latest_feature_bucket(dict.fromkeys([
+        bucket = _latest_feature_bucket(dict.fromkeys([
             'unreleased_1_feature',
             # Yes, releases like 10.x or 17.x are unlikely, but definitely
             # plausible - think modern Firefox for example.
@@ -66,13 +66,13 @@ class latest_feature_bucket_:
         assert bucket == 'unreleased_202_feature'
 
 
-class release_and_issues_:
+class _release_and_issues_:
     class bugfix:
         # TODO: factor out into setup() so each test has some excluded/ignored
         # data in it - helps avoid naive implementation returning x[0] etc.
 
         def no_unreleased(self):
-            release, issues = release_and_issues(
+            release, issues = _release_and_issues(
                 changelog={'1.1': [], '1.1.0': [1, 2]},
                 branch='1.1',
                 release_type=Release.BUGFIX,
@@ -86,7 +86,7 @@ class release_and_issues_:
     class feature:
         def no_unreleased(self):
             # release is None, issues is empty list
-            release, issues = release_and_issues(
+            release, issues = _release_and_issues(
                 changelog={'1.0.1': [1], 'unreleased_1_feature': []},
                 branch='master',
                 release_type=Release.FEATURE,
@@ -96,7 +96,7 @@ class release_and_issues_:
 
         def has_unreleased(self):
             # release is still None, issues is nonempty list
-            release, issues = release_and_issues(
+            release, issues = _release_and_issues(
                 changelog={'1.0.1': [1], 'unreleased_1_feature': [2, 3]},
                 branch='master',
                 release_type=Release.FEATURE,
@@ -108,7 +108,7 @@ class release_and_issues_:
         skip()
 
 
-class find_package_:
+class _find_package_:
     def can_be_short_circuited_with_config_value(self):
         # TODO: should we just bundle this + the version part into one
         # function and setting? do we ever peep into the package for anything
@@ -159,9 +159,9 @@ class load_version_:
         skip()
 
 
-class latest_and_next_version_:
+class _latest_and_next_version_:
     def next_patch_of_bugfix_release(self):
-        versions = latest_and_next_version(Lexicon({
+        versions = _latest_and_next_version(Lexicon({
             'release_type': Release.BUGFIX,
             'latest_line_release': Version('1.2.2'),
             'latest_overall_release': Version('1.4.1'), # realism!
@@ -169,7 +169,7 @@ class latest_and_next_version_:
         assert versions == (Version('1.2.2'), Version('1.2.3'))
 
     def next_minor_of_feature_release(self):
-        versions = latest_and_next_version(Lexicon({
+        versions = _latest_and_next_version(Lexicon({
             'release_type': Release.FEATURE,
             'latest_line_release': None, # realism!
             'latest_overall_release': Version('1.2.2'),

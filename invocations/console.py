@@ -26,7 +26,7 @@ def confirm(question, assume_yes=True):
         If the user does not supplies input that is (case-insensitively) equal
         to "y", "yes", "n" or "no", they will be re-prompted until they do.
 
-    :param unicode question: The question part of the prompt.
+    :param str question: The question part of the prompt.
     :param bool assume_yes:
         Whether to assume the affirmative answer by default. Default value:
         ``True``.

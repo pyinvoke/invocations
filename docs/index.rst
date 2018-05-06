@@ -5,12 +5,18 @@ Invocations
 .. include:: ../README.rst
 
 
-Table of Contents
-=================
+Contents
+========
 
 .. toctree::
-    :maxdepth: 2
     :glob:
 
     changelog
+
+API/task docs
+=============
+
+.. toctree::
+    :glob:
+
     api/*

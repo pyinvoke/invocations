@@ -1,5 +1,5 @@
-======
-pytest
-======
+==========
+``pytest``
+==========
 
 .. automodule:: invocations.pytest
