@@ -42,7 +42,9 @@ class _release_line_:
 
 class _latest_feature_bucket_:
     def base_case_of_single_release_family(self):
-        bucket = _latest_feature_bucket(dict.fromkeys(['unreleased_1_feature']))
+        bucket = _latest_feature_bucket(
+            dict.fromkeys(['unreleased_1_feature'])
+        )
         assert bucket == 'unreleased_1_feature'
 
     def simple_ordering_by_bucket_number(self):
