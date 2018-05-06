@@ -147,6 +147,8 @@ def sites(c):
     # exist =/ circular dependencies ahoy! Do it quietly to avoid pulluting
     # output; only super-serious errors will bubble up.
     # TODO: wants a 'temporarily tweak context settings' contextmanager
+    # TODO: also a fucking spinner cuz this confuses me every time I run it
+    # when the docs aren't already prebuilt
     docs_c['run'].hide = True
     www_c['run'].hide = True
     docs['build'](docs_c)
