@@ -1,5 +1,6 @@
 from datetime import datetime
-import os
+from os import environ, getcwd
+from os.path import abspath, join, dirname
 import sys
 
 
@@ -16,7 +17,7 @@ year = datetime.now().year
 copyright = u'%d Jeff Forcier' % year
 
 # Ensure project directory is on PYTHONPATH for version, autodoc access
-sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), '..')))
+sys.path.insert(0, abspath(join(getcwd(), '..')))
 
 # Enforce use of Alabaster (even on RTD) and configure it
 html_theme = 'alabaster'
@@ -41,3 +42,22 @@ html_sidebars = {
 # Other extension configs
 autodoc_default_flags = ['members', 'special-members']
 releases_github_path = 'pyinvoke/invocations'
+
+# Intersphinx
+# TODO: this could probably get wrapped up into us or some other shared lib?
+on_rtd = environ.get('READTHEDOCS') == 'True'
+on_travis = environ.get('TRAVIS', False)
+on_dev = not (on_rtd or on_travis)
+
+# Invoke
+inv_target = join(
+    dirname(__file__),
+    '..', '..', 'invoke', 'sites', 'docs', '_build'
+)
+if not on_dev:
+    inv_target = 'http://docs.pyinvoke.org/en/latest/'
+# Put them all together, + Python core
+intersphinx_mapping = {
+    'python': ('http://docs.python.org/', None),
+    'invoke': (inv_target, None),
+}
