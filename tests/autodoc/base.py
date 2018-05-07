@@ -2,7 +2,7 @@ from os.path import join, dirname
 import re
 import shutil
 
-from mock import Mock
+from mock import Mock, patch
 from pytest import skip
 
 from invoke import Context
@@ -36,10 +36,10 @@ class autodoc_:
     def teardown_class(self):
         shutil.rmtree(self.build_dir, ignore_errors=True)
 
-    def setup_adds_TaskDocumenter_as_documenter(self):
-        app = Mock()
-        setup(app)
-        app.add_autodocumenter.assert_called_once_with(TaskDocumenter)
+    @patch('sphinx.ext.autodoc.add_documenter')
+    def setup_adds_TaskDocumenter_as_documenter(self, add_documenter):
+        setup(Mock())
+        add_documenter.assert_called_once_with(TaskDocumenter)
 
     def module_docstring_unmodified(self):
         # Just a sanity test, really.
