@@ -27,7 +27,7 @@ def base_case(c):
 
 
 @task
-def simple_case(c, arg):
+def simple_case(c, simple_arg):
     """
     Parameterization!
     """

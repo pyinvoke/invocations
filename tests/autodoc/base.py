@@ -59,7 +59,12 @@ class autodoc_:
         assert "undocumented" not in self.api_docs
 
     def base_case_of_no_argument_docstringed_task(self):
-        skip()
+        for sentinel in ("base_case", "smallest possible task"):
+            assert sentinel in self.api_docs
 
     def simple_case_of_single_argument_task(self):
-        skip()
+        # TODO: OK we really need something that scales better soon re:
+        # viewing the output as a non-HTML string / something that is not
+        # super tied to sphinx/theme output...heh
+        for sentinel in ("simple_case", "simple_arg", "Parameterization!"):
+            assert sentinel in self.api_docs
