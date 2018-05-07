@@ -41,11 +41,19 @@ To use:
 .. _autodoc: http://www.sphinx-doc.org/en/master/ext/autodoc.html
 """
 
-from sphinx.ext.autodoc import FunctionDocumenter
+from invoke import Task
+from sphinx.ext.autodoc import ModuleLevelDocumenter
 
 
-class TaskDocumenter(FunctionDocumenter):
+# TODO: consider inheriting from FunctionDocumenter if it helps save a lot of
+# code, but make sure to nix anything that would make autodoc try documenting
+# real functions with us! (Which is probably just can_document_member...)
+class TaskDocumenter(ModuleLevelDocumenter):
     objtype = 'task'
+
+    @classmethod
+    def can_document_member(cls, member, membername, isattr, parent):
+        return isinstance(member, Task)
 
 
 def setup(app):

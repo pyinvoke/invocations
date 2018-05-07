@@ -1,4 +1,5 @@
 from os.path import join, dirname
+import re
 import shutil
 
 from mock import Mock
@@ -16,8 +17,10 @@ def _build():
     support = join(dirname(__file__), '_support')
     docs = join(support, 'docs')
     build = join(support, '_build')
+    command = "sphinx-build -c {} -W {} {}".format(support, docs, build)
     with c.cd(support):
-        c.run("sphinx-build -c {} -W {} {}".format(support, docs, build))
+        # Turn off stdin mirroring to avoid irritating pytest.
+        c.run(command, in_stream=False)
     return build
 
 
@@ -26,19 +29,34 @@ class autodoc_:
     def setup_class(self):
         # Build once, introspect many...for now
         self.build_dir = _build()
+        with open(join(self.build_dir, 'api.html')) as fd:
+            self.api_docs = fd.read()
 
     @classmethod
     def teardown_class(self):
-        shutil.rmtree(self.build_dir)
+        shutil.rmtree(self.build_dir, ignore_errors=True)
 
     def setup_adds_TaskDocumenter_as_documenter(self):
         app = Mock()
         setup(app)
         app.add_autodocumenter.assert_called_once_with(TaskDocumenter)
 
+    def module_docstring_unmodified(self):
+        # Just a sanity test, really.
+        assert "Some fake tasks to test task autodoc." in self.api_docs
+
+    def regular_functions_only_appear_once(self):
+        # Paranoid sanity check re: our
+        # very-much-like-FunctionDocumenter-documenter not accidentally loading
+        # up non-task objects. SHRUG.
+        # TODO: incredibly stupid "is HTML string literal" test because too
+        # lazy to whip up something with BeautifulSoup et al.
+        for sentinel in (">not_a_task", ">I am a regular function"):
+            assert len(re.findall(sentinel, self.api_docs)) == 1
+
     def undocumented_members_do_not_appear_by_default(self):
         # This really just tests basic Sphinx/autodoc stuff for now...meh
-        skip()
+        assert "undocumented" not in self.api_docs
 
     def base_case_of_no_argument_docstringed_task(self):
         skip()
