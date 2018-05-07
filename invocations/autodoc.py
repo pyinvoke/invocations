@@ -3,9 +3,8 @@ Sphinx autodoc hooks for documenting Invoke-level objects such as tasks.
 
 Unlike most of the rest of Invocations, this module isn't for reuse in the
 "import and call functions" sense, but instead acts as a Sphinx extension which
-allows Sphinx's `autodoc
-<http://www.sphinx-doc.org/en/master/ext/autodoc.html>`_ functionality to see
-and document Invoke tasks and similar Invoke objects.
+allows Sphinx's `autodoc`_ functionality to see and document
+Invoke tasks and similar Invoke objects.
 
 .. note::
     This functionality is mostly useful for redistributable/reusable tasks
@@ -25,14 +24,21 @@ To use:
   tasks module(s), e.g. ``.. automodule:: myproject.tasks`` in some ``.rst``
   document of your choosing.
 
-    - As noted above, this only works for modules that are importable, again
-      like any other Sphinx autodoc use case.
-    - All other autodoc constraints are in play - for example, by default only
-      tasks with docstrings will be picked up, unless you give the
-      ``:undoc-members:`` flag somehow. Please see the Sphinx docs for details.
+    - As noted above, this only works for modules that are importable, like any
+      other Sphinx autodoc use case.
+    - Unless you want to opt-in which module members get documented, use
+      ``:members:`` or add ``"members"`` to your ``conf.py``'s
+      ``autodoc_default_flags``.
+    - By default, only tasks with docstrings will be picked up, unless you also
+      give the ``:undoc-members:`` flag or add ``:undoc-members:`` / add
+      ``"undoc-members"`` to ``autodoc_default_flags``.
+    - Please see the `autodoc`_ docs for details on these settings and more!
 
 - Build your docs, and you should see your tasks showing up as documented
   functions in the result.
+
+
+.. _autodoc: http://www.sphinx-doc.org/en/master/ext/autodoc.html
 """
 
 from sphinx.ext.autodoc import FunctionDocumenter
