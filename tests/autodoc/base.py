@@ -3,7 +3,6 @@ import re
 import shutil
 
 from mock import Mock, patch
-from pytest import skip
 
 from invoke import Context
 from invocations.autodoc import setup, TaskDocumenter
