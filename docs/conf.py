@@ -5,7 +5,12 @@ import sys
 
 
 # Core settings
-extensions = ['releases', 'sphinx.ext.intersphinx', 'sphinx.ext.autodoc']
+extensions = [
+    'releases',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.autodoc',
+    'invocations.autodoc',
+]
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
