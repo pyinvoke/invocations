@@ -26,3 +26,11 @@ script:
   - inv docs --nitpick
   - flake8
 # TODO: after_success -> codecov, once coverage sucks less XD
+notifications:
+  irc:
+    channels: "irc.freenode.org#invoke"
+    template:
+      - "%{repository_name}@%{branch}: %{message} (%{build_url})"
+    on_success: change
+    on_failure: change
+  email: false
