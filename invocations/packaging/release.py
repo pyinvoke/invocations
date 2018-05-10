@@ -597,9 +597,10 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
         Whether to upload wheels (requires the ``wheel`` package from PyPI).
 
     :param str index:
-        Custom upload index URL.
+        Custom upload index/repository name.
 
         By default, uses whatever the invoked ``pip`` is configured to use.
+        Modify your ``pypirc`` file to add new named repositories.
 
     :param bool sign:
         Whether to sign the built archive(s) via GPG.
@@ -690,7 +691,7 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
         # Upload
         parts = ["twine", "upload"]
         if index:
-            index_arg = "-r {0}".format(index)
+            index_arg = "--repository {0}".format(index)
         if index:
             parts.append(index_arg)
         paths = archives[:]
