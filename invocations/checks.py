@@ -12,7 +12,6 @@ def blacken(c, line_length=79, folder=None, check=False):
     """
     Run black on the current source tree (all ``.py`` files).
     """
-
     default_folders = ["."]
     configured_folders = c.config.get("blacken", {}).get(
         "folders", default_folders
