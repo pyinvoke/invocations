@@ -735,6 +735,6 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
 
 # Stitch together current partway-rewritten stuff into public namespace.
 # TODO: reconsider once fully done; may end up looking a lot like this anyways.
-ns = Collection('release', all_, status, build, publish)
+ns = Collection('release', all_, status, prepare, build, publish)
 # Hide stdout by default, preferring to explicitly enable it when necessary.
 ns.configure({'run': {'hide': 'stdout'}})
