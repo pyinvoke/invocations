@@ -1,5 +1,5 @@
 """
-Shortcuts for common development check tasks
+Tasks for common project sanity-checking such as linting or type checking.
 """
 
 from __future__ import unicode_literals
@@ -17,11 +17,11 @@ def blacken(c, line_length=79, folder=None, check=False):
     )
     folders = configured_folders if not folder else folder
 
-    black_command_line = "black -l {0}".format(line_length)
+    black_command_line = "black -l {}".format(line_length)
     if check:
-        black_command_line = "{0} --check".format(black_command_line)
+        black_command_line = "{} --check".format(black_command_line)
 
-    cmd = "find {0} -name '*.py' | xargs {1}".format(
+    cmd = "find {} -name '*.py' | xargs {}".format(
         " ".join(folders), black_command_line
     )
     c.run(cmd, pty=True)
