@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :feature:`-` Add the ``checks`` module, containing ``checks.blacken`` which
+  executes the `black <https://github.com/ambv/black>`_ code formatter
 - :release:`1.1.0 <2018-05-14>`
 - :feature:`-` Split out the body of the (sadly incomplete)
   ``packaging.release.all`` task into the better-named
