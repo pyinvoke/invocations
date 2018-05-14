@@ -251,6 +251,19 @@ def all_(c):
     """
     Catchall version-bump/tag/changelog/PyPI upload task.
     """
+    prepare(c)
+    # TODO: below
+    # push(c)
+    # build(c)
+    # publish(c) # TODO: update publish() to accept some of our state and do
+    # things with it like be idempotent?
+
+
+@task
+def prepare(c):
+    """
+    Edit changelog & version, git commit, and git tag, to set up for release.
+    """
     # Print dry-run/status/actions-to-take data & grab programmatic result
     # TODO: maybe expand the enum-based stuff to have values that split up
     # textual description, command string, etc. See the TODO up by their
@@ -298,12 +311,6 @@ def all_(c):
         c.run("git tag {0}".format(state.expected_version), hide=False)
         # TODO: print something to clarify/confirm tag was cut, if not just
         # adding echo=True to above
-
-    # TODO: vvv
-    # push(c)
-    # build(c)
-    # publish(c) # TODO: update publish() to accept some of our state and do
-    # things with it like be idempotent?
 
 
 def _release_line(c):
