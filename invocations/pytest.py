@@ -69,13 +69,15 @@ def test(
 
 
 @task(help=test.help)
-def integration(c, opts=None, pty=True):
+def integration(c, opts=None, pty=True, x=False, k=None):
     """
     Run the integration test suite. May be slow!
+
+    See ``pytest.test`` for description of most arguments.
     """
     opts = opts or ""
     opts += " integration/"
-    test(c, opts=opts, pty=pty)
+    test(c, opts=opts, pty=pty, x=x, k=k)
 
 
 @task
