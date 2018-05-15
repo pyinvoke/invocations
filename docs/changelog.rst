@@ -2,8 +2,8 @@
 Changelog
 =========
 
-- :feature:`-` Add ``-x`` and ``-k`` flags to ``pytest.integration`` to match
-  ``pytest.test`` (they're simple passthroughs).
+- :feature:`-` Add 'missing' arguments to ``pytest.integration`` so its
+  signature now largely matches ``pytest.test``, which it wraps.
 - :feature:`-` Add the ``checks`` module, containing ``checks.blacken`` which
   executes the `black <https://github.com/ambv/black>`_ code formatter
 - :release:`1.1.0 <2018-05-14>`

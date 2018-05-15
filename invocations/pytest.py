@@ -69,7 +69,10 @@ def test(
 
 
 @task(help=test.help)
-def integration(c, opts=None, pty=True, x=False, k=None):
+def integration(
+    c, opts=None, pty=True, x=False, k=None, verbose=True, color=True,
+    capture='sys', module=None,
+):
     """
     Run the integration test suite. May be slow!
 
@@ -77,7 +80,10 @@ def integration(c, opts=None, pty=True, x=False, k=None):
     """
     opts = opts or ""
     opts += " integration/"
-    test(c, opts=opts, pty=pty, x=x, k=k)
+    test(
+        c, opts=opts, pty=pty, x=x, k=k, verbose=verbose, color=color,
+        capture=capture, module=module,
+    )
 
 
 @task
