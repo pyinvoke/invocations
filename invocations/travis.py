@@ -85,6 +85,7 @@ def sudo_coverage(c):
     Ensures the virtualenv is sourced and that coverage is run in a mode
     suitable for headless/API consumtion (e.g. no HTML report, etc.)
     """
+    # TODO: deprecate in favor of just using sudo-run
     sudo_run(c, command="inv coverage")
 
 
