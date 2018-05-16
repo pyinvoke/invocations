@@ -80,9 +80,11 @@ def integration(
     """
     opts = opts or ""
     opts += " integration/"
+    if module is not None:
+        opts += "{}.py".format(module)
     test(
         c, opts=opts, pty=pty, x=x, k=k, verbose=verbose, color=color,
-        capture=capture, module=module,
+        capture=capture,
     )
 
 
