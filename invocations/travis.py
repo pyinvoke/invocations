@@ -62,6 +62,22 @@ def make_sshable(c):
 
 
 @task
+def sudo_run(c, command):
+    """
+    Run some command under Travis-oriented sudo subshell/virtualenv.
+
+    :param str command:
+        Command string to run, e.g. ``inv coverage``, ``inv integration``, etc.
+        (Does not necessarily need to be an Invoke task, but...)
+    """
+    # NOTE: explicit shell wrapper because sourcing the venv works best here;
+    # test tasks currently use their own subshell to call e.g. 'pytest --blah',
+    # so the tactic of '$VIRTUAL_ENV/bin/inv coverage' doesn't help - only that
+    # intermediate process knows about the venv!
+    cmd = "source $VIRTUAL_ENV/bin/activate && {}".format(command)
+    c.sudo('bash -c "{0}"'.format(cmd), user=c.travis.sudo.user)
+
+@task
 def sudo_coverage(c):
     """
     Execute the local ``coverage`` task as the configured Travis sudo user.
@@ -69,12 +85,7 @@ def sudo_coverage(c):
     Ensures the virtualenv is sourced and that coverage is run in a mode
     suitable for headless/API consumtion (e.g. no HTML report, etc.)
     """
-    # NOTE: explicit shell wrapper because sourcing the venv works best here;
-    # test tasks currently use their own subshell to call e.g. 'spec --blah',
-    # so the tactic of '$VIRTUAL_ENV/bin/inv coverage' doesn't help - only that
-    # intermediate process knows about the venv!
-    cmd = "source $VIRTUAL_ENV/bin/activate && inv coverage"
-    c.sudo('bash -c "{0}"'.format(cmd), user=c.travis.sudo.user)
+    sudo_run(c, command="inv coverage")
 
 
 @task
