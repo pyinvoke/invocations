@@ -17,6 +17,7 @@ matrix:
 install:
   - pip install -r dev-requirements.txt
 script:
+  - pip install black==18.5b0
   - inv blacken
   - flake8
   # Run tests w/ coverage first, so it uses the local-installed copy.
