@@ -10,7 +10,8 @@ Changelog
 - :feature:`-` Add 'missing' arguments to ``pytest.integration`` so its
   signature now largely matches ``pytest.test``, which it wraps.
 - :feature:`-` Add the ``checks`` module, containing ``checks.blacken`` which
-  executes the `black <https://github.com/ambv/black>`_ code formatter
+  executes the `black <https://github.com/ambv/black>`_ code formatter. Thanks
+  to Chris Rose.
 - :release:`1.1.0 <2018-05-14>`
 - :feature:`-` Split out the body of the (sadly incomplete)
   ``packaging.release.all`` task into the better-named
