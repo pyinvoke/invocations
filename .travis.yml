@@ -17,6 +17,8 @@ matrix:
 install:
   - pip install -r dev-requirements.txt
 script:
+  - inv blacken
+  - flake8
   # Run tests w/ coverage first, so it uses the local-installed copy.
   # (If we do this after the below installation tests, coverage will think
   # nothing got covered!)
@@ -25,7 +27,6 @@ script:
   - inv travis.test-installation --package=invocations --sanity="inv --list"
   - inv travis.test-packaging --package=invocations --sanity="inv --list"
   - inv docs --nitpick
-  - flake8
 # TODO: after_success -> codecov, once coverage sucks less XD
 notifications:
   irc:
