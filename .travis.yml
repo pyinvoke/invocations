@@ -17,8 +17,9 @@ matrix:
 install:
   - pip install -r dev-requirements.txt
 script:
-  - "pip install black==18.5b0"
-  - inv blacken
+  # Fast syntax check failures for more rapid feedback to submitters
+  # (Travis-oriented metatask that version checks Python, installs, runs.)
+  - inv travis.blacken
   - flake8
   # Run tests w/ coverage first, so it uses the local-installed copy.
   # (If we do this after the below installation tests, coverage will think

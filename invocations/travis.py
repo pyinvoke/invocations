@@ -9,10 +9,12 @@ somewhere in your config setup:
 """
 
 import os
+import sys
 
 from invoke import task
 
 from .packaging.release import publish
+from . import checks
 
 
 PYTHON = os.environ.get("TRAVIS_PYTHON_VERSION", "")
@@ -156,3 +158,23 @@ def test_packaging(c, package, sanity, alt_python=None):
         c.run("pip uninstall -y {0}".format(package), warn=True)
         c.run("pip install tmp/dist/{0}".format(glob))
         c.run(sanity)
+
+
+@task
+def blacken(c):
+    """
+    Install and execute `black` under appropriate circumstances
+    """
+    # Black only even installs under 3.6 or newer. And given its nature,
+    # there's no real point running it under more than one Python version
+    # anyhow.
+    if not PYTHON.startswith("3.6"):
+        msg = "Not blackening, since Python {} != Python 3.6".format(PYTHON)
+        print(msg, file=sys.stderr)
+        return
+    # Install, allowing config override of hardcoded default version
+    config = c.config.get("travis", {}).get("black", {})
+    version = config.get("version", "18.5b0")
+    c.run("pip install black=={}".format(version))
+    # Execute our blacken task
+    checks.blacken(c)
