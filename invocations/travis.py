@@ -165,11 +165,18 @@ def test_packaging(c, package, sanity, alt_python=None):
 @task
 def blacken(c):
     """
-    Install and execute `black` under appropriate circumstances
+    Install and execute ``black`` under appropriate circumstances, with diffs.
+
+    Installs and runs ``black`` under Python 3.6 (the first version it
+    supports). Since this sort of CI based task only needs to run once per
+    commit (formatting is not going to change between interpreters) this seems
+    like a worthwhile tradeoff.
+
+    Not only does this execute ``black --check`` as a pass/fail, if it fails it
+    then runs ``black`` normally & emits the resulting diff, so contributors
+    can see exactly what they need to change. This is intended as a hedge
+    against the fact that not all contributors will be using Python 3.6+.
     """
-    # Black only even installs under 3.6 or newer. And given its nature,
-    # there's no real point running it under more than one Python version
-    # anyhow.
     if not PYTHON.startswith("3.6"):
         msg = "Not blackening, since Python {} != Python 3.6".format(PYTHON)
         print(msg, file=sys.stderr)
@@ -178,5 +185,6 @@ def blacken(c):
     config = c.config.get("travis", {}).get("black", {})
     version = config.get("version", "18.5b0")
     c.run("pip install black=={}".format(version))
-    # Execute our blacken task
-    checks.blacken(c)
+    # Execute our blacken task, with diff + check, which will both error
+    # and emit diffs.
+    checks.blacken(c, check=True, diff=True)
