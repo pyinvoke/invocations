@@ -8,6 +8,8 @@ somewhere in your config setup:
 - ``travis.sudo.password``: Their password.
 """
 
+from __future__ import print_function
+
 import os
 import sys
 
