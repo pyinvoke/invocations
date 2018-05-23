@@ -7,8 +7,15 @@ from invoke import task
 
 @task
 def test(
-    c, verbose=True, color=True, capture='sys', module=None, k=None,
-    x=False, opts='', pty=True,
+    c,
+    verbose=True,
+    color=True,
+    capture="sys",
+    module=None,
+    k=None,
+    x=False,
+    opts="",
+    pty=True,
 ):
     """
     Run pytest with given options.
@@ -52,16 +59,16 @@ def test(
     # configure it explicitly...?)
     flags = []
     if verbose:
-        flags.append('--verbose')
+        flags.append("--verbose")
     if color:
-        flags.append('--color=yes')
-    flags.append('--capture={0}'.format(capture))
+        flags.append("--color=yes")
+    flags.append("--capture={0}".format(capture))
     if opts is not None:
         flags.append(opts)
-    if k is not None and not ('-k' in opts if opts else False):
+    if k is not None and not ("-k" in opts if opts else False):
         flags.append("-k '{}'".format(k))
-    if x and not ('-x' in opts if opts else False):
-        flags.append('-x')
+    if x and not ("-x" in opts if opts else False):
+        flags.append("-x")
     modstr = ""
     if module is not None:
         modstr = " tests/{}.py".format(module)
@@ -70,8 +77,15 @@ def test(
 
 @task(help=test.help)
 def integration(
-    c, opts=None, pty=True, x=False, k=None, verbose=True, color=True,
-    capture='sys', module=None,
+    c,
+    opts=None,
+    pty=True,
+    x=False,
+    k=None,
+    verbose=True,
+    color=True,
+    capture="sys",
+    module=None,
 ):
     """
     Run the integration test suite. May be slow!
@@ -83,13 +97,19 @@ def integration(
     if module is not None:
         opts += "{}.py".format(module)
     test(
-        c, opts=opts, pty=pty, x=x, k=k, verbose=verbose, color=color,
+        c,
+        opts=opts,
+        pty=pty,
+        x=x,
+        k=k,
+        verbose=verbose,
+        color=color,
         capture=capture,
     )
 
 
 @task
-def coverage(c, report='term', opts='', tester=None):
+def coverage(c, report="term", opts="", tester=None):
     """
     Run pytest with coverage enabled.
 
@@ -108,5 +128,5 @@ def coverage(c, report='term', opts='', tester=None):
     opts += "--cov --no-cov-on-fail --cov-report={0}".format(report)
     # TODO: call attached suite's test(), not the one in here, if they differ
     (tester or test)(c, opts=opts)
-    if report is 'html':
+    if report is "html":
         c.run("open htmlcov/index.html")

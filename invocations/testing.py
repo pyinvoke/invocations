@@ -10,26 +10,28 @@ from tqdm import tqdm
 from .watch import watch
 
 
-@task(help={
-    'module': "Just runs tests/STRING.py.",
-    'runner': "Use STRING to run tests instead of 'spec'.",
-    'opts': "Extra flags for the test runner",
-    'pty': "Whether to run tests under a pseudo-tty",
-})
+@task(
+    help={
+        "module": "Just runs tests/STRING.py.",
+        "runner": "Use STRING to run tests instead of 'spec'.",
+        "opts": "Extra flags for the test runner",
+        "pty": "Whether to run tests under a pseudo-tty",
+    }
+)
 def test(c, module=None, runner=None, opts=None, pty=True):
     """
     Run a Spec or Nose-powered internal test suite.
     """
-    runner = runner or 'spec'
+    runner = runner or "spec"
     # Allow selecting specific submodule
     specific_module = " --tests=tests/%s.py" % module
-    args = (specific_module if module else "")
+    args = specific_module if module else ""
     if opts:
         args += " " + opts
     # Always enable timing info by default. OPINIONATED
     args += " --with-timing"
     # Allow client to configure some other Nose-related things.
-    logformat = c.config.get('tests', {}).get('logformat', None)
+    logformat = c.config.get("tests", {}).get("logformat", None)
     if logformat is not None:
         args += " --logging-format='{0}'".format(logformat)
     # Use pty by default so the spec/nose/Python process buffers "correctly"
@@ -57,17 +59,17 @@ def watch_tests(c, module=None, opts=None):
     Honors ``tests.package`` setting re: which source directory to watch for
     changes.
     """
-    package = c.config.get('tests', {}).get('package')
-    patterns = ['\./tests/']
+    package = c.config.get("tests", {}).get("package")
+    patterns = ["\./tests/"]
     if package:
-        patterns.append('\./{0}/'.format(package))
-    kwargs = {'module': module, 'opts': opts}
+        patterns.append("\./{0}/".format(package))
+    kwargs = {"module": module, "opts": opts}
     # Kick things off with an initial test (making sure it doesn't exit on its
     # own if tests currently fail)
     c.config.run.warn = True
     test(c, **kwargs)
     # Then watch
-    watch(c, test, patterns, ['.*/\..*\.swp'], **kwargs)
+    watch(c, test, patterns, [".*/\..*\.swp"], **kwargs)
 
 
 @task
@@ -126,7 +128,7 @@ def count_errors(c, command, trials=10, verbose=False, fail_fast=False):
     # "stdout contained <sentinel>" or whatnot
     goods, bads = [], []
     prev_error = time.time()
-    for num_runs in tqdm(range(trials), unit='trial'):
+    for num_runs in tqdm(range(trials), unit="trial"):
         result = c.run(command, hide=True, warn=True)
         if result.failed:
             now = time.time()
@@ -138,7 +140,7 @@ def count_errors(c, command, trials=10, verbose=False, fail_fast=False):
                 break
         else:
             goods.append(result)
-    num_runs += 1 # for count starting at 1, not 0
+    num_runs += 1  # for count starting at 1, not 0
     if verbose or fail_fast:
         # TODO: would be nice to show interwoven stdout/err but I don't believe
         # we track that at present...
@@ -168,5 +170,8 @@ def count_errors(c, command, trials=10, verbose=False, fail_fast=False):
         print("First failure occurred after {0} successes".format(successes))
     else:
         print(overall)
-    print("Stats: min={0}s, mean={1}s, mode={2}s, max={3}s".format(
-        min(periods), mean, mode, max(periods)))
+    print(
+        "Stats: min={0}s, mean={1}s, mode={2}s, max={3}s".format(
+            min(periods), mean, mode, max(periods)
+        )
+    )

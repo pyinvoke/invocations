@@ -42,16 +42,17 @@ To use:
 """
 
 from invoke import Task
-from sphinx.util.inspect import getargspec # Improved over raw stdlib
+from sphinx.util.inspect import getargspec  # Improved over raw stdlib
+
 # For sane mock patching. Meh.
 from sphinx.ext import autodoc
 
 
 class TaskDocumenter(
-    autodoc.DocstringSignatureMixin, autodoc.ModuleLevelDocumenter,
+    autodoc.DocstringSignatureMixin, autodoc.ModuleLevelDocumenter
 ):
-    objtype = 'task'
-    directivetype = 'function'
+    objtype = "task"
+    directivetype = "function"
 
     @classmethod
     def can_document_member(cls, member, membername, isattr, parent):
