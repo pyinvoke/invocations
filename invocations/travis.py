@@ -15,6 +15,9 @@ from invoke import task
 from .packaging.release import publish
 
 
+PYTHON = os.environ.get("TRAVIS_PYTHON_VERSION", "")
+
+
 @task
 def make_sudouser(c):
     """
@@ -140,10 +143,12 @@ def test_packaging(c, package, sanity, alt_python=None):
             # TODO: the original .travis.yml was structured with logic this
             # way; I don't recall if it was purposeful or if an 'if/else' would
             # suffice instead.
-            travis_ver = os.environ["TRAVIS_PYTHON_VERSION"]
-            if travis_ver.startswith("3") or travis_ver == "pypy3":
+            # TODO: shouldn't we just be able to use internal Python hints
+            # about this now anyways (eg `sys.version`)? Will that work for
+            # pypy and pypy3?
+            if PYTHON.startswith("3") or PYTHON == "pypy3":
                 globs.append("*py3*.whl")
-            if travis_ver.startswith("2") or travis_ver == "pypy":
+            if PYTHON.startswith("2") or PYTHON == "pypy":
                 globs.append("*py2*.whl")
         else:
             globs.append("*.whl")
