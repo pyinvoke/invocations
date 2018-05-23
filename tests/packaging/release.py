@@ -69,8 +69,8 @@ class _latest_feature_bucket_:
             dict.fromkeys(
                 [
                     "unreleased_1_feature",
-                    # Yes, releases like 10.x or 17.x are unlikely, but definitely
-                    # plausible - think modern Firefox for example.
+                    # Yes, releases like 10.x or 17.x are unlikely, but
+                    # definitely plausible - think modern Firefox for example.
                     "unreleased_10_feature",
                     "unreleased_23_feature",
                     "unreleased_202_feature",
@@ -372,9 +372,8 @@ Tag +{tag}
             ).strip()
             output = sys.stdout.getvalue()
             err = "Expected:\n\n{0}\n\nGot:\n\n{1}".format(regex, output)
-            err += "\n\nRepr edition...\n\nExpected:\n\n{0!r}\n\nGot:\n\n{1!r}".format(
-                regex, output
-            )  # noqa
+            err += "\n\nRepr edition...\n\n"
+            err += "Expected:\n\n{0!r}\n\nGot:\n\n{1!r}".format(regex, output)
             assert re.match(regex, output), err
 
         @trap  # just for cleaner test output
