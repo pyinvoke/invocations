@@ -148,7 +148,7 @@ def _converge(c):
     # Short-circuit if type is undefined; we can't do useful work for that.
     if release_type is Release.UNDEFINED:
         raise UndefinedReleaseType(
-            "You don't seem to be on a release-related branch;"
+            "You don't seem to be on a release-related branch; "
             "why are you trying to cut a release?"
         )
     # Parse our changelog so we can tell what's released and what's not.
