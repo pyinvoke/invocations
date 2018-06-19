@@ -15,8 +15,8 @@ ns.configure(
         },
         "run": {
             "env": {
-                # Our ANSI color tests test against hardcoded codes appropriate for
-                # this terminal, for now.
+                # Our ANSI color tests test against hardcoded codes appropriate
+                # for this terminal, for now.
                 "TERM": "xterm-256color"
             }
         },
