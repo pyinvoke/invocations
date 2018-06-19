@@ -13,9 +13,9 @@ def _build():
     Build local support docs tree and return the build target dir for cleanup.
     """
     c = Context()
-    support = join(dirname(__file__), '_support')
-    docs = join(support, 'docs')
-    build = join(support, '_build')
+    support = join(dirname(__file__), "_support")
+    docs = join(support, "docs")
+    build = join(support, "_build")
     command = "sphinx-build -c {} -W {} {}".format(support, docs, build)
     with c.cd(support):
         # Turn off stdin mirroring to avoid irritating pytest.
@@ -24,18 +24,19 @@ def _build():
 
 
 class autodoc_:
+
     @classmethod
     def setup_class(self):
         # Build once, introspect many...for now
         self.build_dir = _build()
-        with open(join(self.build_dir, 'api.html')) as fd:
+        with open(join(self.build_dir, "api.html")) as fd:
             self.api_docs = fd.read()
 
     @classmethod
     def teardown_class(self):
         shutil.rmtree(self.build_dir, ignore_errors=True)
 
-    @patch('sphinx.ext.autodoc.add_documenter')
+    @patch("sphinx.ext.autodoc.add_documenter")
     def setup_adds_TaskDocumenter_as_documenter(self, add_documenter):
         setup(Mock())
         add_documenter.assert_called_once_with(TaskDocumenter)

@@ -36,7 +36,7 @@ from ..util import tmpdir
 from ..console import confirm
 
 
-debug = logging.getLogger('invocations.packaging.release').debug
+debug = logging.getLogger("invocations.packaging.release").debug
 
 
 # TODO: this could be a good module to test out a more class-centric method of
@@ -73,22 +73,26 @@ check = "\u2714"
 ex = "\u2718"
 
 # Types of releases/branches
-Release = Enum('Release', "BUGFIX FEATURE UNDEFINED")
+Release = Enum("Release", "BUGFIX FEATURE UNDEFINED")
 
 # Actions to take for various components - done as enums whose values are
 # useful one-line status outputs.
+
 
 class Changelog(Enum):
     OKAY = t.green(check + " no unreleased issues")
     NEEDS_RELEASE = t.red(ex + " needs :release: entry")
 
+
 class VersionFile(Enum):
     OKAY = t.green(check + " version up to date")
     NEEDS_BUMP = t.red(ex + " needs version bump")
 
+
 class Tag(Enum):
     OKAY = t.green(check + " all set")
     NEEDS_CUTTING = t.red(ex + " needs cutting")
+
 
 # Bits for testing branch names to determine release type
 BUGFIX_RE = re.compile("^\d+\.\d+$")
@@ -97,6 +101,7 @@ BUGFIX_RELEASE_RE = re.compile("^\d+\.\d+\.\d+$")
 # - same concept, different name, e.g. s/master/dev/
 # - different concept entirely, e.g. no master-ish, only feature branches
 FEATURE_RE = re.compile("^master$")
+
 
 class UndefinedReleaseType(Exception):
     pass
@@ -142,7 +147,9 @@ def _converge(c):
     branch, release_type = _release_line(c)
     # Short-circuit if type is undefined; we can't do useful work for that.
     if release_type is Release.UNDEFINED:
-        raise UndefinedReleaseType("You don't seem to be on a release-related branch; why are you trying to cut a release?") # noqa
+        raise UndefinedReleaseType(
+            "You don't seem to be on a release-related branch; why are you trying to cut a release?"
+        )  # noqa
     # Parse our changelog so we can tell what's released and what's not.
     # TODO: below needs to go in something doc-y somewhere; having it in a
     # non-user-facing subroutine docstring isn't visible enough.
@@ -169,16 +176,20 @@ def _converge(c):
     # Grab all git tags
     tags = _get_tags(c)
 
-    state = Lexicon({
-        'branch': branch,
-        'release_type': release_type,
-        'changelog': changelog,
-        'latest_line_release': Version(line_release) if line_release else None,
-        'latest_overall_release': overall_release, # already a Version
-        'unreleased_issues': issues,
-        'current_version': Version(current_version),
-        'tags': tags,
-    })
+    state = Lexicon(
+        {
+            "branch": branch,
+            "release_type": release_type,
+            "changelog": changelog,
+            "latest_line_release": Version(line_release)
+            if line_release
+            else None,
+            "latest_overall_release": overall_release,  # already a Version
+            "unreleased_issues": issues,
+            "current_version": Version(current_version),
+            "tags": tags,
+        }
+    )
     # Version number determinations:
     # - latest actually-released version
     # - the next version after that for current branch
@@ -281,17 +292,17 @@ def all_(c):
         # but have other contents as well.
         version_file = os.path.join(
             _find_package(c),
-            c.packaging.get('version_module', '_version') + ".py",
+            c.packaging.get("version_module", "_version") + ".py",
         )
         cmd = "$EDITOR {0}".format(version_file)
         c.run(cmd, pty=True, hide=False)
     if actions.tag == Tag.NEEDS_CUTTING:
         # Commit, if necessary, so the tag includes everything.
         # NOTE: this strips out untracked files. effort.
-        cmd = "git status --porcelain | egrep -v \"^\\?\""
+        cmd = 'git status --porcelain | egrep -v "^\\?"'
         if c.run(cmd, hide=True, warn=True).ok:
             c.run(
-                "git commit -am \"Cut {0}\"".format(state.expected_version),
+                'git commit -am "Cut {0}"'.format(state.expected_version),
                 hide=False,
             )
         # Tag!
@@ -349,11 +360,9 @@ def _latest_feature_bucket(changelog):
 
     :returns: a string key from ``changelog``.
     """
-    unreleased = [x for x in changelog if x.startswith('unreleased_')]
+    unreleased = [x for x in changelog if x.startswith("unreleased_")]
     return sorted(
-        unreleased,
-        key=lambda x: int(x.split('_')[1]),
-        reverse=True,
+        unreleased, key=lambda x: int(x.split("_")[1]), reverse=True
     )[0]
 
 
@@ -413,7 +422,7 @@ def _get_tags(c):
     Return sorted list of release-style tags as semver objects.
     """
     tags_ = []
-    for tagstr in c.run("git tag", hide=True).stdout.strip().split('\n'):
+    for tagstr in c.run("git tag", hide=True).stdout.strip().split("\n"):
         try:
             tags_.append(Version(tagstr))
         # Ignore anything non-semver; most of the time they'll be non-release
@@ -462,18 +471,18 @@ def _find_package(c):
     """
     # TODO: is there a way to get this from the same place setup.py does w/o
     # setup.py barfing (since setup() runs at import time and assumes CLI use)?
-    configured_value = c.get('packaging', {}).get('package', None)
+    configured_value = c.get("packaging", {}).get("package", None)
     if configured_value:
         return configured_value
     # TODO: tests covering this stuff here (most logic tests simply supply
     # config above)
     packages = [
         path
-        for path in os.listdir('.')
+        for path in os.listdir(".")
         if (
             os.path.isdir(path)
-            and os.path.exists(os.path.join(path, '__init__.py'))
-            and path not in ('tests', 'integration', 'sites', 'vendor')
+            and os.path.exists(os.path.join(path, "__init__.py"))
+            and path not in ("tests", "integration", "sites", "vendor")
         )
     ]
     if not packages:
@@ -485,7 +494,7 @@ def _find_package(c):
 
 def load_version(c):
     package_name = _find_package(c)
-    version_module = c.packaging.get('version_module', '_version')
+    version_module = c.packaging.get("version_module", "_version")
     # NOTE: have to explicitly give it a bytestr (Python 2) or unicode (Python
     # 3) because https://bugs.python.org/issue21720 HOORAY
     cast = binary_type if PY2 else text_type
@@ -533,18 +542,20 @@ def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
         Whether to clean out the local ``build/`` folder before building.
     """
     # Config hooks
-    config = c.config.get('packaging', {})
+    config = c.config.get("packaging", {})
     # TODO: update defaults to be None, then flip the below so non-None runtime
     # beats config.
-    sdist = config.get('sdist', sdist)
-    wheel = config.get('wheel', wheel)
-    python = config.get('python', python or 'python') # buffalo buffalo
+    sdist = config.get("sdist", sdist)
+    wheel = config.get("wheel", wheel)
+    python = config.get("python", python or "python")  # buffalo buffalo
     # Sanity
     if not sdist and not wheel:
-        sys.exit("You said no sdists and no wheels...what DO you want to build exactly?") # noqa
+        sys.exit(
+            "You said no sdists and no wheels...what DO you want to build exactly?"
+        )  # noqa
     # Directory path/arg logic
     if not directory:
-        directory = "" # os.path.join() doesn't like None
+        directory = ""  # os.path.join() doesn't like None
     dist_dir = os.path.join(directory, "dist")
     dist_arg = "-d {0}".format(dist_dir)
     build_dir = os.path.join(directory, "build")
@@ -573,14 +584,25 @@ def find_gpg(c):
         if c.run("which {0}".format(candidate), hide=True, warn=True).ok:
             return candidate
 
+
 # TODO: open some PRs for twine to push things like dual wheels, better
 # dry-run/cleanroom directory concerns, etc into it.
 # TODO: consider making this idempotent re: checking if the 'current release'
 # already exists on PyPI. Or just hope PyPI response on error is sufficiently
 # useful and trap/print that.
 @task
-def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
-    directory=None, dual_wheels=False, alt_python=None, check_desc=False):
+def publish(
+    c,
+    sdist=True,
+    wheel=False,
+    index=None,
+    sign=False,
+    dry_run=False,
+    directory=None,
+    dual_wheels=False,
+    alt_python=None,
+    check_desc=False,
+):
     """
     Publish code to PyPI or index of choice.
 
@@ -643,11 +665,11 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
     # Don't hide by default, this step likes to be verbose most of the time.
     c.config.run.hide = False
     # Config hooks
-    config = c.config.get('packaging', {})
-    index = config.get('index', index)
-    sign = config.get('sign', sign)
-    dual_wheels = config.get('dual_wheels', dual_wheels)
-    check_desc = config.get('check_desc', check_desc)
+    config = c.config.get("packaging", {})
+    index = config.get("index", index)
+    sign = config.get("sign", sign)
+    dual_wheels = config.get("dual_wheels", dual_wheels)
+    check_desc = config.get("check_desc", check_desc)
     # Initial sanity check, if needed. Will die usefully.
     if check_desc:
         c.run("python setup.py check -r -s")
@@ -659,9 +681,9 @@ def publish(c, sdist=True, wheel=False, index=None, sign=False, dry_run=False,
         # Build opposing interpreter archive, if necessary
         if dual_wheels:
             if not alt_python:
-                alt_python = 'python2'
+                alt_python = "python2"
                 if sys.version_info[0] == 2:
-                    alt_python = 'python3'
+                    alt_python = "python3"
             build(c, sdist=False, wheel=True, directory=tmp, python=alt_python)
         # Do the thing!
         upload(c, directory=tmp, index=index, sign=sign, dry_run=dry_run)
@@ -689,10 +711,12 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
     # Obtain list of archive filenames, then ensure any wheels come first
     # so their improved metadata is what PyPI sees initially (otherwise, it
     # only honors the sdist's lesser data).
-    archives = list(itertools.chain.from_iterable(
-        glob(os.path.join(directory, 'dist', '*.{0}'.format(extension)))
-        for extension in ('whl', 'tar.gz')
-    ))
+    archives = list(
+        itertools.chain.from_iterable(
+            glob(os.path.join(directory, "dist", "*.{0}".format(extension)))
+            for extension in ("whl", "tar.gz")
+        )
+    )
     # Sign each archive in turn
     # TODO: twine has a --sign option; but the below is still nice insofar
     # as it lets us dry-run, generate for web upload when pypi's API is
@@ -702,11 +726,15 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
         input_ = StringIO(getpass.getpass(prompt) + "\n")
         gpg_bin = find_gpg(c)
         if not gpg_bin:
-            sys.exit("You need to have one of `gpg`, `gpg1` or `gpg2` installed to GPG-sign!") # noqa
+            sys.exit(
+                "You need to have one of `gpg`, `gpg1` or `gpg2` installed to GPG-sign!"
+            )  # noqa
         for archive in archives:
-            cmd = "{0} --detach-sign -a --passphrase-fd 0 {{0}}".format(gpg_bin) # noqa
+            cmd = "{0} --detach-sign -a --passphrase-fd 0 {{0}}".format(
+                gpg_bin
+            )  # noqa
             c.run(cmd.format(archive), in_stream=input_)
-            input_.seek(0) # So it can be replayed by subsequent iterations
+            input_.seek(0)  # So it can be replayed by subsequent iterations
     # Upload
     parts = ["twine", "upload"]
     if index:
@@ -715,7 +743,7 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
         parts.append(index_arg)
     paths = archives[:]
     if sign:
-        paths.append(os.path.join(directory, 'dist', "*.asc"))
+        paths.append(os.path.join(directory, "dist", "*.asc"))
     parts.extend(paths)
     cmd = " ".join(parts)
     if dry_run:
@@ -728,6 +756,6 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
 
 # Stitch together current partway-rewritten stuff into public namespace.
 # TODO: reconsider once fully done; may end up looking a lot like this anyways.
-ns = Collection('release', all_, status, build, publish)
+ns = Collection("release", all_, status, build, publish)
 # Hide stdout by default, preferring to explicitly enable it when necessary.
-ns.configure({'run': {'hide': 'stdout'}})
+ns.configure({"run": {"hide": "stdout"}})

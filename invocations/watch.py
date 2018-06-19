@@ -14,6 +14,7 @@ def make_handler(ctx, task_, regexes, ignore_regexes, *args, **kwargs):
         sys.exit("If you want to use this, 'pip install watchdog' first.")
 
     class Handler(RegexMatchingEventHandler):
+
         def on_any_event(self, event):
             try:
                 task_(*args, **kwargs)
@@ -32,7 +33,7 @@ def observe(*handlers):
     observer = Observer()
     # TODO: Find parent directory of tasks.py and use that.
     for handler in handlers:
-        observer.schedule(handler, '.', recursive=True)
+        observer.schedule(handler, ".", recursive=True)
     observer.start()
     try:
         while True:

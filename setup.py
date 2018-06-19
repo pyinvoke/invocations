@@ -6,67 +6,64 @@ from setuptools import setup, find_packages
 
 # Version info -- read without importing
 _locals = {}
-with open('invocations/_version.py') as fp:
+with open("invocations/_version.py") as fp:
     exec(fp.read(), None, _locals)
-version = _locals['__version__']
+version = _locals["__version__"]
 
 requirements = [
     # Core dependency
-    'invoke>=1.0,<2.0',
+    "invoke>=1.0,<2.0",
     # Dependencies for various subpackages.
     # NOTE: these used to be all optional (only complained about at import
     # time if missing), but that got hairy fast, and these are all
     # pure-Python packages, so it shouldn't be a huge burden for users to
     # obtain them.
-    'blessings>=1.6,<2',
-    'releases>=1.2,<2',
-    'semantic_version>=2.4,<3',
-    'tabulate==0.7.5',
-    'tqdm>=4.8.1',
+    "blessings>=1.6,<2",
+    "releases>=1.2,<2",
+    "semantic_version>=2.4,<3",
+    "tabulate==0.7.5",
+    "tqdm>=4.8.1",
 ]
 # TODO: unfortunately, this means that e.g. wheels built under Python <3.4 will
 # 'statically' require enum34, even if they are being installed under Python
 # >=3.4. Which can blow up under e.g. Python 3.6.
-if sys.version_info < (3, 4): # which is when stdlib.enum arrived
-    requirements.append('enum34>=1.1,<2')
+if sys.version_info < (3, 4):  # which is when stdlib.enum arrived
+    requirements.append("enum34>=1.1,<2")
 
 setup(
-    name='invocations',
+    name="invocations",
     version=version,
     description="Common/best-practice Invoke tasks and collections",
-    long_description=open('README.rst').read(),
-    license='BSD',
-    author='Jeff Forcier',
-    author_email='jeff@bitprophet.org',
-    url='https://invocations.readthedocs.io',
-
+    long_description=open("README.rst").read(),
+    license="BSD",
+    author="Jeff Forcier",
+    author_email="jeff@bitprophet.org",
+    url="https://invocations.readthedocs.io",
     # Release requirements. See dev-requirements.txt for dev version reqs.
     install_requires=requirements,
-
     packages=find_packages(),
-
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Console',
-        'Intended Audience :: Developers',
-        'Intended Audience :: System Administrators',
-        'License :: OSI Approved :: BSD License',
-        'Operating System :: POSIX',
-        'Operating System :: Unix',
-        'Operating System :: MacOS :: MacOS X',
-        'Operating System :: Microsoft :: Windows',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Topic :: Software Development',
-        'Topic :: Software Development :: Build Tools',
-        'Topic :: Software Development :: Libraries',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Topic :: System :: Software Distribution',
-        'Topic :: System :: Systems Administration',
+        "Development Status :: 5 - Production/Stable",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "Intended Audience :: System Administrators",
+        "License :: OSI Approved :: BSD License",
+        "Operating System :: POSIX",
+        "Operating System :: Unix",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: Microsoft :: Windows",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Topic :: Software Development",
+        "Topic :: Software Development :: Build Tools",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: System :: Software Distribution",
+        "Topic :: System :: Systems Administration",
     ],
 )

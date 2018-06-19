@@ -44,9 +44,9 @@ def _unpack(c, tmp, package, version, git_url=None):
             globs = []
             globexpr = ""
             for extension, opener in (
-                ('zip', 'unzip'),
-                ('tgz', 'tar xzvf'),
-                ('tar.gz', 'tar xzvf'),
+                ("zip", "unzip"),
+                ("tgz", "tar xzvf"),
+                ("tar.gz", "tar xzvf"),
             ):
                 globexpr = "*.{0}".format(extension)
                 globs = glob(globexpr)
@@ -61,8 +61,15 @@ def _unpack(c, tmp, package, version, git_url=None):
 
 
 @task
-def vendorize(c, distribution, version, vendor_dir, package=None,
-    git_url=None, license=None):
+def vendorize(
+    c,
+    distribution,
+    version,
+    vendor_dir,
+    package=None,
+    git_url=None,
+    license=None,
+):
     """
     Vendorize Python package ``distribution`` at version/SHA ``version``.
 

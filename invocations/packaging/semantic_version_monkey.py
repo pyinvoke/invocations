@@ -18,7 +18,10 @@ def clone(self):
     separately from the original.
     """
     return Version(text_type(self))
+
+
 Version.clone = clone
+
 
 def next_minor(self):
     """
@@ -33,7 +36,10 @@ def next_minor(self):
     clone.minor += 1
     clone.patch = 0
     return clone
+
+
 Version.next_minor = next_minor
+
 
 def next_patch(self):
     """
@@ -42,4 +48,6 @@ def next_patch(self):
     clone = self.clone()
     clone.patch += 1
     return clone
+
+
 Version.next_patch = next_patch
