@@ -69,8 +69,8 @@ class _latest_feature_bucket_:
             dict.fromkeys(
                 [
                     "unreleased_1_feature",
-                    # Yes, releases like 10.x or 17.x are unlikely, but definitely
-                    # plausible - think modern Firefox for example.
+                    # Yes, releases like 10.x or 17.x are unlikely, but
+                    # definitely plausible - think modern Firefox for example.
                     "unreleased_10_feature",
                     "unreleased_23_feature",
                     "unreleased_202_feature",
