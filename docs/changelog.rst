@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`1.2.1 <2018-06-18>`
 - :support:`- backported` Remove some apparently non-functional ``setup.py``
   logic around conditionally requiring ``enum34``; it was never getting
   selected and thus breaking a couple modules that relied on it.
