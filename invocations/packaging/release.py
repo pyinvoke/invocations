@@ -148,8 +148,9 @@ def _converge(c):
     # Short-circuit if type is undefined; we can't do useful work for that.
     if release_type is Release.UNDEFINED:
         raise UndefinedReleaseType(
-            "You don't seem to be on a release-related branch; why are you trying to cut a release?"
-        )  # noqa
+            "You don't seem to be on a release-related branch; "
+            "why are you trying to cut a release?"
+        )
     # Parse our changelog so we can tell what's released and what's not.
     # TODO: below needs to go in something doc-y somewhere; having it in a
     # non-user-facing subroutine docstring isn't visible enough.
@@ -551,8 +552,9 @@ def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
     # Sanity
     if not sdist and not wheel:
         sys.exit(
-            "You said no sdists and no wheels...what DO you want to build exactly?"
-        )  # noqa
+            "You said no sdists and no wheels..."
+            "what DO you want to build exactly?"
+        )
     # Directory path/arg logic
     if not directory:
         directory = ""  # os.path.join() doesn't like None
@@ -727,8 +729,9 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
         gpg_bin = find_gpg(c)
         if not gpg_bin:
             sys.exit(
-                "You need to have one of `gpg`, `gpg1` or `gpg2` installed to GPG-sign!"
-            )  # noqa
+                "You need to have one of `gpg`, `gpg1` or `gpg2` "
+                "installed to GPG-sign!"
+            )
         for archive in archives:
             cmd = "{0} --detach-sign -a --passphrase-fd 0 {{0}}".format(
                 gpg_bin
