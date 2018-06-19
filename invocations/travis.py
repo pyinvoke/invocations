@@ -35,7 +35,7 @@ def make_sudouser(c):
     # attempting to mutate or overwrite main sudoers conf.
     conf = "/etc/sudoers.d/passworded"
     cmd = "echo '{0}   ALL=(ALL:ALL) PASSWD:ALL' > {1}".format(user, conf)
-    c.sudo("sh -c \"{0}\"".format(cmd))
+    c.sudo('sh -c "{0}"'.format(cmd))
     # Grant travis group write access to /home/travis as some integration tests
     # may try writing conf files there. (TODO: shouldn't running the tests via
     # 'sudo -H' mean that's no longer necessary?)
@@ -55,10 +55,10 @@ def make_sshable(c):
     c.config.sudo.user = user
     ssh_dir = "{0}/.ssh".format(home)
     # TODO: worth wrapping in 'sh -c' and using '&&' instead of doing this?
-    for cmd in ('mkdir {0}', 'chmod 0700 {0}'):
+    for cmd in ("mkdir {0}", "chmod 0700 {0}"):
         c.sudo(cmd.format(ssh_dir, user))
     c.sudo('ssh-keygen -f {0}/id_rsa -N ""'.format(ssh_dir))
-    c.sudo('cp {0}/{{id_rsa.pub,authorized_keys}}'.format(ssh_dir))
+    c.sudo("cp {0}/{{id_rsa.pub,authorized_keys}}".format(ssh_dir))
 
 
 @task
@@ -112,7 +112,7 @@ def test_packaging(c, package, sanity, alt_python=None):
         ``$TRAVIS_PYTHON_VERSION``.)
     """
     # Use an explicit directory for building so we can reference after
-    path = 'tmp'
+    path = "tmp"
     # Echo on please
     c.config.run.echo = True
     # Ensure no GPG signing is attempted.
@@ -121,19 +121,19 @@ def test_packaging(c, package, sanity, alt_python=None):
     publish(c, dry_run=True, directory=path, alt_python=alt_python)
     # Various permutations of nuke->install->sanity test, as needed
     # TODO: normalize sdist so it's actually a config option, rn is kwarg-only
-    globs = ['*.tar.gz']
+    globs = ["*.tar.gz"]
     if c.packaging.wheel:
         if alt_python:
             # TODO: the original .travis.yml was structured with logic this
             # way; I don't recall if it was purposeful or if an 'if/else' would
             # suffice instead.
-            travis_ver = os.environ['TRAVIS_PYTHON_VERSION']
-            if travis_ver.startswith('3') or travis_ver == 'pypy3':
-                globs.append('*py3*.whl')
-            if travis_ver.startswith('2') or travis_ver == 'pypy':
-                globs.append('*py2*.whl')
+            travis_ver = os.environ["TRAVIS_PYTHON_VERSION"]
+            if travis_ver.startswith("3") or travis_ver == "pypy3":
+                globs.append("*py3*.whl")
+            if travis_ver.startswith("2") or travis_ver == "pypy":
+                globs.append("*py2*.whl")
         else:
-            globs.append('*.whl')
+            globs.append("*.whl")
     for glob in globs:
         c.run("pip uninstall -y {0}".format(package), warn=True)
         c.run("pip install tmp/dist/{0}".format(glob))

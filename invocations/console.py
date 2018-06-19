@@ -44,15 +44,15 @@ def confirm(question, assume_yes=True):
         # TODO: ensure that this is Ctrl-C friendly, ISTR issues with
         # raw_input/input on some Python versions blocking KeyboardInterrupt.
         response = input("{0} [{1}] ".format(question, suffix))
-        response = response.lower().strip() # Normalize
+        response = response.lower().strip()  # Normalize
         # Default
         if not response:
             return assume_yes
         # Yes
-        if response in ['y', 'yes']:
+        if response in ["y", "yes"]:
             return True
         # No
-        if response in ['n', 'no']:
+        if response in ["n", "no"]:
             return False
         # Didn't get empty, yes or no, so complain and loop
         err = "I didn't understand you. Please specify '(y)es' or '(n)o'."

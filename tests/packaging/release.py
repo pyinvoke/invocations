@@ -14,13 +14,23 @@ from pytest_relaxed import trap, raises
 
 from invocations.packaging.semantic_version_monkey import Version
 from invocations.packaging.release import (
-    _release_line, _latest_feature_bucket, _release_and_issues, all_, status,
-    Changelog, Release, VersionFile, UndefinedReleaseType, Tag, load_version,
+    _release_line,
+    _latest_feature_bucket,
+    _release_and_issues,
+    all_,
+    status,
+    Changelog,
+    Release,
+    VersionFile,
+    UndefinedReleaseType,
+    Tag,
+    load_version,
     _latest_and_next_version,
 )
 
 
 class _release_line_:
+
     def assumes_bugfix_if_release_branch(self):
         c = MockContext(run=Result("2.7"))
         assert _release_line(c)[1] == Release.BUGFIX
@@ -41,56 +51,62 @@ class _release_line_:
 
 
 class _latest_feature_bucket_:
+
     def base_case_of_single_release_family(self):
         bucket = _latest_feature_bucket(
-            dict.fromkeys(['unreleased_1_feature'])
+            dict.fromkeys(["unreleased_1_feature"])
         )
-        assert bucket == 'unreleased_1_feature'
+        assert bucket == "unreleased_1_feature"
 
     def simple_ordering_by_bucket_number(self):
-        bucket = _latest_feature_bucket(dict.fromkeys([
-            'unreleased_1_feature',
-            'unreleased_2_feature',
-        ]))
-        assert bucket == 'unreleased_2_feature'
+        bucket = _latest_feature_bucket(
+            dict.fromkeys(["unreleased_1_feature", "unreleased_2_feature"])
+        )
+        assert bucket == "unreleased_2_feature"
 
     def ordering_goes_by_numeric_not_lexical_order(self):
-        bucket = _latest_feature_bucket(dict.fromkeys([
-            'unreleased_1_feature',
-            # Yes, releases like 10.x or 17.x are unlikely, but definitely
-            # plausible - think modern Firefox for example.
-            'unreleased_10_feature',
-            'unreleased_23_feature',
-            'unreleased_202_feature',
-            'unreleased_17_feature',
-            'unreleased_2_feature',
-        ]))
-        assert bucket == 'unreleased_202_feature'
+        bucket = _latest_feature_bucket(
+            dict.fromkeys(
+                [
+                    "unreleased_1_feature",
+                    # Yes, releases like 10.x or 17.x are unlikely, but definitely
+                    # plausible - think modern Firefox for example.
+                    "unreleased_10_feature",
+                    "unreleased_23_feature",
+                    "unreleased_202_feature",
+                    "unreleased_17_feature",
+                    "unreleased_2_feature",
+                ]
+            )
+        )
+        assert bucket == "unreleased_202_feature"
 
 
 class _release_and_issues_:
+
     class bugfix:
         # TODO: factor out into setup() so each test has some excluded/ignored
         # data in it - helps avoid naive implementation returning x[0] etc.
 
         def no_unreleased(self):
             release, issues = _release_and_issues(
-                changelog={'1.1': [], '1.1.0': [1, 2]},
-                branch='1.1',
+                changelog={"1.1": [], "1.1.0": [1, 2]},
+                branch="1.1",
                 release_type=Release.BUGFIX,
             )
-            assert release == '1.1.0'
+            assert release == "1.1.0"
             assert issues == []
 
         def has_unreleased(self):
             skip()
 
     class feature:
+
         def no_unreleased(self):
             # release is None, issues is empty list
             release, issues = _release_and_issues(
-                changelog={'1.0.1': [1], 'unreleased_1_feature': []},
-                branch='master',
+                changelog={"1.0.1": [1], "unreleased_1_feature": []},
+                branch="master",
                 release_type=Release.FEATURE,
             )
             assert release is None
@@ -99,8 +115,8 @@ class _release_and_issues_:
         def has_unreleased(self):
             # release is still None, issues is nonempty list
             release, issues = _release_and_issues(
-                changelog={'1.0.1': [1], 'unreleased_1_feature': [2, 3]},
-                branch='master',
+                changelog={"1.0.1": [1], "unreleased_1_feature": [2, 3]},
+                branch="master",
                 release_type=Release.FEATURE,
             )
             assert release is None
@@ -111,6 +127,7 @@ class _release_and_issues_:
 
 
 class _find_package_:
+
     def can_be_short_circuited_with_config_value(self):
         # TODO: should we just bundle this + the version part into one
         # function and setting? do we ever peep into the package for anything
@@ -132,6 +149,7 @@ class _find_package_:
 
 
 class load_version_:
+
     def setup(self):
         sys.path.insert(0, support_dir)
 
@@ -139,12 +157,10 @@ class load_version_:
         sys.path.remove(support_dir)
 
     def _expect_version(self, expected, config_val=None):
-        config = {
-            'package': 'fakepackage',
-        }
+        config = {"package": "fakepackage"}
         if config_val is not None:
-            config['version_module'] = config_val
-        c = MockContext(Config(overrides={'packaging': config}))
+            config["version_module"] = config_val
+        c = MockContext(Config(overrides={"packaging": config}))
         assert load_version(c) == expected
 
     # NOTE: these all also happen to test the Python bug re: a unicode value
@@ -152,31 +168,40 @@ class load_version_:
     # another one.
 
     def defaults_to_underscore_version(self):
-        self._expect_version('1.0.0')
+        self._expect_version("1.0.0")
 
     def can_configure_which_module_holds_version_data(self):
-        self._expect_version('1.0.1', config_val='otherversion')
+        self._expect_version("1.0.1", config_val="otherversion")
 
     def errors_usefully_if_version_module_not_found(self):
         skip()
 
 
 class _latest_and_next_version_:
+
     def next_patch_of_bugfix_release(self):
-        versions = _latest_and_next_version(Lexicon({
-            'release_type': Release.BUGFIX,
-            'latest_line_release': Version('1.2.2'),
-            'latest_overall_release': Version('1.4.1'), # realism!
-        }))
-        assert versions == (Version('1.2.2'), Version('1.2.3'))
+        versions = _latest_and_next_version(
+            Lexicon(
+                {
+                    "release_type": Release.BUGFIX,
+                    "latest_line_release": Version("1.2.2"),
+                    "latest_overall_release": Version("1.4.1"),  # realism!
+                }
+            )
+        )
+        assert versions == (Version("1.2.2"), Version("1.2.3"))
 
     def next_minor_of_feature_release(self):
-        versions = _latest_and_next_version(Lexicon({
-            'release_type': Release.FEATURE,
-            'latest_line_release': None, # realism!
-            'latest_overall_release': Version('1.2.2'),
-        }))
-        assert versions == (Version('1.2.2'), Version('1.3.0'))
+        versions = _latest_and_next_version(
+            Lexicon(
+                {
+                    "release_type": Release.FEATURE,
+                    "latest_line_release": None,  # realism!
+                    "latest_overall_release": Version("1.2.2"),
+                }
+            )
+        )
+        assert versions == (Version("1.2.2"), Version("1.3.0"))
 
 
 # Multi-dimensional scenarios, in relatively arbitrary nesting order:
@@ -185,12 +210,12 @@ class _latest_and_next_version_:
 # - comparison of version file contents w/ latest release in changelog
 # TODO: ... (pypi release, etc)
 
-support_dir = path.join(path.dirname(__file__), '_support')
+support_dir = path.join(path.dirname(__file__), "_support")
 
 # Sentinel for targeted __import__ mocking. Is a string so that it can be
 # expected in tests about the version file, etc.
 # NOTE: needs to not shadow any real imported module name!
-FAKE_PACKAGE = 'fakey_mcfakerson_not_real_in_any_way'
+FAKE_PACKAGE = "fakey_mcfakerson_not_real_in_any_way"
 
 # NOTE: can't easily slap this on the test class itself due to using inner
 # classes. If we can get the inner classes to not only copy attributes but also
@@ -223,15 +248,17 @@ def _mock_context(self):
     # Generate config & context from attrs
     #
 
-    changelog_file = '{0}.rst'.format(self._changelog)
-    config = Config(overrides={
-        'packaging': {
-            'changelog_file': path.join(support_dir, changelog_file),
-            'package': FAKE_PACKAGE,
-        },
-    })
+    changelog_file = "{0}.rst".format(self._changelog)
+    config = Config(
+        overrides={
+            "packaging": {
+                "changelog_file": path.join(support_dir, changelog_file),
+                "package": FAKE_PACKAGE,
+            }
+        }
+    )
     tag_output = ""
-    if hasattr(self, '_tags'):
+    if hasattr(self, "_tags"):
         tag_output = "\n".join(self._tags) + "\n"
     # TODO: if/when regex implemented for MockContext, make these keys less
     # strictly tied to the real implementation.
@@ -248,10 +275,10 @@ def _mock_context(self):
         # Git status/commit/tagging
         # TODO: yea I'd really like regexen now plz sigh
         "git tag 1.1.2": Result(""),
-        "git commit -am \"Cut 1.1.2\"": Result(""),
+        'git commit -am "Cut 1.1.2"': Result(""),
         # NOTE: some tests will need to override this, for now default to a
         # result that implies a commit is needed
-        "git status --porcelain | egrep -v \"^\\?\"": Result(
+        'git status --porcelain | egrep -v "^\\?"': Result(
             "M somefile", exited=0
         ),
     }
@@ -262,7 +289,7 @@ def _mock_context(self):
     # NOTE: end-running around Context/DataProxy setattr because doing
     # context.run.echo = True (or similar) is too common a use case to be worth
     # breaking just for stupid test monkeypatch purposes
-    object.__setattr__(context, 'run', Mock(wraps=context.run))
+    object.__setattr__(context, "run", Mock(wraps=context.run))
 
     #
     # Execute converge() inside a mock environment
@@ -270,15 +297,16 @@ def _mock_context(self):
 
     # Allow targeted import mocking, leaving regular imports alone.
     real_import = __import__
+
     def fake_import(*args, **kwargs):
         if args[0] is not FAKE_PACKAGE:
             return real_import(*args, **kwargs)
         return Mock(_version=Mock(__version__=self._version))
+
     # Because I can't very well patch six.moves.builtins itself, can I? =/
-    builtins = '__builtin__' if PY2 else 'builtins'
+    builtins = "__builtin__" if PY2 else "builtins"
     import_patcher = patch(
-        '{0}.__import__'.format(builtins),
-        side_effect=fake_import,
+        "{0}.__import__".format(builtins), side_effect=fake_import
     )
 
     with import_patcher:
@@ -302,11 +330,12 @@ def _expect_actions(self, *actions):
 
 
 class status_:
+
     class overall_behavior:
-        _branch = '1.1'
-        _changelog = 'unreleased_1.1_bugs'
-        _version = '1.1.1'
-        _tags = ('1.1.0', '1.1.1')
+        _branch = "1.1"
+        _changelog = "unreleased_1.1_bugs"
+        _version = "1.1.1"
+        _tags = ("1.1.0", "1.1.1")
 
         @trap
         def displays_expectations_and_component_statuses(self):
@@ -330,7 +359,7 @@ class status_:
             )
             for part in parts:
                 parts[part] = re.escape(parts[part])
-            parts['header_footer'] = r'-+ +-+'
+            parts["header_footer"] = r"-+ +-+"
             # NOTE: forces impl to follow specific order, which is good
             regex = r"""
 {header_footer}
@@ -338,13 +367,17 @@ Changelog +{changelog}
 Version +{version}
 Tag +{tag}
 {header_footer}
-""".format(**parts).strip()
+""".format(
+                **parts
+            ).strip()
             output = sys.stdout.getvalue()
             err = "Expected:\n\n{0}\n\nGot:\n\n{1}".format(regex, output)
-            err += "\n\nRepr edition...\n\nExpected:\n\n{0!r}\n\nGot:\n\n{1!r}".format(regex, output) # noqa
+            err += "\n\nRepr edition...\n\nExpected:\n\n{0!r}\n\nGot:\n\n{1!r}".format(
+                regex, output
+            )  # noqa
             assert re.match(regex, output), err
 
-        @trap # just for cleaner test output
+        @trap  # just for cleaner test output
         def returns_lexica_for_reuse(self):
             actions = Lexicon(
                 changelog=Changelog.NEEDS_RELEASE,
@@ -355,82 +388,84 @@ Tag +{tag}
             assert found_actions == actions
             # Spot check state, don't need to check whole thing...
             assert found_state.branch == self._branch
-            assert found_state.latest_version == Version('1.1.1')
+            assert found_state.latest_version == Version("1.1.1")
             assert found_state.tags == [Version(x) for x in self._tags]
 
     # TODO: I got this attribute jazz working in pytest but see if there is a
     # 'native' pytest feature that works better (while still in conjunction
     # with nested tasks, ideally)
     class release_line_branch:
-        _branch = '1.1'
+        _branch = "1.1"
 
         class unreleased_issues:
-            _changelog = 'unreleased_1.1_bugs'
+            _changelog = "unreleased_1.1_bugs"
 
             class file_version_equals_latest_in_changelog:
-                _version = '1.1.1'
+                _version = "1.1.1"
 
                 class tags_only_exist_for_past_releases:
-                    _tags = ('1.1.0', '1.1.1')
+                    _tags = ("1.1.0", "1.1.1")
 
                     def changelog_release_version_update_tag_update(self):
-                        _expect_actions(self,
+                        _expect_actions(
+                            self,
                             Changelog.NEEDS_RELEASE,
                             VersionFile.NEEDS_BUMP,
                             Tag.NEEDS_CUTTING,
                         )
 
             class version_file_is_newer:
-                _version = '1.1.2'
+                _version = "1.1.2"
 
                 class tags_only_exist_for_past_releases:
-                    _tags = ('1.1.0', '1.1.1')
+                    _tags = ("1.1.0", "1.1.1")
 
                     def changelog_release_version_okay_tag_update(self):
-                        _expect_actions(self,
+                        _expect_actions(
+                            self,
                             Changelog.NEEDS_RELEASE,
                             VersionFile.OKAY,
                             Tag.NEEDS_CUTTING,
                         )
 
             class changelog_version_is_newer:
-                _version = '1.1.0'
+                _version = "1.1.0"
                 # Undefined situation - unsure how/whether to test
 
         class no_unreleased_issues:
-            _changelog = 'no_unreleased_1.1_bugs'
+            _changelog = "no_unreleased_1.1_bugs"
 
             class file_version_equals_latest_in_changelog:
-                _version = '1.1.2'
+                _version = "1.1.2"
 
                 class tag_for_new_version_present:
-                    _tags = ('1.1.0', '1.1.1', '1.1.2')
+                    _tags = ("1.1.0", "1.1.1", "1.1.2")
 
                     def no_updates_necessary(self):
-                        _expect_actions(self,
-                            Changelog.OKAY,
-                            VersionFile.OKAY,
-                            Tag.OKAY,
+                        _expect_actions(
+                            self, Changelog.OKAY, VersionFile.OKAY, Tag.OKAY
                         )
 
                 class tag_for_new_version_missing:
-                    _tags = ('1.1.0', '1.1.1')
+                    _tags = ("1.1.0", "1.1.1")
 
                     def tag_needs_cutting_still(self):
-                        _expect_actions(self,
+                        _expect_actions(
+                            self,
                             Changelog.OKAY,
                             VersionFile.OKAY,
                             Tag.NEEDS_CUTTING,
                         )
 
             class version_file_out_of_date:
-                _version = '1.1.1'
+                _version = "1.1.1"
 
                 class tag_missing:
-                    _tags = ('1.1.0', '1.1.1') # no 1.1.2
+                    _tags = ("1.1.0", "1.1.1")  # no 1.1.2
 
                     def changelog_okay_version_needs_bump_tag_needs_cut(self):
-                        _expect_actions(self,
+                        _expect_actions(
+                            self,
                             Changelog.OKAY,
                             VersionFile.NEEDS_BUMP,
                             Tag.NEEDS_CUTTING,
@@ -442,11 +477,12 @@ Tag +{tag}
                 # be an error.
 
             class version_file_is_newer:
-                _version = '1.1.3'
+                _version = "1.1.3"
 
                 def both_technically_okay(self):
-                    skip() # see TODO below
-                    _expect_actions(self,
+                    skip()  # see TODO below
+                    _expect_actions(
+                        self,
                         # TODO: display a 'warning' state noting that your
                         # version outpaces your changelog despite your
                         # changelog having no unreleased stuff in it. Still
@@ -457,23 +493,24 @@ Tag +{tag}
                     )
 
     class master_branch:
-        _branch = 'master'
+        _branch = "master"
 
         class unreleased_issues:
-            _changelog = 'unreleased_1.x_features'
+            _changelog = "unreleased_1.x_features"
 
             class file_version_equals_latest_in_changelog:
-                _version = '1.0.1'
+                _version = "1.0.1"
 
                 class latest_tag_same_as_file_version:
-                    _tags = ('1.0.0', '1.0.1')
+                    _tags = ("1.0.0", "1.0.1")
 
                     def changelog_release_version_update_tag_cut(self):
                         # TODO: do we want some sort of "and here's _what_ you
                         # ought to be adding as the new release and/or version
                         # value" aspect to the actions? can leave up to user
                         # for now, but, more automation is better.
-                        _expect_actions(self,
+                        _expect_actions(
+                            self,
                             Changelog.NEEDS_RELEASE,
                             VersionFile.NEEDS_BUMP,
                             Tag.NEEDS_CUTTING,
@@ -488,13 +525,14 @@ Tag +{tag}
             # release is 1.0.1 but branch (master) implies desire is 1.1.0)?
 
             class version_file_is_newer:
-                _version = '1.1.0'
+                _version = "1.1.0"
 
                 class new_tag_not_present:
-                    _tags = ('1.0.1',)
+                    _tags = ("1.0.1",)
 
                     def changelog_release_version_okay(self):
-                        _expect_actions(self,
+                        _expect_actions(
+                            self,
                             # TODO: same as above re: suggesting the release
                             # value to the edit step
                             Changelog.NEEDS_RELEASE,
@@ -503,33 +541,32 @@ Tag +{tag}
                         )
 
             class changelog_version_is_newer:
-                _version = '1.2.0'
+                _version = "1.2.0"
                 # TODO: as with bugfix branches, this is undefined, except here
                 # it's even moreso because...well it's even more wacky. why
                 # would we have anything >1.1.0 when the changelog itself only
                 # even goes up to 1.0.x??
 
         class no_unreleased_issues:
-            _changelog = 'no_unreleased_1.x_features'
+            _changelog = "no_unreleased_1.x_features"
 
             class file_version_equals_latest_in_changelog:
-                _version = '1.1.0'
+                _version = "1.1.0"
 
                 class tag_present:
-                    _tags = ('1.0.2', '1.1.0')
+                    _tags = ("1.0.2", "1.1.0")
 
                     def all_okay(self):
-                        _expect_actions(self,
-                            Changelog.OKAY,
-                            VersionFile.OKAY,
-                            Tag.OKAY,
+                        _expect_actions(
+                            self, Changelog.OKAY, VersionFile.OKAY, Tag.OKAY
                         )
 
                 class tag_missing:
-                    _tags = ('1.0.2')
+                    _tags = "1.0.2"
 
                     def changelog_and_version_okay_tag_needs_cut(self):
-                        _expect_actions(self,
+                        _expect_actions(
+                            self,
                             Changelog.OKAY,
                             VersionFile.OKAY,
                             Tag.NEEDS_CUTTING,
@@ -538,7 +575,7 @@ Tag +{tag}
     class undefined_branch:
         _branch = "whatever"
         _changelog = "nah"
-        _tags = ('nope',)
+        _tags = ("nope",)
 
         @raises(UndefinedReleaseType)
         def raises_exception(self):
@@ -546,10 +583,14 @@ Tag +{tag}
 
 
 def _confirm(which):
-    path = 'invocations.packaging.release.confirm'
+    path = "invocations.packaging.release.confirm"
+
     def _wrapper(f):
         return trap(patch(path, return_value=which)(f))
+
     return _wrapper
+
+
 _confirm_true = _confirm(True)
 _confirm_false = _confirm(False)
 
@@ -564,14 +605,14 @@ def _run_all(c, mute=True):
 
 
 class All:
-    "all_" # mehhh
+    "all_"  # mehhh
 
     # NOTE: just testing the base case of 'everything needs updating',
     # all the permutations are tested elsewhere.
-    _branch = '1.1'
-    _changelog = 'unreleased_1.1_bugs'
-    _version = '1.1.1'
-    _tags = ('1.1.0',)
+    _branch = "1.1"
+    _changelog = "unreleased_1.1_bugs"
+    _version = "1.1.1"
+    _tags = ("1.1.0",)
 
     @_confirm_false
     def displays_status_output(self, _):
@@ -587,7 +628,7 @@ class All:
             assert action.value in output, err
 
     @trap
-    @patch('invocations.console.input', return_value='no')
+    @patch("invocations.console.input", return_value="no")
     def prompts_before_taking_action(self, mock_input):
         with _mock_context(self) as c:
             _run_all(c)
@@ -602,8 +643,8 @@ class All:
         # Expect that only the status-y run() calls were made.
         assert c.run.call_count == 2
         commands = [x[0][0] for x in c.run.call_args_list]
-        assert commands[0].startswith('git rev-parse')
-        assert commands[1].startswith('git tag')
+        assert commands[0].startswith("git rev-parse")
+        assert commands[1].startswith("git tag")
 
     @_confirm_true
     def opens_EDITOR_with_changelog_when_it_needs_update(self, _):
@@ -630,12 +671,12 @@ class All:
     def commits_and_adds_git_tag_when_needs_cutting(self, _):
         with _mock_context(self) as c:
             _run_all(c)
-            version = "1.1.2" # as changelog has issues & prev was 1.1.1
+            version = "1.1.2"  # as changelog has issues & prev was 1.1.1
             # Ensure the commit necessity test happened. (Default mock_context
             # sets it up to result in a commit being necessary.)
-            check = "git status --porcelain | egrep -v \"^\\?\""
+            check = 'git status --porcelain | egrep -v "^\\?"'
             c.run.assert_any_call(check, hide=True, warn=True)
-            commit = "git commit -am \"Cut {0}\"".format(version)
+            commit = 'git commit -am "Cut {0}"'.format(version)
             # TODO: annotated, signed, etc?
             tag = "git tag {0}".format(version)
             for cmd in (commit, tag):
@@ -645,12 +686,12 @@ class All:
     def does_not_commit_if_no_commit_necessary(self, _):
         with _mock_context(self) as c:
             # Set up for a no-commit-necessary result to check command
-            check = "git status --porcelain | egrep -v \"^\\?\""
+            check = 'git status --porcelain | egrep -v "^\\?"'
             # TODO: update MockContext so modifying it post-instantiation feels
             # cleaner. Modifying 'private' attrs feels bad. (Though in this
             # case, can't really make it public, as that risks clashing with
             # "real" members of the context/config...?)
-            c.set_result_for('run', check, Result("", exited=1))
+            c.set_result_for("run", check, Result("", exited=1))
             _run_all(c)
             # Expect NO git commit
             commands = [x[0][0] for x in c.run.call_args_list]
@@ -665,7 +706,7 @@ class All:
     # Don't want a full re-enactment of status_ test tree, but do want to spot
     # check that actions not needing to be taken, aren't...
     class lack_of_action:
-        _changelog = 'no_unreleased_1.1_bugs'
+        _changelog = "no_unreleased_1.1_bugs"
 
         @_confirm_true
         def no_changelog_update_needed_means_no_changelog_edit(self, _):
@@ -692,7 +733,9 @@ class All:
 # TERM=screen-256color, that made these tests break! Updating test machinery to
 # account for now, but...not ideal!
 class component_state_enums_contain_human_readable_values:
+
     class changelog:
+
         def okay(self):
             expected = "\x1b[32m\u2714 no unreleased issues\x1b(B\x1b[m"
             assert Changelog.OKAY.value == expected
@@ -702,6 +745,7 @@ class component_state_enums_contain_human_readable_values:
             assert Changelog.NEEDS_RELEASE.value == expected
 
     class version_file:
+
         def okay(self):
             expected = "\x1b[32m\u2714 version up to date\x1b(B\x1b[m"
             assert VersionFile.OKAY.value == expected
@@ -711,6 +755,7 @@ class component_state_enums_contain_human_readable_values:
             assert VersionFile.NEEDS_BUMP.value == expected
 
     class tag:
+
         def okay(self):
             assert Tag.OKAY.value == "\x1b[32m\u2714 all set\x1b(B\x1b[m"
 

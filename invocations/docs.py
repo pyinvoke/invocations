@@ -13,7 +13,7 @@ from .watch import make_handler, observe
 
 
 # Underscored func name to avoid shadowing kwargs in build()
-@task(name='clean')
+@task(name="clean")
 def _clean(c):
     """
     Nuke docs build target directory so next build is clean.
@@ -23,7 +23,7 @@ def _clean(c):
 
 
 # Ditto
-@task(name='browse')
+@task(name="browse")
 def _browse(c):
     """
     Open build target's index.html in a browser (using 'open').
@@ -32,15 +32,19 @@ def _browse(c):
     c.run("open {0}".format(index))
 
 
-@task(default=True, help={
-    'opts': "Extra sphinx-build options/args",
-    'clean': "Remove build tree before building",
-    'browse': "Open docs index in browser after building",
-    'nitpick': "Build with stricter warnings/errors enabled",
-    'source': "Source directory; overrides config setting",
-    'target': "Output directory; overrides config setting",
-})
-def build(c,
+@task(
+    default=True,
+    help={
+        "opts": "Extra sphinx-build options/args",
+        "clean": "Remove build tree before building",
+        "browse": "Open docs index in browser after building",
+        "nitpick": "Build with stricter warnings/errors enabled",
+        "source": "Source directory; overrides config setting",
+        "target": "Output directory; overrides config setting",
+    },
+)
+def build(
+    c,
     clean=False,
     browse=False,
     nitpick=False,
@@ -93,44 +97,46 @@ def tree(c):
     Display documentation contents with the 'tree' program.
     """
     ignore = ".git|*.pyc|*.swp|dist|*.egg-info|_static|_build|_templates"
-    c.run("tree -Ca -I \"{0}\" {1}".format(ignore, c.sphinx.source))
+    c.run('tree -Ca -I "{0}" {1}'.format(ignore, c.sphinx.source))
 
 
 # Vanilla/default/parameterized collection for normal use
 ns = Collection(_clean, _browse, build, tree, doctest)
-ns.configure({
-    'sphinx': {
-        'source': 'docs',
-        # TODO: allow lazy eval so one attr can refer to another?
-        'target': join('docs', '_build'),
-        'target_file': 'index.html',
+ns.configure(
+    {
+        "sphinx": {
+            "source": "docs",
+            # TODO: allow lazy eval so one attr can refer to another?
+            "target": join("docs", "_build"),
+            "target_file": "index.html",
+        }
     }
-})
+)
 
 
 # Multi-site variants, used by various projects (fabric, invoke, paramiko)
 # Expects a tree like sites/www/<sphinx> + sites/docs/<sphinx>,
 # and that you want 'inline' html build dirs, e.g. sites/www/_build/index.html.
 
+
 def _site(name, help_part):
-    _path = join('sites', name)
+    _path = join("sites", name)
     # TODO: turn part of from_module into .clone(), heh.
     self = sys.modules[__name__]
-    coll = Collection.from_module(self, name=name, config={
-        'sphinx': {
-            'source': _path,
-            'target': join(_path, '_build')
-        }
-    })
+    coll = Collection.from_module(
+        self,
+        name=name,
+        config={"sphinx": {"source": _path, "target": join(_path, "_build")}},
+    )
     coll.__doc__ = "Tasks for building {}".format(help_part)
-    coll['build'].__doc__ = "Build {}".format(help_part)
+    coll["build"].__doc__ = "Build {}".format(help_part)
     return coll
 
 
 # Usage doc/API site (published as e.g. docs.myproject.org)
-docs = _site('docs', "the API docs subsite.")
+docs = _site("docs", "the API docs subsite.")
 # Main/about/changelog site (e.g. (www.)?myproject.org)
-www = _site('www', "the main project website.")
+www = _site("www", "the main project website.")
 
 
 @task
@@ -152,15 +158,15 @@ def sites(c):
     # TODO: wants a 'temporarily tweak context settings' contextmanager
     # TODO: also a fucking spinner cuz this confuses me every time I run it
     # when the docs aren't already prebuilt
-    docs_c['run'].hide = True
-    www_c['run'].hide = True
-    docs['build'](docs_c)
-    www['build'](www_c)
-    docs_c['run'].hide = False
-    www_c['run'].hide = False
+    docs_c["run"].hide = True
+    www_c["run"].hide = True
+    docs["build"](docs_c)
+    www["build"](www_c)
+    docs_c["run"].hide = False
+    www_c["run"].hide = False
     # Run the actual builds, with nitpick=True (nitpicks + tracebacks)
-    docs['build'](docs_c, nitpick=True)
-    www['build'](www_c, nitpick=True)
+    docs["build"](docs_c, nitpick=True)
+    www["build"](www_c, nitpick=True)
 
 
 @task
@@ -185,25 +191,25 @@ def watch_docs(c):
     www_c.update(**www.configuration())
     www_handler = make_handler(
         ctx=www_c,
-        task_=www['build'],
-        regexes=['\./README.rst', '\./sites/www'],
-        ignore_regexes=['.*/\..*\.swp', '\./sites/www/_build'],
+        task_=www["build"],
+        regexes=["\./README.rst", "\./sites/www"],
+        ignore_regexes=[".*/\..*\.swp", "\./sites/www/_build"],
     )
 
     # Code and docs trigger API
     docs_c = Context(config=c.config.clone())
     docs_c.update(**docs.configuration())
-    regexes = ['\./sites/docs']
-    package = c.get('packaging', {}).get('package', None)
+    regexes = ["\./sites/docs"]
+    package = c.get("packaging", {}).get("package", None)
     if package is None:
-        package = c.get('tests', {}).get('package', None)
+        package = c.get("tests", {}).get("package", None)
     if package:
-        regexes.append('\./{}/'.format(package))
+        regexes.append("\./{}/".format(package))
     api_handler = make_handler(
         ctx=docs_c,
-        task_=docs['build'],
+        task_=docs["build"],
         regexes=regexes,
-        ignore_regexes=['.*/\..*\.swp', '\./sites/docs/_build'],
+        ignore_regexes=[".*/\..*\.swp", "\./sites/docs/_build"],
     )
 
     observe(www_handler, api_handler)
