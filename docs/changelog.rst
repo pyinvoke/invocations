@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`1.3.0 <2018-06-20>`
 - :feature:`-` Bump Releases requirement up to 1.6 and leverage its new ability
   to load Sphinx extensions, in ``packaging.release.prepare`` (which parses
   Releases changelogs programmatically). Prior to this, projects which needed
