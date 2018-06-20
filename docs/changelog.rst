@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :feature:`-` Bump Releases requirement up to 1.6 and leverage its new ability
+  to load Sphinx extensions, in ``packaging.release.prepare`` (which parses
+  Releases changelogs programmatically). Prior to this, projects which needed
+  extensions to build their doctree would throw errors when using the
+  ``packaging.release`` module.
 - :release:`1.2.1 <2018-06-18>`
 - :support:`- backported` Remove some apparently non-functional ``setup.py``
   logic around conditionally requiring ``enum34``; it was never getting

@@ -18,7 +18,7 @@ requirements = [
     # obtain them.
     "blessings>=1.6,<2",
     "enum34>=1.1,<2",
-    "releases>=1.2,<2",
+    "releases>=1.6,<2",
     "semantic_version>=2.4,<3",
     "tabulate==0.7.5",
     "tqdm>=4.8.1",

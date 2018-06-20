@@ -165,7 +165,9 @@ def _converge(c):
     # TODO: chdir to sphinx.source, import conf.py, look at
     # releases_changelog_name - that way it will honor that setting and we can
     # ditch this explicit one instead. (and the docstring above)
-    changelog = parse_changelog(c.packaging.changelog_file)
+    changelog = parse_changelog(
+        c.packaging.changelog_file, load_extensions=True
+    )
     # Get latest appropriate changelog release and any unreleased issues, for
     # current line
     line_release, issues = _release_and_issues(changelog, branch, release_type)
