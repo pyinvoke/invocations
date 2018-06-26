@@ -14,6 +14,7 @@ def make_handler(ctx, task_, regexes, ignore_regexes, *args, **kwargs):
         sys.exit("If you want to use this, 'pip install watchdog' first.")
 
     class Handler(RegexMatchingEventHandler):
+
         def on_any_event(self, event):
             try:
                 task_(*args, **kwargs)

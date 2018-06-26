@@ -9,6 +9,7 @@ from invocations.console import confirm
 
 
 class confirm_:
+
     @patch("invocations.console.input", return_value="yes")
     def displays_question_with_yes_no_suffix(self, mock_input):
         confirm("Are you sure?")
