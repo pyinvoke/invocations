@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :bug:`-` Was missing a 'hide output' flag on a subprocess shell call, the
+  result of which was mystery git branch names appearing in the output of
+  ``inv release`` and friends. Fixed now.
 - :support:`- backported` Remove some apparently non-functional ``setup.py``
   logic around conditionally requiring ``enum34``; it was never getting
   selected and thus breaking a couple modules that relied on it.
