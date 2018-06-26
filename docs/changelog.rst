@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :release:`1.3.1 <2018-06-26>`
+- :release:`1.2.2 <2018-06-26>`
+- :release:`1.1.1 <2018-06-26>`
+- :release:`1.0.1 <2018-06-26>`
 - :bug:`-` Was missing a 'hide output' flag on a subprocess shell call, the
   result of which was mystery git branch names appearing in the output of
   ``inv release`` and friends. Fixed now.
