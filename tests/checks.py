@@ -36,7 +36,10 @@ class checks:
                     ),
                     "find foo bar -name '*.py' | xargs black -l 80 --check --diff",  # noqa
                 ),
-                # TODO: extra arbitrary 'find' opts passthru
+                (
+                    dict(find_opts="-and -not -name foo"),
+                    "find . -name '*.py' -and -not -name foo | xargs black -l 79",  # noqa
+                ),
             ],
         )
         def runs_black(self, ctx, kwargs, command):
