@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :bug:`-` ``checks.blacken`` had a typo regarding its folder selection
+  argument; the CLI/function arg was ``folder`` while the configuration value
+  was ``folders`` (plural). It's been made consistent: the CLI/function
+  argument is now ``folders``.
 - :feature:`-` Add a ``find_opts`` argument to ``checks.blacken`` for improved
   control over what files get blackened.
 - :release:`1.3.0 <2018-06-20>`
