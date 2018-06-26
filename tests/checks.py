@@ -4,9 +4,7 @@ from invocations.checks import blacken
 
 
 class checks:
-
     class blacken_:
-
         @pytest.mark.parametrize(
             "kwargs,command",
             [
