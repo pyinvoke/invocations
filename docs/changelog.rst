@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :bug:`-` Was missing a 'hide output' flag on a subprocess shell call, the
+  result of which was mystery git branch names appearing in the output of
+  ``inv release`` and friends. Fixed now.
 - :bug:`-` ``checks.blacken`` had a typo regarding its folder selection
   argument; the CLI/function arg was ``folder`` while the configuration value
   was ``folders`` (plural). It's been made consistent: the CLI/function
