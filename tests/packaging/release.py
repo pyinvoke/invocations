@@ -30,7 +30,6 @@ from invocations.packaging.release import (
 
 
 class _release_line_:
-
     def assumes_bugfix_if_release_branch(self):
         c = MockContext(run=Result("2.7"))
         assert _release_line(c)[1] == Release.BUGFIX
@@ -51,7 +50,6 @@ class _release_line_:
 
 
 class _latest_feature_bucket_:
-
     def base_case_of_single_release_family(self):
         bucket = _latest_feature_bucket(
             dict.fromkeys(["unreleased_1_feature"])
@@ -83,7 +81,6 @@ class _latest_feature_bucket_:
 
 
 class _release_and_issues_:
-
     class bugfix:
         # TODO: factor out into setup() so each test has some excluded/ignored
         # data in it - helps avoid naive implementation returning x[0] etc.
@@ -101,7 +98,6 @@ class _release_and_issues_:
             skip()
 
     class feature:
-
         def no_unreleased(self):
             # release is None, issues is empty list
             release, issues = _release_and_issues(
@@ -127,7 +123,6 @@ class _release_and_issues_:
 
 
 class _find_package_:
-
     def can_be_short_circuited_with_config_value(self):
         # TODO: should we just bundle this + the version part into one
         # function and setting? do we ever peep into the package for anything
@@ -149,7 +144,6 @@ class _find_package_:
 
 
 class load_version_:
-
     def setup(self):
         sys.path.insert(0, support_dir)
 
@@ -178,7 +172,6 @@ class load_version_:
 
 
 class _latest_and_next_version_:
-
     def next_patch_of_bugfix_release(self):
         versions = _latest_and_next_version(
             Lexicon(
@@ -330,7 +323,6 @@ def _expect_actions(self, *actions):
 
 
 class status_:
-
     class overall_behavior:
         _branch = "1.1"
         _changelog = "unreleased_1.1_bugs"
@@ -732,9 +724,7 @@ class All:
 # TERM=screen-256color, that made these tests break! Updating test machinery to
 # account for now, but...not ideal!
 class component_state_enums_contain_human_readable_values:
-
     class changelog:
-
         def okay(self):
             expected = "\x1b[32m\u2714 no unreleased issues\x1b(B\x1b[m"
             assert Changelog.OKAY.value == expected
@@ -744,7 +734,6 @@ class component_state_enums_contain_human_readable_values:
             assert Changelog.NEEDS_RELEASE.value == expected
 
     class version_file:
-
         def okay(self):
             expected = "\x1b[32m\u2714 version up to date\x1b(B\x1b[m"
             assert VersionFile.OKAY.value == expected
@@ -754,7 +743,6 @@ class component_state_enums_contain_human_readable_values:
             assert VersionFile.NEEDS_BUMP.value == expected
 
     class tag:
-
         def okay(self):
             assert Tag.OKAY.value == "\x1b[32m\u2714 all set\x1b(B\x1b[m"
 
