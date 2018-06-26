@@ -1,5 +1,7 @@
 """
 Tasks for common project sanity-checking such as linting or type checking.
+
+.. versionadded:: 1.2
 """
 
 from __future__ import unicode_literals
@@ -26,6 +28,8 @@ def blacken(c, line_length=79, folder=None, check=False, diff=False):
         Whether to run ``black --check``. Default: ``False``.
     :param bool diff:
         Whether to run ``black --diff``. Default: ``False``.
+
+    .. versionadded:: 1.2
     """
     default_folders = ["."]
     configured_folders = c.config.get("blacken", {}).get(
