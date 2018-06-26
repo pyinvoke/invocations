@@ -33,24 +33,28 @@ def blacken(
     :param str find_opts:
         Extra option string appended to the end of the internal ``find``
         command. For example, skip a vendor directory with ``"-and -not -path
-        ./vendor\*"``, add ``-mtime N``, or etc.
+        ./vendor\*"``, add ``-mtime N``, or etc. Honors the
+        ``blacken.find_opts`` config option.
 
     .. versionadded:: 1.2
     .. versionchanged:: 1.4
         Added the ``find_opts`` argument.
     """
+    config = c.config.get("blacken", {})
     default_folders = ["."]
-    configured_folders = c.config.get("blacken", {}).get(
-        "folders", default_folders
-    )
+    configured_folders = config.get("folders", default_folders)
     folders = folders or configured_folders
+
+    default_find_opts = ""
+    configured_find_opts = config.get("find_opts", default_find_opts)
+    find_opts = find_opts or configured_find_opts
 
     black_command_line = "black -l {}".format(line_length)
     if check:
         black_command_line = "{} --check".format(black_command_line)
     if diff:
         black_command_line = "{} --diff".format(black_command_line)
-    if find_opts is not None:
+    if find_opts:
         find_opts = " {}".format(find_opts)
     else:
         find_opts = ""

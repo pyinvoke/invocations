@@ -72,3 +72,15 @@ class checks:
             ctx.blacken = dict(folders=["nowhere"])
             blacken(ctx, folders=["nowhere"])
             assert "nowhere" in ctx.run_command
+
+        def find_opts_configurable(self, ctx):
+            ctx.blacken = dict(find_opts="-and -not -name foo.py")
+            blacken(ctx)
+            assert (
+                "find . -name '*.py' -and -not -name foo.py" in ctx.run_command
+            )
+
+        def find_opts_config_loses_to_runtime(self, ctx):
+            ctx.blacken = dict(find_opts="-and -not -name foo.py")
+            blacken(ctx, find_opts="-or -name '*.js'")
+            assert "find . -name '*.py' -or -name '*.js'" in ctx.run_command
