@@ -18,6 +18,13 @@ class checks:
                     "find foo bar -name '*.py' | xargs black -l 79",
                 ),
                 (
+                    # Explicit invocation that matches a default CLI
+                    # invocation, since 'folders' is an iterable and thus shows
+                    # up as an empty list in real life. Ehhh.
+                    dict(folders=[]),
+                    "find . -name '*.py' | xargs black -l 79",
+                ),
+                (
                     dict(check=True),
                     "find . -name '*.py' | xargs black -l 79 --check",
                 ),
@@ -39,6 +46,7 @@ class checks:
                 "base case is all files and 79 characters",
                 "line length controllable",
                 "folders controllable",
+                "folders real default value",
                 "check flag passed through",
                 "diff flag passed through",
                 "most args combined",

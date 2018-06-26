@@ -35,7 +35,7 @@ def blacken(c, line_length=79, folders=None, check=False, diff=False):
     configured_folders = c.config.get("blacken", {}).get(
         "folders", default_folders
     )
-    folders = configured_folders if folders is None else folders
+    folders = folders or configured_folders
 
     black_command_line = "black -l {}".format(line_length)
     if check:
