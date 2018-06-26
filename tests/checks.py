@@ -41,6 +41,15 @@ class checks:
                     "find . -name '*.py' -and -not -name foo | xargs black -l 79",  # noqa
                 ),
             ],
+            ids=[
+                "base case is all files and 79 characters",
+                "line length configurable",
+                "folders configurable",
+                "check flag passed through",
+                "diff flag passed through",
+                "most args combined",
+                "find opts configurable",
+            ],
         )
         def runs_black(self, ctx, kwargs, command):
             blacken(ctx, **kwargs)
