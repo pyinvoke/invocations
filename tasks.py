@@ -21,5 +21,6 @@ ns.configure(
                 "TERM": "xterm-256color"
             }
         },
+        "travis": {"black": {"version": "18.6b4"}},
     }
 )

@@ -16,11 +16,12 @@ matrix:
   # fast_finish: true
 install:
   - pip install -r dev-requirements.txt
-script:
+before_script:
   # Fast syntax check failures for more rapid feedback to submitters
   # (Travis-oriented metatask that version checks Python, installs, runs.)
   - inv travis.blacken
   - flake8
+script:
   # Run tests w/ coverage first, so it uses the local-installed copy.
   # (If we do this after the below installation tests, coverage will think
   # nothing got covered!)
