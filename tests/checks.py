@@ -41,12 +41,12 @@ class checks:
             ],
             ids=[
                 "base case is all files and 79 characters",
-                "line length configurable",
-                "folders configurable",
+                "line length controllable",
+                "folders controllable",
                 "check flag passed through",
                 "diff flag passed through",
                 "most args combined",
-                "find opts configurable",
+                "find opts controllable",
             ],
         )
         def runs_black(self, ctx, kwargs, command):
