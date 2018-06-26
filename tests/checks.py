@@ -65,10 +65,10 @@ class checks:
             # Just config -> works fine
             ctx.blacken = dict(folders=["elsewhere"])
             blacken(ctx)
-            assert "elsewhere" in ctx.run.call_args[0][0]
+            assert "elsewhere" in ctx.run_command
 
         def folders_config_loses_to_runtime(self, ctx):
             # Config + CLI opt -> CLI opt wins
             ctx.blacken = dict(folders=["nowhere"])
             blacken(ctx, folders=["nowhere"])
-            assert "nowhere" in ctx.run.call_args[0][0]
+            assert "nowhere" in ctx.run_command
