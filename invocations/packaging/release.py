@@ -346,7 +346,7 @@ def _release_line(c):
     # TODO: major releases? or are they big enough events we don't need to
     # bother with the script? Also just hard to gauge - when is master the next
     # 1.x feature vs 2.0?
-    branch = c.run("git rev-parse --abbrev-ref HEAD").stdout.strip()
+    branch = c.run("git rev-parse --abbrev-ref HEAD", hide=True).stdout.strip()
     type_ = Release.UNDEFINED
     if BUGFIX_RE.match(branch):
         type_ = Release.BUGFIX
