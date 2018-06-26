@@ -24,7 +24,6 @@ def _build():
 
 
 class autodoc_:
-
     @classmethod
     def setup_class(self):
         # Build once, introspect many...for now

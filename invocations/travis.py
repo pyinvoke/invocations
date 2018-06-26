@@ -183,7 +183,7 @@ def blacken(c):
         return
     # Install, allowing config override of hardcoded default version
     config = c.config.get("travis", {}).get("black", {})
-    version = config.get("version", "18.5b0")
+    version = config.get("version", "18.6b4")
     c.run("pip install black=={}".format(version))
     # Execute our blacken task, with diff + check, which will both error
     # and emit diffs.
