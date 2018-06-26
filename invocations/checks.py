@@ -9,8 +9,8 @@ from __future__ import unicode_literals
 from invoke import task
 
 
-@task(name="blacken", iterable=["folder"])
-def blacken(c, line_length=79, folder=None, check=False, diff=False):
+@task(name="blacken", iterable=["folders"])
+def blacken(c, line_length=79, folders=None, check=False, diff=False):
     """
     Run black on the current source tree (all ``.py`` files).
 
@@ -20,9 +20,9 @@ def blacken(c, line_length=79, folder=None, check=False, diff=False):
 
     :param int line_length:
         Line length argument. Default: ``79``.
-    :param str folder:
-        Folder(s) to search within for ``.py`` files. May be given multiple
-        times to search N folders. Default: ``["."]``. Honors the
+    :param list folders:
+        List of folders (or, on the CLI, an argument that can be given N times)
+        to search within for ``.py`` files. Default: ``["."]``. Honors the
         ``blacken.folders`` config option.
     :param bool check:
         Whether to run ``black --check``. Default: ``False``.
@@ -35,7 +35,7 @@ def blacken(c, line_length=79, folder=None, check=False, diff=False):
     configured_folders = c.config.get("blacken", {}).get(
         "folders", default_folders
     )
-    folders = configured_folders if not folder else folder
+    folders = configured_folders if folders is None else folders
 
     black_command_line = "black -l {}".format(line_length)
     if check:

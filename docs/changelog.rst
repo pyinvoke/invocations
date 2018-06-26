@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :bug:`-` ``checks.blacken`` had a typo regarding its folder selection
+  argument; the CLI/function arg was ``folder`` while the configuration value
+  was ``folders`` (plural). It's been made consistent: the CLI/function
+  argument is now ``folders``.
 - :release:`1.2.1 <2018-06-18>`
 - :support:`- backported` Remove some apparently non-functional ``setup.py``
   logic around conditionally requiring ``enum34``; it was never getting
