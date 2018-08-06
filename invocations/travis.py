@@ -172,10 +172,10 @@ def blacken(c):
     commit (formatting is not going to change between interpreters) this seems
     like a worthwhile tradeoff.
 
-    Not only does this execute ``black --check`` as a pass/fail, if it fails it
-    then runs ``black`` normally & emits the resulting diff, so contributors
-    can see exactly what they need to change. This is intended as a hedge
-    against the fact that not all contributors will be using Python 3.6+.
+    This task uses black's ``--check`` and ``--fail`` flags, so not only will
+    the build fail if it does not conform, but contributors can see exactly
+    what they need to change. This is intended as a hedge against the fact that
+    not all contributors will be using Python 3.6+.
     """
     if not PYTHON.startswith("3.6"):
         msg = "Not blackening, since Python {} != Python 3.6".format(PYTHON)
