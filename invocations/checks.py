@@ -13,7 +13,7 @@ from invoke import task
 def blacken(
     c, line_length=79, folders=None, check=False, diff=False, find_opts=None
 ):
-    """
+    r"""
     Run black on the current source tree (all ``.py`` files).
 
     .. warning::
