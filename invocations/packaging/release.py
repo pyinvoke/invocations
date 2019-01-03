@@ -95,12 +95,12 @@ class Tag(Enum):
 
 
 # Bits for testing branch names to determine release type
-BUGFIX_RE = re.compile("^\d+\.\d+$")
-BUGFIX_RELEASE_RE = re.compile("^\d+\.\d+\.\d+$")
+BUGFIX_RE = re.compile(r"^\d+\.\d+$")
+BUGFIX_RELEASE_RE = re.compile(r"^\d+\.\d+\.\d+$")
 # TODO: allow tweaking this if folks use different branch methodology:
 # - same concept, different name, e.g. s/master/dev/
 # - different concept entirely, e.g. no master-ish, only feature branches
-FEATURE_RE = re.compile("^master$")
+FEATURE_RE = re.compile(r"^master$")
 
 
 class UndefinedReleaseType(Exception):

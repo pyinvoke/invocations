@@ -192,24 +192,24 @@ def watch_docs(c):
     www_handler = make_handler(
         ctx=www_c,
         task_=www["build"],
-        regexes=["\./README.rst", "\./sites/www"],
-        ignore_regexes=[".*/\..*\.swp", "\./sites/www/_build"],
+        regexes=[r"\./README.rst", r"\./sites/www"],
+        ignore_regexes=[r".*/\..*\.swp", r"\./sites/www/_build"],
     )
 
     # Code and docs trigger API
     docs_c = Context(config=c.config.clone())
     docs_c.update(**docs.configuration())
-    regexes = ["\./sites/docs"]
+    regexes = [r"\./sites/docs"]
     package = c.get("packaging", {}).get("package", None)
     if package is None:
         package = c.get("tests", {}).get("package", None)
     if package:
-        regexes.append("\./{}/".format(package))
+        regexes.append(r"\./{}/".format(package))
     api_handler = make_handler(
         ctx=docs_c,
         task_=docs["build"],
         regexes=regexes,
-        ignore_regexes=[".*/\..*\.swp", "\./sites/docs/_build"],
+        ignore_regexes=[r".*/\..*\.swp", r"\./sites/docs/_build"],
     )
 
     observe(www_handler, api_handler)
