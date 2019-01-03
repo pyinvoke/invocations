@@ -17,7 +17,7 @@ def make_handler(ctx, task_, regexes, ignore_regexes, *args, **kwargs):
         def on_any_event(self, event):
             try:
                 task_(*args, **kwargs)
-            except:
+            except BaseException:
                 pass
 
     return Handler(regexes=regexes, ignore_regexes=ignore_regexes)
