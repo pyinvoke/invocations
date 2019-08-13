@@ -20,7 +20,7 @@ def confirm(question, assume_yes=True):
     you.
 
     By default, when the user presses Enter without typing anything, "yes" is
-    assumed. This can be changed by specifying ``affirmative=False``.
+    assumed. This can be changed by specifying ``assume_yes=False``.
 
     .. note::
         If the user does not supplies input that is (case-insensitively) equal
