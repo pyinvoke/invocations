@@ -22,6 +22,7 @@ requirements = [
     "semantic_version>=2.4,<2.7",
     "tabulate==0.7.5",
     "tqdm>=4.8.1",
+    "PyYaml==5.2",
 ]
 
 setup(
