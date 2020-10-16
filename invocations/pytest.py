@@ -16,6 +16,7 @@ def test(
     x=False,
     opts="",
     pty=True,
+    warnings=True,
 ):
     """
     Run pytest with given options.
@@ -51,6 +52,13 @@ def test(
 
     :param bool pty:
         Whether to use a pty when executing pytest. Default: ``True``.
+
+    :param bool warnings:
+        Inverse alias for the pytest ``--disable_warnings`` flag; when this is
+        False (i.e. called on CLI as ``--no-warnings``), ``--disable-warnings``
+        will be given. Default: ``True``.
+
+        .. versionadded:: 2.0
     """
     # TODO: really need better tooling around these patterns
     # TODO: especially the problem of wanting to be configurable, but
@@ -69,6 +77,8 @@ def test(
         flags.append("-k '{}'".format(k))
     if x and not ("-x" in opts if opts else False):
         flags.append("-x")
+    if not warnings and not ("--disable-warnings" in opts if opts else False):
+        flags.append("--disable-warnings")
     modstr = ""
     if module is not None:
         modstr = " tests/{}.py".format(module)

@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :feature:`-` Add a ``warnings`` kwarg/flag to ``pytest.test``, allowing one
+  to call it with ``--no-warnings`` as an inline 'alias' for pytest's own
+  ``--disable-warnings`` flag.
 - :bug:`- major` Fix minor display bug causing the ``pytest`` task module to
   append a trailing space to the invocation of pytest itself.
 - :support:`-` Modify ``release`` task tree to look at ``main`` branches
