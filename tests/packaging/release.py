@@ -14,18 +14,18 @@ from pytest_relaxed import trap, raises
 
 from invocations.packaging.semantic_version_monkey import Version
 from invocations.packaging.release import (
-    _release_line,
-    _latest_feature_bucket,
-    _release_and_issues,
-    all_,
-    status,
     Changelog,
     Release,
-    VersionFile,
-    UndefinedReleaseType,
     Tag,
-    load_version,
+    UndefinedReleaseType,
+    VersionFile,
     _latest_and_next_version,
+    _latest_feature_bucket,
+    _release_and_issues,
+    _release_line,
+    all_,
+    load_version,
+    status,
 )
 
 
