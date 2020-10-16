@@ -98,9 +98,9 @@ class Tag(Enum):
 BUGFIX_RE = re.compile(r"^\d+\.\d+$")
 BUGFIX_RELEASE_RE = re.compile(r"^\d+\.\d+\.\d+$")
 # TODO: allow tweaking this if folks use different branch methodology:
-# - same concept, different name, e.g. s/master/dev/
-# - different concept entirely, e.g. no master-ish, only feature branches
-FEATURE_RE = re.compile(r"^master$")
+# - same concept, different name, e.g. s/main/dev/
+# - different concept entirely, e.g. no main-ish, only feature branches
+FEATURE_RE = re.compile(r"^main$")
 
 
 class UndefinedReleaseType(Exception):
@@ -334,7 +334,7 @@ def _release_line(c):
     :returns:
         A two-tuple of ``(branch-name, line-type)`` where:
 
-        - ``branch-name`` is the current branch name, e.g. ``1.1``, ``master``,
+        - ``branch-name`` is the current branch name, e.g. ``1.1``, ``main``,
           ``gobbledygook`` (or, usually, ``HEAD`` if not on a branch).
         - ``line-type`` is a symbolic member of `.Release` representing what
           "type" of release the line appears to be for:
@@ -342,7 +342,7 @@ def _release_line(c):
             - ``Release.BUGFIX`` if on a bugfix/stable release line, e.g.
               ``1.1``.
             - ``Release.FEATURE`` if on a feature-release branch (typically
-              ``master``).
+              ``main``).
             - ``Release.UNDEFINED`` if neither of those appears to apply
               (usually means on some unmerged feature/dev branch).
     """
@@ -353,7 +353,7 @@ def _release_line(c):
     # explicit pointer-to-git-repo option (i.e. if run from outside project
     # context).
     # TODO: major releases? or are they big enough events we don't need to
-    # bother with the script? Also just hard to gauge - when is master the next
+    # bother with the script? Also just hard to gauge - when is main the next
     # 1.x feature vs 2.0?
     branch = c.run("git rev-parse --abbrev-ref HEAD", hide=True).stdout.strip()
     type_ = Release.UNDEFINED
@@ -409,7 +409,7 @@ def _release_and_issues(changelog, branch, release_type):
         Two-tuple of release (``str``) and issues (``list`` of issue numbers.)
 
         If there is no latest release for the given branch (e.g. if it's a
-        feature or master branch), it will be ``None``.
+        feature or main branch), it will be ``None``.
     """
     # Bugfix lines just use the branch to find issues
     bucket = branch
@@ -451,7 +451,7 @@ def _latest_and_next_version(state):
 
     E.g. on the ``1.2`` branch, we take the latest ``1.2.x`` release and
     increment its tertiary number, so e.g. if the previous release was
-    ``1.2.2``, this function returns ``1.2.3``. If on ``master`` and latest
+    ``1.2.2``, this function returns ``1.2.3``. If on ``main`` and latest
     overall release was ``1.2.2``, it returns ``1.3.0``.
 
     :param dict state:
