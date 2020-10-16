@@ -63,7 +63,7 @@ def test(
     if color:
         flags.append("--color=yes")
     flags.append("--capture={0}".format(capture))
-    if opts is not None:
+    if opts:
         flags.append(opts)
     if k is not None and not ("-k" in opts if opts else False):
         flags.append("-k '{}'".format(k))
