@@ -14,7 +14,7 @@ flake8==3.6.0
 # For docs (explicit, even tho we currently commutatively require these
 # anyways, how meta)
 # NOTE: sphinx is busted for our releases tree in 1.6+
-sphinx<1.6
+sphinx<1.7
 alabaster==0.7.12
 
 # Self, for runtime/task dependencies
