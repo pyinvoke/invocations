@@ -34,8 +34,8 @@ class _release_line_:
         c = MockContext(run=Result("2.7"))
         assert _release_line(c)[1] == Release.BUGFIX
 
-    def assumes_feature_if_master(self):
-        c = MockContext(run=Result("master"))
+    def assumes_feature_if_main(self):
+        c = MockContext(run=Result("main"))
         assert _release_line(c)[1] == Release.FEATURE
 
     def is_undefined_if_arbitrary_branch_name(self):
@@ -102,7 +102,7 @@ class _release_and_issues_:
             # release is None, issues is empty list
             release, issues = _release_and_issues(
                 changelog={"1.0.1": [1], "unreleased_1_feature": []},
-                branch="master",
+                branch="main",
                 release_type=Release.FEATURE,
             )
             assert release is None
@@ -112,7 +112,7 @@ class _release_and_issues_:
             # release is still None, issues is nonempty list
             release, issues = _release_and_issues(
                 changelog={"1.0.1": [1], "unreleased_1_feature": [2, 3]},
-                branch="master",
+                branch="main",
                 release_type=Release.FEATURE,
             )
             assert release is None
@@ -483,8 +483,8 @@ Tag +{tag}
                         VersionFile.OKAY,
                     )
 
-    class master_branch:
-        _branch = "master"
+    class main_branch:
+        _branch = "main"
 
         class unreleased_issues:
             _changelog = "unreleased_1.x_features"
@@ -513,7 +513,7 @@ Tag +{tag}
 
             # TODO: what if the version file is newer _but not what it needs to
             # be for the branch_? e.g. if it was 1.0.2 here (where latest
-            # release is 1.0.1 but branch (master) implies desire is 1.1.0)?
+            # release is 1.0.1 but branch (main) implies desire is 1.1.0)?
 
             class version_file_is_newer:
                 _version = "1.1.0"

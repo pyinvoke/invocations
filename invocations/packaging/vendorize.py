@@ -15,8 +15,8 @@ def _unpack(c, tmp, package, version, git_url=None):
     Download + unpack given package into temp dir ``tmp``.
 
     Return ``(real_version, source)`` where ``real_version`` is the "actual"
-    version downloaded (e.g. if a Git master was indicated, it will be the SHA
-    of master HEAD) and ``source`` is the source directory (relative to
+    version downloaded (e.g. if a Git main branch was indicated, it will be the
+    SHA of ``main`` HEAD) and ``source`` is the source directory (relative to
     unpacked source) to import into ``<project>/vendor``.
     """
     real_version = version[:]
