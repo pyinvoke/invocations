@@ -7,7 +7,7 @@ import sys
 
 from invoke.vendor.six import PY2
 from invoke.vendor.lexicon import Lexicon
-from invoke import MockContext, Result, Config
+from invoke import MockContext, Result, Config, Exit
 from mock import Mock, patch
 from pytest import skip
 from pytest_relaxed import trap, raises
@@ -583,7 +583,7 @@ _confirm_false = _confirm(False)
 def _run_all(c, mute=True):
     try:
         return all_(c)
-    except SystemExit:
+    except Exit:
         if not mute:
             raise
 

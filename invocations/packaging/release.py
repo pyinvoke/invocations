@@ -26,7 +26,7 @@ from invoke.vendor.lexicon import Lexicon
 
 from blessings import Terminal
 from enum import Enum
-from invoke import Collection, task
+from invoke import Collection, task, Exit
 from releases.util import parse_changelog
 from tabulate import tabulate
 
@@ -287,7 +287,7 @@ def prepare(c):
     actions, state = status(c)
     # TODO: unless nothing-to-do in which case just say that & exit 0
     if not confirm("Take the above actions?"):
-        sys.exit("Aborting.")
+        raise Exit("Aborting.")
 
     # TODO: factor out what it means to edit a file:
     # - $EDITOR or explicit expansion of it in case no shell involved
@@ -496,9 +496,9 @@ def _find_package(c):
         )
     ]
     if not packages:
-        sys.exit("Unable to find a local Python package!")
+        raise Exit("Unable to find a local Python package!")
     if len(packages) > 1:
-        sys.exit("Found multiple Python packages: {0!r}".format(packages))
+        raise Exit("Found multiple Python packages: {0!r}".format(packages))
     return packages[0]
 
 
@@ -560,7 +560,7 @@ def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
     python = config.get("python", python or "python")  # buffalo buffalo
     # Sanity
     if not sdist and not wheel:
-        sys.exit(
+        raise Exit(
             "You said no sdists and no wheels..."
             "what DO you want to build exactly?"
         )
@@ -737,7 +737,7 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
         input_ = StringIO(getpass.getpass(prompt) + "\n")
         gpg_bin = find_gpg(c)
         if not gpg_bin:
-            sys.exit(
+            raise Exit(
                 "You need to have one of `gpg`, `gpg1` or `gpg2` "
                 "installed to GPG-sign!"
             )
