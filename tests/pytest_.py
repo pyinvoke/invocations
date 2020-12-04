@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 
 from invoke import MockContext
-from mock import Mock
 
 from invocations.pytest import test
 
@@ -19,7 +18,6 @@ def _expect(flags=None, extra_flags=None, kwargs=None):
 
 
 class test_:
-
     def defaults_to_verbose_color_and_syscapture_with_pty_True(self):
         # Relies on default flags within expect helper
         with _expect() as c:

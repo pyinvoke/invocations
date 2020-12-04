@@ -276,13 +276,6 @@ def _mock_context(self):
         ),
     }
     context = MockContext(config=config, run=run_results)
-    # Wrap run() in a Mock too.
-    # NOTE: we don't do this inside MockContext itself because that would add a
-    # test lib as a runtime dependency =/
-    # NOTE: end-running around Context/DataProxy setattr because doing
-    # context.run.echo = True (or similar) is too common a use case to be worth
-    # breaking just for stupid test monkeypatch purposes
-    object.__setattr__(context, "run", Mock(wraps=context.run))
 
     #
     # Execute converge() inside a mock environment
