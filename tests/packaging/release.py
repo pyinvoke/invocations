@@ -241,7 +241,7 @@ def _mock_context(self):
     # Generate config & context from attrs
     #
 
-    changelog_file = "{0}.rst".format(self._changelog)
+    changelog_file = "{}.rst".format(self._changelog)
     config = Config(
         overrides={
             "packaging": {
@@ -260,9 +260,9 @@ def _mock_context(self):
         # Branch detection
         "git rev-parse --abbrev-ref HEAD": Result(self._branch),
         # Changelog update action - just here so it can be called
-        "$EDITOR {0.packaging.changelog_file}".format(config): Result(),
+        "$EDITOR {.packaging.changelog_file}".format(config): Result(),
         # Version file update - ditto
-        "$EDITOR {0}/_version.py".format(FAKE_PACKAGE): Result(),
+        "$EDITOR {}/_version.py".format(FAKE_PACKAGE): Result(),
         # Git tags
         "git tag": Result(tag_output),
         # Git status/commit/tagging
@@ -292,7 +292,7 @@ def _mock_context(self):
     # Because I can't very well patch six.moves.builtins itself, can I? =/
     builtins = "__builtin__" if PY2 else "builtins"
     import_patcher = patch(
-        "{0}.__import__".format(builtins), side_effect=fake_import
+        "{}.__import__".format(builtins), side_effect=fake_import
     )
 
     with import_patcher:
@@ -311,7 +311,7 @@ def _expect_actions(self, *actions):
     for action in actions:
         # Check for action's text value in the table which gets printed.
         # (Actual table formatting is tested in an individual test.)
-        err = "Didn't find {0} in stdout:\n\n{1}".format(action, stdout)
+        err = "Didn't find {} in stdout:\n\n{}".format(action, stdout)
         assert action.value in stdout, err
 
 
@@ -356,9 +356,9 @@ Tag +{tag}
                 **parts
             ).strip()
             output = sys.stdout.getvalue()
-            err = "Expected:\n\n{0}\n\nGot:\n\n{1}".format(regex, output)
+            err = "Expected:\n\n{}\n\nGot:\n\n{}".format(regex, output)
             err += "\n\nRepr edition...\n\n"
-            err += "Expected:\n\n{0!r}\n\nGot:\n\n{1!r}".format(regex, output)
+            err += "Expected:\n\n{!r}\n\nGot:\n\n{!r}".format(regex, output)
             assert re.match(regex, output), err
 
         @trap  # just for cleaner test output
@@ -608,7 +608,7 @@ class All:
             VersionFile.NEEDS_BUMP,
             Tag.NEEDS_CUTTING,
         ):
-            err = "Didn't see '{0}' text in status output!".format(action.name)
+            err = "Didn't see '{}' text in status output!".format(action.name)
             assert action.value in output, err
 
     @trap
@@ -638,17 +638,17 @@ class All:
             path = c.config.packaging.changelog_file
             # TODO: real code should probs expand EDITOR explicitly so it can
             # run w/o a shell wrap / require a full env?
-            cmd = "$EDITOR {0}".format(path)
+            cmd = "$EDITOR {}".format(path)
             c.run.assert_any_call(cmd, pty=True, hide=False)
 
     @_confirm_true
     def opens_EDITOR_with_version_file_when_it_needs_update(self, _):
         with _mock_context(self) as c:
             _run_all(c)
-            path = "{0}/_version.py".format(FAKE_PACKAGE)
+            path = "{}/_version.py".format(FAKE_PACKAGE)
             # TODO: real code should probs expand EDITOR explicitly so it can
             # run w/o a shell wrap / require a full env?
-            cmd = "$EDITOR {0}".format(path)
+            cmd = "$EDITOR {}".format(path)
             c.run.assert_any_call(cmd, pty=True, hide=False)
 
     @_confirm_true
@@ -660,9 +660,9 @@ class All:
             # sets it up to result in a commit being necessary.)
             check = 'git status --porcelain | egrep -v "^\\?"'
             c.run.assert_any_call(check, hide=True, warn=True)
-            commit = 'git commit -am "Cut {0}"'.format(version)
+            commit = 'git commit -am "Cut {}"'.format(version)
             # TODO: annotated, signed, etc?
-            tag = "git tag {0}".format(version)
+            tag = "git tag {}".format(version)
             for cmd in (commit, tag):
                 c.run.assert_any_call(cmd, hide=False)
 
@@ -700,8 +700,8 @@ class All:
                 # proving a negative sucks - eventually make this subroutine
                 # assert based. Meh.
                 path = c.config.packaging.changelog_file
-                cmd = "$EDITOR {0}".format(path)
-                err = "Saw {0!r} despite changelog not needing update!".format(
+                cmd = "$EDITOR {}".format(path)
+                err = "Saw {!r} despite changelog not needing update!".format(
                     cmd
                 )
                 assert cmd not in [x[0][0] for x in c.run.call_args_list], err

@@ -43,7 +43,7 @@ def confirm(question, assume_yes=True):
     while True:
         # TODO: ensure that this is Ctrl-C friendly, ISTR issues with
         # raw_input/input on some Python versions blocking KeyboardInterrupt.
-        response = input("{0} [{1}] ".format(question, suffix))
+        response = input("{} [{}] ".format(question, suffix))
         response = response.lower().strip()  # Normalize
         # Default
         if not response:

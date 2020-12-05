@@ -35,14 +35,14 @@ def make_sudouser(c):
     # --groups travis because we must be in the Travis group to access the
     # (created by Travis for us) virtualenv and other contents within
     # /home/travis.
-    c.sudo("useradd {0} --create-home --groups travis".format(user))
+    c.sudo("useradd {} --create-home --groups travis".format(user))
     # Password 'mypass' also arbitrary
-    c.run("echo {0}:{1} | sudo chpasswd".format(user, password))
+    c.run("echo {}:{} | sudo chpasswd".format(user, password))
     # Set up new (glob-sourced) sudoers conf file for our user; easier than
     # attempting to mutate or overwrite main sudoers conf.
     conf = "/etc/sudoers.d/passworded"
-    cmd = "echo '{0}   ALL=(ALL:ALL) PASSWD:ALL' > {1}".format(user, conf)
-    c.sudo('sh -c "{0}"'.format(cmd))
+    cmd = "echo '{}   ALL=(ALL:ALL) PASSWD:ALL' > {}".format(user, conf)
+    c.sudo('sh -c "{}"'.format(cmd))
     # Grant travis group write access to /home/travis as some integration tests
     # may try writing conf files there. (TODO: shouldn't running the tests via
     # 'sudo -H' mean that's no longer necessary?)
@@ -57,15 +57,16 @@ def make_sshable(c):
     Set up passwordless SSH keypair & authorized_hosts access to localhost.
     """
     user = c.travis.sudo.user
-    home = "~{0}".format(user)
+    home = "~{}".format(user)
     # Run sudo() as the new sudo user; means less chown'ing, etc.
     c.config.sudo.user = user
-    ssh_dir = "{0}/.ssh".format(home)
+    ssh_dir = "{}/.ssh".format(home)
     # TODO: worth wrapping in 'sh -c' and using '&&' instead of doing this?
+    # TODO: uhh isn't this fucking broken
     for cmd in ("mkdir {0}", "chmod 0700 {0}"):
         c.sudo(cmd.format(ssh_dir, user))
-    c.sudo('ssh-keygen -f {0}/id_rsa -N ""'.format(ssh_dir))
-    c.sudo("cp {0}/{{id_rsa.pub,authorized_keys}}".format(ssh_dir))
+    c.sudo('ssh-keygen -f {}/id_rsa -N ""'.format(ssh_dir))
+    c.sudo("cp {}/{{id_rsa.pub,authorized_keys}}".format(ssh_dir))
 
 
 @task
@@ -82,7 +83,7 @@ def sudo_run(c, command):
     # so the tactic of '$VIRTUAL_ENV/bin/inv coverage' doesn't help - only that
     # intermediate process knows about the venv!
     cmd = "source $VIRTUAL_ENV/bin/activate && {}".format(command)
-    c.sudo('bash -c "{0}"'.format(cmd), user=c.travis.sudo.user)
+    c.sudo('bash -c "{}"'.format(cmd), user=c.travis.sudo.user)
 
 
 @task
@@ -107,7 +108,7 @@ def test_installation(c, package, sanity):
     :param str package: Package name to uninstall.
     :param str sanity: Sanity-check command string to run.
     """
-    c.run("pip uninstall -y {0}".format(package))
+    c.run("pip uninstall -y {}".format(package))
     c.run("pip install .")
     if sanity:
         c.run(sanity)
@@ -157,8 +158,8 @@ def test_packaging(c, package, sanity, alt_python=None):
         else:
             globs.append("*.whl")
     for glob in globs:
-        c.run("pip uninstall -y {0}".format(package), warn=True)
-        c.run("pip install tmp/dist/{0}".format(glob))
+        c.run("pip uninstall -y {}".format(package), warn=True)
+        c.run("pip install tmp/dist/{}".format(glob))
         c.run(sanity)
 
 

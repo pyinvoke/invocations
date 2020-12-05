@@ -48,13 +48,13 @@ def _unpack(c, tmp, package, version, git_url=None):
                 ("tgz", "tar xzvf"),
                 ("tar.gz", "tar xzvf"),
             ):
-                globexpr = "*.{0}".format(extension)
+                globexpr = "*.{}".format(extension)
                 globs = glob(globexpr)
                 if globs:
                     break
             archive = os.path.basename(globs[0])
-            source, _, _ = archive.rpartition(".{0}".format(extension))
-            c.run("{0} {1}".format(opener, globexpr))
+            source, _, _ = archive.rpartition(".{}".format(extension))
+            c.run("{} {}".format(opener, globexpr))
         finally:
             os.chdir(cwd)
     return real_version, source

@@ -29,7 +29,7 @@ def _browse(c):
     Open build target's index.html in a browser (using 'open').
     """
     index = join(c.sphinx.target, c.sphinx.target_file)
-    c.run("open {0}".format(index))
+    c.run("open {}".format(index))
 
 
 @task(
@@ -61,7 +61,7 @@ def build(
         opts = ""
     if nitpick:
         opts += " -n -W -T"
-    cmd = "sphinx-build{0} {1} {2}".format(
+    cmd = "sphinx-build{} {} {}".format(
         (" " + opts) if opts else "",
         source or c.sphinx.source,
         target or c.sphinx.target,
@@ -97,7 +97,7 @@ def tree(c):
     Display documentation contents with the 'tree' program.
     """
     ignore = ".git|*.pyc|*.swp|dist|*.egg-info|_static|_build|_templates"
-    c.run('tree -Ca -I "{0}" {1}'.format(ignore, c.sphinx.source))
+    c.run('tree -Ca -I "{}" {}'.format(ignore, c.sphinx.source))
 
 
 # Vanilla/default/parameterized collection for normal use

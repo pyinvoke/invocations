@@ -298,7 +298,7 @@ def prepare(c):
     if actions.changelog is Changelog.NEEDS_RELEASE:
         # TODO: identify top of list and inject a ready-made line? Requires vim
         # assumption...GREAT opportunity for class/method based tasks!
-        cmd = "$EDITOR {0.packaging.changelog_file}".format(c)
+        cmd = "$EDITOR {.packaging.changelog_file}".format(c)
         c.run(cmd, pty=True, hide=False)
     # TODO: add a step for checking reqs.txt / setup.py vs virtualenv contents
     # Version file!
@@ -310,7 +310,7 @@ def prepare(c):
             _find_package(c),
             c.packaging.get("version_module", "_version") + ".py",
         )
-        cmd = "$EDITOR {0}".format(version_file)
+        cmd = "$EDITOR {}".format(version_file)
         c.run(cmd, pty=True, hide=False)
     if actions.tag == Tag.NEEDS_CUTTING:
         # Commit, if necessary, so the tag includes everything.
@@ -318,11 +318,11 @@ def prepare(c):
         cmd = 'git status --porcelain | egrep -v "^\\?"'
         if c.run(cmd, hide=True, warn=True).ok:
             c.run(
-                'git commit -am "Cut {0}"'.format(state.expected_version),
+                'git commit -am "Cut {}"'.format(state.expected_version),
                 hide=False,
             )
         # Tag!
-        c.run("git tag {0}".format(state.expected_version), hide=False)
+        c.run("git tag {}".format(state.expected_version), hide=False)
         # TODO: print something to clarify/confirm tag was cut, if not just
         # adding echo=True to above
 
@@ -498,7 +498,7 @@ def _find_package(c):
     if not packages:
         raise Exit("Unable to find a local Python package!")
     if len(packages) > 1:
-        raise Exit("Found multiple Python packages: {0!r}".format(packages))
+        raise Exit("Found multiple Python packages: {!r}".format(packages))
     return packages[0]
 
 
@@ -568,9 +568,9 @@ def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
     if not directory:
         directory = ""  # os.path.join() doesn't like None
     dist_dir = os.path.join(directory, "dist")
-    dist_arg = "-d {0}".format(dist_dir)
+    dist_arg = "-d {}".format(dist_dir)
     build_dir = os.path.join(directory, "build")
-    build_arg = "-b {0}".format(build_dir)
+    build_arg = "-b {}".format(build_dir)
     # Clean
     if clean:
         if os.path.exists(build_dir):
@@ -592,7 +592,7 @@ def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
 
 def find_gpg(c):
     for candidate in "gpg gpg1 gpg2".split():
-        if c.run("which {0}".format(candidate), hide=True, warn=True).ok:
+        if c.run("which {}".format(candidate), hide=True, warn=True).ok:
             return candidate
 
 
@@ -724,7 +724,7 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
     # only honors the sdist's lesser data).
     archives = list(
         itertools.chain.from_iterable(
-            glob(os.path.join(directory, "dist", "*.{0}".format(extension)))
+            glob(os.path.join(directory, "dist", "*.{}".format(extension)))
             for extension in ("whl", "tar.gz")
         )
     )
@@ -742,7 +742,7 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
                 "installed to GPG-sign!"
             )
         for archive in archives:
-            cmd = "{0} --detach-sign -a --passphrase-fd 0 {{0}}".format(
+            cmd = "{} --detach-sign -a --passphrase-fd 0 {{}}".format(
                 gpg_bin
             )  # noqa
             c.run(cmd.format(archive), in_stream=input_)
@@ -750,7 +750,7 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
     # Upload
     parts = ["twine", "upload"]
     if index:
-        index_arg = "--repository {0}".format(index)
+        index_arg = "--repository {}".format(index)
     if index:
         parts.append(index_arg)
     paths = archives[:]
@@ -759,9 +759,9 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
     parts.extend(paths)
     cmd = " ".join(parts)
     if dry_run:
-        print("Would publish via: {0}".format(cmd))
+        print("Would publish via: {}".format(cmd))
         print("Files that would be published:")
-        c.run("ls -l {0}".format(" ".join(paths)))
+        c.run("ls -l {}".format(" ".join(paths)))
     else:
         c.run(cmd)
 

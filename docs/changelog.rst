@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :support:`-` Replace some old Python 2.6 compatible syntax bits.
 - :feature:`-` Add a ``warnings`` kwarg/flag to ``pytest.test``, allowing one
   to call it with ``--no-warnings`` as an inline 'alias' for pytest's own
   ``--disable-warnings`` flag.
