@@ -158,6 +158,9 @@ def sites(c):
     # TODO: wants a 'temporarily tweak context settings' contextmanager
     # TODO: also a fucking spinner cuz this confuses me every time I run it
     # when the docs aren't already prebuilt
+    # TODO: this is still bad because it means the actually displayed build
+    # output "looks like" nothing was built (due to that first pass building
+    # most pages)
     docs_c["run"].hide = True
     www_c["run"].hide = True
     docs["build"](docs_c)
