@@ -2,6 +2,37 @@
 Changelog
 =========
 
+- :bug:`- major` ``release.build``'s ``--clean`` flag has been updated:
+
+    - It now honors configuration like the other flags in this task,
+      specifically ``packaging.clean``.
+    - It now defaults to ``False`` (rationale: most build operations in the
+      wild tend to assume no cleaning by default, so defaulting to the opposite
+      was sometimes surprising).
+
+      .. warning:: This is a backwards incompatible change.
+
+    - When ``True``, it applies to both build and dist directories, instead of
+      just build.
+
+      .. warning:: This is a backwards incompatible change.
+
+    - It may now also take the string values ``"build"`` or ``"dist"`` to clean
+      only one of those directories.
+
+- :support:`-` Reverse the default value of ``release.build``'s ``wheel``
+  argument: this task now builds both sdists and wheels by default. Included in
+  this change is a new runtime dependency on the ``wheel`` package.
+
+  (Rationale: at this point in time, most users will be expecting wheels to be
+  available, and not building wheels is likely to be the uncommon case.)
+
+  .. warning:: This is a backwards incompatible change.
+
+- :bug:`- major` ``release.build`` had bad kwargs-vs-config logic preventing
+  flags such as ``--wheel`` or ``--pythonn`` from actually working (config
+  defaults always won out, leading to silent ignoring of user input). This has
+  been fixed and those responsible have been sacked.
 - :support:`-` Replace some old Python 2.6 compatible syntax bits.
 - :feature:`-` Add a ``warnings`` kwarg/flag to ``pytest.test``, allowing one
   to call it with ``--no-warnings`` as an inline 'alias' for pytest's own

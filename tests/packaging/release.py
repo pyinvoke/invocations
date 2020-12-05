@@ -24,6 +24,7 @@ from invocations.packaging.release import (
     _release_and_issues,
     _release_line,
     all_,
+    build,
     load_version,
     status,
 )
@@ -742,3 +743,172 @@ class component_state_enums_contain_human_readable_values:
         def needs_cutting(self):
             expected = "\x1b[31m\u2718 needs cutting\x1b(B\x1b[m"
             assert Tag.NEEDS_CUTTING.value == expected
+
+
+@contextmanager
+def _expect_setuppy(
+    flags, clean=False, python="python", config=None, yield_rmtree=False
+):
+    kwargs = dict(run=True)
+    if config is not None:
+        kwargs["config"] = config
+    c = MockContext(**kwargs)
+    # Make sure we don't actually run rmtree regardless
+    with patch("invocations.packaging.release.rmtree") as rmtree:
+        if yield_rmtree:
+            yield c, rmtree
+        else:
+            yield c
+    c.run.assert_called_once_with("{} setup.py {}".format(python, flags))
+
+
+class build_:
+    sdist_flags = "sdist -d dist"
+    wheel_flags = "build -b build bdist_wheel -d dist"
+    # DID SOMEBODY SAY 'DIST'???
+    both_flags = "sdist -d dist build -b build bdist_wheel -d dist"
+    oh_dir = "sdist -d {0} build -b {1} bdist_wheel -d {0}".format(
+        path.join("dir", "dist"), path.join("dir", "build")
+    )
+
+    class sdist:
+        def indicates_sdist_builds(self):
+            with _expect_setuppy(self.both_flags) as c:
+                build(c, sdist=True)
+
+        def on_by_default(self):
+            with _expect_setuppy(self.both_flags) as c:
+                build(c)
+
+        def can_be_disabled_via_config(self):
+            config = Config(dict(packaging=dict(sdist=False)))
+            with _expect_setuppy(self.wheel_flags, config=config) as c:
+                build(c)
+
+        def kwarg_wins_over_config(self):
+            config = Config(dict(packaging=dict(sdist=False)))
+            with _expect_setuppy(self.both_flags, config=config) as c:
+                build(c, sdist=True)
+
+    class wheel:
+        def indicates_explicit_build_and_wheel(self):
+            with _expect_setuppy(self.wheel_flags) as c:
+                build(c, sdist=False, wheel=True)
+
+        def on_by_default(self):
+            with _expect_setuppy(self.wheel_flags) as c:
+                build(c, sdist=False)
+
+        def can_be_disabled_via_config(self):
+            config = Config(dict(packaging=dict(wheel=False)))
+            with _expect_setuppy(self.sdist_flags, config=config) as c:
+                build(c)
+
+        def kwarg_wins_over_config(self):
+            config = Config(dict(packaging=dict(wheel=False)))
+            with _expect_setuppy(self.both_flags, config=config) as c:
+                build(c, wheel=True)
+
+    @raises(Exit)
+    def kabooms_if_sdist_and_wheel_both_False(self):
+        build(MockContext(), sdist=False, wheel=False)
+
+    class directory:
+        def defaults_to_blank_or_cwd(self):
+            with _expect_setuppy(self.both_flags) as c:
+                build(c)
+
+        def if_given_affects_build_and_dist_dirs(self):
+            with _expect_setuppy(self.oh_dir) as c:
+                build(c, directory="dir")
+
+        def may_be_given_via_config(self):
+            config = Config(dict(packaging=dict(directory="dir")))
+            with _expect_setuppy(self.oh_dir, config=config) as c:
+                build(c)
+
+        def kwarg_wins_over_config(self):
+            config = Config(dict(packaging=dict(directory="NOTdir")))
+            with _expect_setuppy(self.oh_dir, config=config) as c:
+                build(c, directory="dir")
+
+    class python:
+        def defaults_to_python(self):
+            with _expect_setuppy(self.both_flags, python="python") as c:
+                build(c, python="python")
+
+        def may_be_overridden(self):
+            with _expect_setuppy(self.both_flags, python="fython") as c:
+                build(c, python="fython")
+
+        def can_be_given_via_config(self):
+            config = Config(dict(packaging=dict(python="python17")))
+            with _expect_setuppy(
+                self.both_flags, config=config, python="python17"
+            ) as c:
+                build(c)
+
+        def kwarg_wins_over_config(self):
+            config = Config(dict(packaging=dict(python="python17")))
+            with _expect_setuppy(
+                self.both_flags, config=config, python="python99"
+            ) as c:
+                build(c, python="python99")
+
+    class clean:
+        def _expect_with_rmtree(self):
+            return _expect_setuppy(self.both_flags, yield_rmtree=True)
+
+        def defaults_to_False_meaning_no_clean(self):
+            with self._expect_with_rmtree() as (c, rmtree):
+                build(c)
+            assert not rmtree.called
+
+        def True_means_clean_both_dirs(self):
+            with self._expect_with_rmtree() as (c, rmtree):
+                build(c, clean=True)
+            rmtree.assert_any_call("dist", ignore_errors=True)
+            rmtree.assert_any_call("build", ignore_errors=True)
+
+        def understands_directory_option(self):
+            with _expect_setuppy(self.oh_dir, yield_rmtree=True) as (
+                c,
+                rmtree,
+            ):
+                build(c, directory="dir", clean=True)
+            rmtree.assert_any_call(
+                path.join("dir", "build"), ignore_errors=True
+            )
+            rmtree.assert_any_call(
+                path.join("dir", "dist"), ignore_errors=True
+            )
+
+        def dist_means_clean_dist(self):
+            with self._expect_with_rmtree() as (c, rmtree):
+                build(c, clean="dist")
+            rmtree.assert_called_once_with("dist", ignore_errors=True)
+
+        def build_means_clean_build(self):
+            with self._expect_with_rmtree() as (c, rmtree):
+                build(c, clean="build")
+            rmtree.assert_called_once_with("build", ignore_errors=True)
+
+        def may_be_configured(self):
+            config = Config(dict(packaging=dict(clean="build")))
+            with _expect_setuppy(
+                self.both_flags, yield_rmtree=True, config=config
+            ) as (c, rmtree):
+                build(c)
+            rmtree.assert_called_once_with("build", ignore_errors=True)
+
+        def kwarg_wins_over_config(self):
+            config = Config(dict(packaging=dict(clean="build")))
+            with _expect_setuppy(
+                self.both_flags, yield_rmtree=True, config=config
+            ) as (c, rmtree):
+                build(c, clean="dist")
+            rmtree.assert_called_once_with("dist", ignore_errors=True)
+
+        @raises(Exit)
+        def errors_if_unknown_value(self):
+            build(MockContext(), clean="lmao")

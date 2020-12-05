@@ -515,49 +515,71 @@ def load_version(c):
 
 
 @task
-def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
+def build(c, sdist=None, wheel=None, directory=None, python=None, clean=None):
     """
     Build sdist and/or wheel archives, optionally in a temp base directory.
 
-    All parameters save ``directory`` honor config settings of the same name,
-    under the ``packaging`` tree. E.g. say ``.configure({'packaging': {'wheel':
-    True}})`` to force building wheel archives by default.
+    All parameters/flags honor config settings of the same name, under the
+    ``packaging`` tree. E.g. say ``.configure({'packaging': {'wheel':
+    False}})`` to disable building wheel archives by default.
 
     :param bool sdist:
-        Whether to build sdists/tgzs.
+        Whether to build sdists/tgzs. Default: ``True``.
 
     :param bool wheel:
         Whether to build wheels (requires the ``wheel`` package from PyPI).
+        Default: ``True``.
 
     :param str directory:
         Allows specifying a specific directory in which to perform builds and
         dist creation. Useful when running as a subroutine from ``publish``
         which sets up a temporary directory.
 
-        Two subdirectories will be created within this directory: one for
-        builds, and one for the dist archives.
+        Up to two subdirectories may be created within this directory: one for
+        builds (if building wheels), and one for the dist archives.
 
-        When ``None`` or another false-y value, the current working directory
-        is used (and thus, local ``dist/`` and ``build/`` subdirectories).
+        When ``None`` or another false-y value (which is the default), the
+        current working directory is used (and thus, local ``dist/`` and
+        ``build/`` subdirectories).
 
     :param str python:
         Which Python binary to use when invoking ``setup.py``.
 
-        Defaults to just ``python``.
+        Defaults to ``"python"``.
 
         If ``wheel=True``, then this Python must have ``wheel`` installed in
         its default ``site-packages`` (or similar) location.
 
-    :param bool clean:
-        Whether to clean out the local ``build/`` folder before building.
+    :param clean:
+        Whether to clean out the build and/or dist directories before building.
+
+        Possible values:
+
+        - ``True``: clean both build and dist dirs.
+        - ``False`` (the default): do not clean.
+        - ``"build"``: only clean the build dir. (This is equivalent to the
+          pre-2.0 default/True behavior.)
+        - ``"dist"``: only clean the dist dir.
+
+    .. versionchanged:: 2.0
+        ``clean`` now defaults to False, cleans both dist and build dirs when
+        True, and accepts "dist" or "build" to clean just one. ``clean`` also
+        honors configuration.
+    .. versionchanged:: 2.0
+        ``wheel`` now defaults to True instead of False.
     """
     # Config hooks
     config = c.config.get("packaging", {})
-    # TODO: update defaults to be None, then flip the below so non-None runtime
-    # beats config.
-    sdist = config.get("sdist", sdist)
-    wheel = config.get("wheel", wheel)
-    python = config.get("python", python or "python")  # buffalo buffalo
+    if sdist is None:
+        sdist = config.get("sdist", True)
+    if wheel is None:
+        wheel = config.get("wheel", True)
+    if directory is None:
+        directory = config.get("directory", "")
+    if python is None:
+        python = config.get("python", "python")  # buffalo buffalo
+    if clean is None:
+        clean = config.get("clean", False)
     # Sanity
     if not sdist and not wheel:
         raise Exit(
@@ -565,19 +587,22 @@ def build(c, sdist=True, wheel=False, directory=None, python=None, clean=True):
             "what DO you want to build exactly?"
         )
     # Directory path/arg logic
-    if not directory:
-        directory = ""  # os.path.join() doesn't like None
     dist_dir = os.path.join(directory, "dist")
     dist_arg = "-d {}".format(dist_dir)
     build_dir = os.path.join(directory, "build")
     build_arg = "-b {}".format(build_dir)
     # Clean
-    if clean:
-        if os.path.exists(build_dir):
-            rmtree(build_dir)
-        # NOTE: not cleaning dist_dir, since this may be called >1 time within
-        # publish() trying to build up multiple wheels/etc.
-        # TODO: separate clean-build/clean-dist args? Meh
+    if clean:  # True or string
+        if clean is True:
+            to_clean = [dist_dir, build_dir]
+        elif clean == "dist":
+            to_clean = [dist_dir]
+        elif clean == "build":
+            to_clean = [build_dir]
+        else:
+            raise Exit("Don't know how to clean {!r}!".format(clean))
+        for target in to_clean:
+            rmtree(target, ignore_errors=True)
     # Build
     parts = [python, "setup.py"]
     if sdist:

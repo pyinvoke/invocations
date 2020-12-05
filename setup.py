@@ -22,6 +22,10 @@ requirements = [
     "semantic_version>=2.4,<2.7",
     "tabulate==0.7.5",
     "tqdm>=4.8.1",
+    # wheel 0.34.0 dropped Python 3.4 which we still support for now
+    # 0.24.0 isn't a specific barrier but is what I personally pinned for years
+    # and is clearly stable enough.
+    "wheel<0.34.0,>=0.24.0",
 ]
 
 setup(
