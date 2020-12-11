@@ -264,7 +264,7 @@ def _mock_context(self):
         "git tag": tag_output,
         # Git status/commit/tagging
         re.compile("git tag .*"): True,
-        re.compile('git commit.*'): True,
+        re.compile("git commit.*"): True,
         # NOTE: some tests will need to override this, for now default to a
         # result that implies a commit is needed
         'git status --porcelain | egrep -v "^\\?"': Result(
