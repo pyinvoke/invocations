@@ -254,29 +254,24 @@ def _mock_context(self):
     tag_output = ""
     if hasattr(self, "_tags"):
         tag_output = "\n".join(self._tags) + "\n"
-    # TODO: if/when regex implemented for MockContext, make these keys less
-    # strictly tied to the real implementation.
     # NOTE: Result first posarg is stdout string data.
     run_results = {
         # Branch detection
-        "git rev-parse --abbrev-ref HEAD": Result(self._branch),
+        "git rev-parse --abbrev-ref HEAD": self._branch,
         # Changelog update action - just here so it can be called
-        "$EDITOR {.packaging.changelog_file}".format(config): Result(),
-        # Version file update - ditto
-        "$EDITOR {}/_version.py".format(FAKE_PACKAGE): Result(),
+        re.compile(r"\$EDITOR.*"): True,
         # Git tags
-        "git tag": Result(tag_output),
+        "git tag": tag_output,
         # Git status/commit/tagging
-        # TODO: yea I'd really like regexen now plz sigh
-        "git tag 1.1.2": Result(""),
-        'git commit -am "Cut 1.1.2"': Result(""),
+        re.compile("git tag .*"): True,
+        re.compile('git commit.*'): True,
         # NOTE: some tests will need to override this, for now default to a
         # result that implies a commit is needed
         'git status --porcelain | egrep -v "^\\?"': Result(
             "M somefile", exited=0
         ),
     }
-    context = MockContext(config=config, run=run_results)
+    context = MockContext(config=config, run=run_results, repeat=True)
 
     #
     # Execute converge() inside a mock environment
