@@ -1,0 +1,82 @@
+[tool.poetry]
+name = "invocations"
+version = "1.4.0"
+description = "Common/best-practice Invoke tasks and collections"
+authors = ["Jeff Forcier <jeff@bitprophet.org>"]
+license = "BSD"
+readme = "README.rst"
+repository = "https://github.com/pyinvoke/invocations"
+homepage = "http://www.pyinvoke.org/"
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 2",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Software Distribution",
+    "Topic :: System :: Systems Administration",
+]
+
+[tool.poetry.dependencies]
+python = "2.7 || ^3.5"
+invoke = "^1.0"
+tqdm = "^4.8"
+tabulate = "0.7.5"
+blessings = "^1.6"
+enum34 = "^1.1"
+releases = "^1.6"
+semantic_version = ">=2.4,<2.7"
+importlib-metadata = "2.1.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^4.6.3"
+wheel = "0.24"
+pytest-relaxed = "~1"
+twine = "1.11.0"
+mock = "1.0.1"
+watchdog = "0.8.3"
+flake8 = "3.6.0"
+sphinx = "^1.5"
+alabaster = "0.7.12"
+coverage = "4.4.2"
+
+[tool.black]
+line-length = 79
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+    | \.eggs
+    | \.git
+    | \.mypy_cache
+    | \.tox
+    | \.pytest_cache
+    | _build
+    | buck-out
+    | build
+    | dist
+    | vendor
+  )
+)
+'''
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
