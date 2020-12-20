@@ -5,6 +5,8 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
+  - "3.7"
+  - "3.8"
   - "pypy"
   - "pypy3"
 matrix:
@@ -14,8 +16,11 @@ matrix:
     - python: pypy3
   # Disabled per https://github.com/travis-ci/travis-ci/issues/1696
   # fast_finish: true
+before_install:
+  - pip uninstall pipenv numpy -y
+  - pip install poetry
 install:
-  - pip install -r dev-requirements.txt
+  - poetry install
 before_script:
   # Fast syntax check failures for more rapid feedback to submitters
   # (Travis-oriented metatask that version checks Python, installs, runs.)
