@@ -128,5 +128,5 @@ def coverage(c, report="term", opts="", tester=None):
     opts += "--cov --no-cov-on-fail --cov-report={0}".format(report)
     # TODO: call attached suite's test(), not the one in here, if they differ
     (tester or test)(c, opts=opts)
-    if report is "html":
+    if report == "html":
         c.run("open htmlcov/index.html")

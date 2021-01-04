@@ -108,7 +108,10 @@ def test_installation(c, package, sanity):
     :param str sanity: Sanity-check command string to run.
     """
     c.run("pip uninstall -y {0}".format(package))
-    c.run("pip install .")
+    if os.path.exists('setup.py'):
+        c.run("pip install .")
+    elif os.path.exists('poetry.lock'):
+        c.run("poetry install")
     if sanity:
         c.run(sanity)
     # TODO: merge with test_packaging below somehow, e.g. a subroutine
