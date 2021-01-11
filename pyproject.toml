@@ -44,6 +44,7 @@ enum34 = "^1.1"
 releases = "^1.6"
 semantic_version = ">=2.4,<2.7"
 importlib-metadata = "2.1.1"
+Sphinx = "1.6.7"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.6.3"

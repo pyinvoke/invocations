@@ -161,7 +161,11 @@ def test_packaging(c, package, sanity, alt_python=None):
             globs.append("*.whl")
     for glob in globs:
         c.run("pip uninstall -y {0}".format(package), warn=True)
-        c.run("pip install tmp/dist/{0}".format(glob))
+        if os.path.exists('setup.py'):
+            c.run("pip install tmp/dist/{0}".format(glob))
+        elif os.path.exists('poetry.lock'):
+            c.run("poetry build")
+            c.run("pip install dist/{0}".format(glob))
         c.run(sanity)
 
 
