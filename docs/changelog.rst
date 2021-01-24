@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :support:`21` Only require ``enum34`` under Python 2 to prevent it clashing
+  with the stdlib ``enum`` under Python 3. Credit: Alex Gaynor.
 - :bug:`- major` ``release.build``'s ``--clean`` flag has been updated:
 
     - It now honors configuration like the other flags in this task,
