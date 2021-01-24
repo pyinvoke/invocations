@@ -515,7 +515,7 @@ def load_version(c):
 
 
 @task
-def build(c, sdist=None, wheel=None, directory=None, python=None, clean=None):
+def build(c, sdist=True, wheel=True, directory=None, python=None, clean=False):
     """
     Build sdist and/or wheel archives, optionally in a temp base directory.
 
@@ -551,35 +551,30 @@ def build(c, sdist=None, wheel=None, directory=None, python=None, clean=None):
         its default ``site-packages`` (or similar) location.
 
     :param clean:
-        Whether to clean out the build and/or dist directories before building.
-
-        Possible values:
-
-        - ``True``: clean both build and dist dirs.
-        - ``False`` (the default): do not clean.
-        - ``"build"``: only clean the build dir. (This is equivalent to the
-          pre-2.0 default/True behavior.)
-        - ``"dist"``: only clean the dist dir.
+        Whether to clean out the build and dist directories before building.
 
     .. versionchanged:: 2.0
-        ``clean`` now defaults to False, cleans both dist and build dirs when
-        True, and accepts "dist" or "build" to clean just one. ``clean`` also
-        honors configuration.
+        ``clean`` now defaults to False instead of True, cleans both dist and
+        build dirs when True, and honors configuration.
     .. versionchanged:: 2.0
         ``wheel`` now defaults to True instead of False.
     """
     # Config hooks
     config = c.config.get("packaging", {})
-    if sdist is None:
-        sdist = config.get("sdist", True)
-    if wheel is None:
-        wheel = config.get("wheel", True)
+    # Check bool flags to see if they were overridden by config.
+    # TODO: this wants something explicit at the Invoke layer, technically this
+    # prevents someone from giving eg --sdist on CLI to override a falsey
+    # config value for it.
+    if sdist is True and "sdist" in config:
+        sdist = config["sdist"]
+    if wheel is True and "wheel" in config:
+        wheel = config["wheel"]
+    if clean is False and "clean" in config:
+        clean = config["clean"]
     if directory is None:
         directory = config.get("directory", "")
     if python is None:
         python = config.get("python", "python")  # buffalo buffalo
-    if clean is None:
-        clean = config.get("clean", False)
     # Sanity
     if not sdist and not wheel:
         raise Exit(
@@ -592,16 +587,8 @@ def build(c, sdist=None, wheel=None, directory=None, python=None, clean=None):
     build_dir = os.path.join(directory, "build")
     build_arg = "-b {}".format(build_dir)
     # Clean
-    if clean:  # True or string
-        if clean is True:
-            to_clean = [dist_dir, build_dir]
-        elif clean == "dist":
-            to_clean = [dist_dir]
-        elif clean == "build":
-            to_clean = [build_dir]
-        else:
-            raise Exit("Don't know how to clean {!r}!".format(clean))
-        for target in to_clean:
+    if clean:
+        for target in (dist_dir, build_dir):
             rmtree(target, ignore_errors=True)
     # Build
     parts = [python, "setup.py"]
@@ -630,7 +617,7 @@ def find_gpg(c):
 def publish(
     c,
     sdist=True,
-    wheel=False,
+    wheel=True,
     index=None,
     sign=False,
     dry_run=False,
@@ -703,9 +690,12 @@ def publish(
     # Config hooks
     config = c.config.get("packaging", {})
     index = config.get("index", index)
-    sign = config.get("sign", sign)
-    dual_wheels = config.get("dual_wheels", dual_wheels)
-    check_desc = config.get("check_desc", check_desc)
+    if sign is False and "sign" in config:
+        sign = config["sign"]
+    if dual_wheels is False and "dual_wheels" in config:
+        dual_wheels = config["dual_wheels"]
+    if check_desc is False and "check_desc" in config:
+        check_desc = config["check_desc"]
     # Initial sanity check, if needed. Will die usefully.
     if check_desc:
         c.run("python setup.py check -r -s")

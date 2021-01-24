@@ -28,22 +28,21 @@ Changelog
 
       .. warning:: This is a backwards incompatible change.
 
-    - It may now also take the string values ``"build"`` or ``"dist"`` to clean
-      only one of those directories.
-
-- :support:`-` Reverse the default value of ``release.build``'s ``wheel``
-  argument from ``False`` to ``True``. Included in this change is a new
-  required runtime dependency on the ``wheel`` package.
+- :support:`-` Reverse the default value of ``release.build`` and
+  ``release.publish``)'s ``wheel`` argument from ``False`` to ``True``.
+  Included in this change is a new required runtime dependency on the ``wheel``
+  package.
 
   Rationale: at this point in time, most users will be expecting wheels to be
   available, and not building wheels is likely to be the uncommon case.
 
   .. warning:: This is a backwards incompatible change.
 
-- :bug:`- major` ``release.build`` had bad kwargs-vs-config logic preventing
-  flags such as ``--wheel`` or ``--python`` from actually working (config
-  defaults always won out, leading to silent ignoring of user input). This has
-  been fixed and those responsible have been sacked.
+- :bug:`- major` ``release.build`` and ``release.publish`` had bad
+  kwargs-vs-config logic preventing flags such as ``--wheel`` or ``--python``
+  from actually working (config defaults always won out, leading to silent
+  ignoring of user input). This has been fixed; config will now only be honored
+  unless the CLI appears to be overriding it.
 - :support:`-` Replace some old Python 2.6-compatible syntax bits.
 - :feature:`-` Add a ``warnings`` kwarg/flag to ``pytest.test``, allowing one
   to call it with ``--no-warnings`` as an inline 'alias' for pytest's own

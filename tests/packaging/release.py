@@ -742,7 +742,7 @@ class component_state_enums_contain_human_readable_values:
 
 @contextmanager
 def _expect_setuppy(
-    flags, clean=False, python="python", config=None, yield_rmtree=False
+    flags, python="python", config=None, yield_rmtree=False
 ):
     kwargs = dict(run=True)
     if config is not None:
@@ -760,7 +760,6 @@ def _expect_setuppy(
 class build_:
     sdist_flags = "sdist -d dist"
     wheel_flags = "build -b build bdist_wheel -d dist"
-    # DID SOMEBODY SAY 'DIST'???
     both_flags = "sdist -d dist build -b build bdist_wheel -d dist"
     oh_dir = "sdist -d {0} build -b {1} bdist_wheel -d {0}".format(
         path.join("dir", "dist"), path.join("dir", "build")
@@ -781,9 +780,9 @@ class build_:
                 build(c)
 
         def kwarg_wins_over_config(self):
-            config = Config(dict(packaging=dict(sdist=False)))
-            with _expect_setuppy(self.both_flags, config=config) as c:
-                build(c, sdist=True)
+            config = Config(dict(packaging=dict(sdist=True)))
+            with _expect_setuppy(self.wheel_flags, config=config) as c:
+                build(c, sdist=False)
 
     class wheel:
         def indicates_explicit_build_and_wheel(self):
@@ -800,9 +799,9 @@ class build_:
                 build(c)
 
         def kwarg_wins_over_config(self):
-            config = Config(dict(packaging=dict(wheel=False)))
-            with _expect_setuppy(self.both_flags, config=config) as c:
-                build(c, wheel=True)
+            config = Config(dict(packaging=dict(wheel=True)))
+            with _expect_setuppy(self.sdist_flags, config=config) as c:
+                build(c, wheel=False)
 
     @raises(Exit)
     def kabooms_if_sdist_and_wheel_both_False(self):
@@ -878,32 +877,20 @@ class build_:
                 path.join("dir", "dist"), ignore_errors=True
             )
 
-        def dist_means_clean_dist(self):
-            with self._expect_with_rmtree() as (c, rmtree):
-                build(c, clean="dist")
-            rmtree.assert_called_once_with("dist", ignore_errors=True)
-
-        def build_means_clean_build(self):
-            with self._expect_with_rmtree() as (c, rmtree):
-                build(c, clean="build")
-            rmtree.assert_called_once_with("build", ignore_errors=True)
-
         def may_be_configured(self):
-            config = Config(dict(packaging=dict(clean="build")))
+            config = Config(dict(packaging=dict(clean=True)))
             with _expect_setuppy(
                 self.both_flags, yield_rmtree=True, config=config
             ) as (c, rmtree):
                 build(c)
-            rmtree.assert_called_once_with("build", ignore_errors=True)
+            rmtree.assert_any_call("dist", ignore_errors=True)
+            rmtree.assert_any_call("build", ignore_errors=True)
 
         def kwarg_wins_over_config(self):
-            config = Config(dict(packaging=dict(clean="build")))
+            config = Config(dict(packaging=dict(clean=True)))
             with _expect_setuppy(
                 self.both_flags, yield_rmtree=True, config=config
             ) as (c, rmtree):
-                build(c, clean="dist")
-            rmtree.assert_called_once_with("dist", ignore_errors=True)
-
-        @raises(Exit)
-        def errors_if_unknown_value(self):
-            build(MockContext(), clean="lmao")
+                build(c, clean=False)
+            rmtree.assert_any_call("dist", ignore_errors=True)
+            rmtree.assert_any_call("build", ignore_errors=True)
