@@ -2,6 +2,12 @@
 Changelog
 =========
 
+- :support:`-` Drop Python 3.4 support. We didn't actually do anything to make
+  the code not work on 3.4, but we've removed some 3.4 related runtime (and
+  development) dependency limitations. Our CI will also no longer test on 3.4.
+
+    .. warning:: This is technically a backwards incompatible change.
+
 - :support:`12` Upgrade our packaging manifest so tests (also docs,
   requirements files, etc) are included in the distribution archives. Thanks to
   Tomáš Chvátal for the report.

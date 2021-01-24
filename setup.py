@@ -22,10 +22,7 @@ requirements = [
     "semantic_version>=2.4,<2.7",
     "tabulate==0.7.5",
     "tqdm>=4.8.1",
-    # wheel 0.34.0 dropped Python 3.4 which we still support for now
-    # 0.24.0 isn't a specific barrier but is what I personally pinned for years
-    # and is clearly stable enough.
-    "wheel<0.34.0,>=0.24.0",
+    "wheel>=0.24.0",
 ]
 
 setup(
@@ -54,9 +51,11 @@ setup(
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Software Development",
         "Topic :: Software Development :: Build Tools",
         "Topic :: Software Development :: Libraries",
