@@ -30,7 +30,7 @@ from invocations.packaging.release import (
 )
 
 
-class _release_line_:
+class release_line_:
     def assumes_bugfix_if_release_branch(self):
         c = MockContext(run=Result("2.7"))
         assert _release_line(c)[1] == Release.BUGFIX
@@ -50,7 +50,7 @@ class _release_line_:
         assert _release_line(c)[1] == Release.UNDEFINED
 
 
-class _latest_feature_bucket_:
+class latest_feature_bucket_:
     def base_case_of_single_release_family(self):
         bucket = _latest_feature_bucket(
             dict.fromkeys(["unreleased_1_feature"])
@@ -81,7 +81,7 @@ class _latest_feature_bucket_:
         assert bucket == "unreleased_202_feature"
 
 
-class _release_and_issues_:
+class release_and_issues_:
     class bugfix:
         # TODO: factor out into setup() so each test has some excluded/ignored
         # data in it - helps avoid naive implementation returning x[0] etc.
@@ -123,7 +123,7 @@ class _release_and_issues_:
         skip()
 
 
-class _find_package_:
+class find_package_:
     def can_be_short_circuited_with_config_value(self):
         # TODO: should we just bundle this + the version part into one
         # function and setting? do we ever peep into the package for anything
@@ -172,7 +172,7 @@ class load_version_:
         skip()
 
 
-class _latest_and_next_version_:
+class latest_and_next_version_:
     def next_patch_of_bugfix_release(self):
         versions = _latest_and_next_version(
             Lexicon(
