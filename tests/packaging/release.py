@@ -741,9 +741,7 @@ class component_state_enums_contain_human_readable_values:
 
 
 @contextmanager
-def _expect_setuppy(
-    flags, python="python", config=None, yield_rmtree=False
-):
+def _expect_setuppy(flags, python="python", config=None, yield_rmtree=False):
     kwargs = dict(run=True)
     if config is not None:
         kwargs["config"] = config
