@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :support:`12` Upgrade our packaging manifest so tests (also docs,
+  requirements files, etc) are included in the distribution archives. Thanks to
+  Tomáš Chvátal for the report.
 - :support:`21` Only require ``enum34`` under Python 2 to prevent it clashing
   with the stdlib ``enum`` under Python 3. Credit: Alex Gaynor.
 - :bug:`- major` ``release.build``'s ``--clean`` flag has been updated:

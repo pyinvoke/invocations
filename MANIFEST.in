@@ -1,3 +1,10 @@
 include LICENSE
 include README.rst
 include dev-requirements.txt
+recursive-include docs *
+recursive-exclude docs/_build *
+include dev-requirements.txt
+include tasks-requirements.txt
+recursive-include tests *
+recursive-exclude * *.pyc *.pyo
+recursive-exclude **/__pycache__ *
