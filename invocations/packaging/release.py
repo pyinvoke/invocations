@@ -100,7 +100,7 @@ BUGFIX_RELEASE_RE = re.compile(r"^\d+\.\d+\.\d+$")
 # TODO: allow tweaking this if folks use different branch methodology:
 # - same concept, different name, e.g. s/main/dev/
 # - different concept entirely, e.g. no main-ish, only feature branches
-FEATURE_RE = re.compile(r"^main$")
+FEATURE_RE = re.compile(r"^(main|master)$")
 
 
 class UndefinedReleaseType(Exception):

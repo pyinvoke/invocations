@@ -40,11 +40,8 @@ Changelog
 - :bug:`- major` Fix minor display bug causing the ``pytest`` task module to
   append a trailing space to the invocation of pytest itself.
 - :support:`-` Modify ``release`` task tree to look at ``main`` branches
-  instead of ``master`` ones, for "are we on a feature release line or a bugfix
-  one?" calculations, etc.
-
-  .. warning:: This is a backwards incompatible change.
-
+  in addition to ``master`` ones, for "are we on a feature release line or a
+  bugfix one?" calculations, etc.
 - :release:`1.4.0 <2018-06-26>`
 - :release:`1.3.1 <2018-06-26>`
 - :release:`1.2.2 <2018-06-26>`

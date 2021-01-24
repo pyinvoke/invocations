@@ -39,6 +39,10 @@ class release_line_:
         c = MockContext(run=Result("main"))
         assert _release_line(c)[1] == Release.FEATURE
 
+    def assumes_feature_if_master(self):
+        c = MockContext(run=Result("master"))
+        assert _release_line(c)[1] == Release.FEATURE
+
     def is_undefined_if_arbitrary_branch_name(self):
         c = MockContext(run=Result("yea-whatever"))
         assert _release_line(c)[1] == Release.UNDEFINED
