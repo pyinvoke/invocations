@@ -23,8 +23,8 @@ def confirm(question, assume_yes=True):
     assumed. This can be changed by specifying ``assume_yes=False``.
 
     .. note::
-        If the user does not supplies input that is (case-insensitively) equal
-        to "y", "yes", "n" or "no", they will be re-prompted until they do.
+        If the user does not supply input that is (case-insensitively) equal to
+        "y", "yes", "n" or "no", they will be re-prompted until they do.
 
     :param str question: The question part of the prompt.
     :param bool assume_yes:
