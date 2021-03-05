@@ -135,7 +135,7 @@ def coverage(c, report="term", opts="", tester=None):
         Specific test task object to invoke. If ``None`` (default), uses this
         module's local `test`.
     """
-    opts += "--cov --no-cov-on-fail --cov-report={}".format(report)
+    opts += " --cov --no-cov-on-fail --cov-report={}".format(report)
     # TODO: call attached suite's test(), not the one in here, if they differ
     (tester or test)(c, opts=opts)
     if report is "html":
