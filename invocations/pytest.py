@@ -140,5 +140,5 @@ def coverage(c, report="term", opts="", tester=None):
         my_opts += " " + opts
     # TODO: call attached suite's test(), not the one in here, if they differ
     (tester or test)(c, opts=my_opts)
-    if report is "html":
+    if report == "html":
         c.run("open htmlcov/index.html")

@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :bug:`-` Correctly test for ``html`` report type inside of
+  ``pytest.coverage`` when deciding whether to run ``open`` at the end.
 - :bug:`-` ``pytest.coverage`` incorrectly concatenated its ``opts`` argument
   to internal options; this has been fixed.
 - :release:`2.0.0 <2021-01-24>`
