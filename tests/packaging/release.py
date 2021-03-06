@@ -27,6 +27,7 @@ from invocations.packaging.release import (
     build,
     load_version,
     status,
+    upload,
 )
 
 
@@ -892,3 +893,38 @@ class build_:
                 build(c, clean=False)
             rmtree.assert_any_call("dist", ignore_errors=True)
             rmtree.assert_any_call("build", ignore_errors=True)
+
+
+class upload_:
+    def _fake(self, c, kwargs=None, flags=None):
+        def mkpath(x):
+            return path.join("somedir", "dist", x)
+
+        with patch("invocations.packaging.release.glob") as glob:
+            tgz, whl = mkpath("foo.tar.gz"), mkpath("foo.whl")
+            glob.side_effect = lambda x: [tgz if x.endswith("gz") else whl]
+            upload(c, "somedir", **(kwargs or {}))
+            glob.assert_any_call(mkpath("*.tar.gz"))
+            glob.assert_any_call(mkpath("*.whl"))
+        self.files = "{} {}".format(whl, tgz)
+        cmd = "twine upload"
+        if flags:
+            cmd += " {}".format(flags)
+        cmd += " {}".format(self.files)
+        return cmd
+
+    def twine_uploads_dist_contents_with_wheels_first(self):
+        c = MockContext(run=True)
+        c.run.assert_called_once_with(self._fake(c))
+
+    def may_target_alternate_index(self):
+        c = MockContext(run=True)
+        cmd = self._fake(c, kwargs=dict(index="lol"), flags="--repository lol")
+        c.run.assert_called_once_with(cmd)
+
+    @patch("builtins.print")
+    def dry_run_just_prints_and_ls(self, print):
+        c = MockContext(run=True)
+        cmd = self._fake(c, kwargs=dict(dry_run=True))
+        print.assert_any_call("Would publish via: {}".format(cmd))
+        c.run.assert_called_once_with("ls -l {}".format(self.files))

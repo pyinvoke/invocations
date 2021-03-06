@@ -765,9 +765,7 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
     # Upload
     parts = ["twine", "upload"]
     if index:
-        index_arg = "--repository {}".format(index)
-    if index:
-        parts.append(index_arg)
+        parts.append("--repository {}".format(index))
     paths = archives[:]
     if sign:
         paths.append(os.path.join(directory, "dist", "*.asc"))
