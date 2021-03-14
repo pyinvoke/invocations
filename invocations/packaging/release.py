@@ -629,16 +629,21 @@ def publish(
     """
     Publish code to PyPI or index of choice.
 
+    This uses the ``twine`` command under the hood, both its pre-upload
+    ``check`` subcommand (which verifies the archives to be uploaded, including
+    checking your PyPI readme) and the ``upload`` one.
+
     All parameters save ``dry_run`` and ``directory`` honor config settings of
     the same name, under the ``packaging`` tree. E.g. say
     ``.configure({'packaging': {'wheel': True}})`` to force building wheel
     archives by default.
 
     :param bool sdist:
-        Whether to upload sdists/tgzs.
+        Whether to upload sdists/tgzs. Default: ``True``.
 
     :param bool wheel:
         Whether to upload wheels (requires the ``wheel`` package from PyPI).
+        Default: ``True``.
 
     :param str index:
         Custom upload index/repository name. See ``upload`` help for details.
@@ -647,10 +652,13 @@ def publish(
         Whether to sign the built archive(s) via GPG.
 
     :param bool dry_run:
-        Skip actual publication step if ``True``.
+        Skip upload step if ``True``.
 
         This also prevents cleanup of the temporary build/dist directories, so
         you can examine the build artifacts.
+
+        Note that this does not skip the ``twine check`` step, just the final
+        upload.
 
     :param str directory:
         Base directory within which will live the ``dist/`` and ``build/``
@@ -688,6 +696,9 @@ def publish(
     # Don't hide by default, this step likes to be verbose most of the time.
     c.config.run.hide = False
     # Config hooks
+    # TODO: this pattern is too widespread. Really needs something in probably
+    # Executor that automatically does this on our behalf for any kwargs we
+    # indicate should be configurable
     config = c.config.get("packaging", {})
     index = config.get("index", index)
     if sign is False and "sign" in config:
