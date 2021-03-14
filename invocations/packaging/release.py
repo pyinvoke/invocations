@@ -635,10 +635,11 @@ def publish(
     archives by default.
 
     :param bool sdist:
-        Whether to upload sdists/tgzs.
+        Whether to upload sdists/tgzs. Default: ``True``.
 
     :param bool wheel:
         Whether to upload wheels (requires the ``wheel`` package from PyPI).
+        Default: ``True``.
 
     :param str index:
         Custom upload index/repository name. See ``upload`` help for details.
@@ -688,6 +689,9 @@ def publish(
     # Don't hide by default, this step likes to be verbose most of the time.
     c.config.run.hide = False
     # Config hooks
+    # TODO: this pattern is too widespread. Really needs something in probably
+    # Executor that automatically does this on our behalf for any kwargs we
+    # indicate should be configurable
     config = c.config.get("packaging", {})
     index = config.get("index", index)
     if sign is False and "sign" in config:
