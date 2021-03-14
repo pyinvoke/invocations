@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :feature:`-` ``twine check`` (which validates packaging metadata's
+  ``long_description``) as a pre-upload step within
+  ``packaging.release.publish``.
 - :bug:`-` Correctly test for ``html`` report type inside of
   ``pytest.coverage`` when deciding whether to run ``open`` at the end.
 - :bug:`-` ``pytest.coverage`` incorrectly concatenated its ``opts`` argument

@@ -708,6 +708,7 @@ def publish(
     if check_desc is False and "check_desc" in config:
         check_desc = config["check_desc"]
     # Initial sanity check, if needed. Will die usefully.
+    # TODO: remove next backwards incompat release, twine check replaces it
     if check_desc:
         c.run("python setup.py check -r -s")
     # Build, into controlled temp dir (avoids attempting to re-upload old
@@ -716,13 +717,17 @@ def publish(
         # Build default archives
         build(c, sdist=sdist, wheel=wheel, directory=tmp)
         # Build opposing interpreter archive, if necessary
+        # TODO: delete dual wheels when dropping Py2 support
         if dual_wheels:
             if not alt_python:
                 alt_python = "python2"
                 if sys.version_info[0] == 2:
                     alt_python = "python3"
             build(c, sdist=False, wheel=True, directory=tmp, python=alt_python)
-        # Do the thing!
+        # Use twine's check command on built artifacts (at present this just
+        # validates long_description)
+        c.run("twine check {}".format(os.path.join(tmp, "dist", "*")))
+        # Do the thing! (Maybe.)
         upload(c, directory=tmp, index=index, sign=sign, dry_run=dry_run)
 
 

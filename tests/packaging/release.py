@@ -26,8 +26,10 @@ from invocations.packaging.release import (
     all_,
     build,
     load_version,
+    publish,
     status,
     upload,
+    ns as release_ns,
 )
 
 
@@ -928,3 +930,85 @@ class upload_:
         cmd = self._fake(c, kwargs=dict(dry_run=True))
         print.assert_any_call("Would publish via: {}".format(cmd))
         c.run.assert_called_once_with("ls -l {}".format(self.files))
+
+    def allows_signing_via_gpg(self):
+        skip()
+
+
+class publish_:
+    class base_case:
+        def does_all_the_things_basically(self):
+            # tmpdir
+            # build
+            # twine check
+            # upload
+            # tmpdir cleaned up
+            skip()
+
+        def unhides_stdout(self):
+            skip()
+
+        def cleans_up_on_error(self):
+            skip()
+
+    class index:
+        def passed_to_upload(self):
+            skip()
+
+        def honors_config(self):
+            skip()
+
+        def kwarg_beats_config(self):
+            skip()
+
+    class sign:
+        def passed_to_upload(self):
+            skip()
+
+        def honors_config(self):
+            skip()
+
+        def kwarg_beats_config(self):
+            skip()
+
+    class sdist:
+        def defaults_True_and_passed_to_build(self):
+            skip()
+
+        def may_be_overridden(self):
+            skip()
+
+    class wheel:
+        def defaults_True_and_passed_to_build(self):
+            skip()
+
+        def may_be_overridden(self):
+            skip()
+
+    def directory_affects_tmpdir(self):
+        skip()
+
+    class dry_run:
+        def causes_tmpdir_cleanup_to_be_skipped(self):
+            skip()
+
+        def causes_tmpdir_cleanup_to_be_skipped_on_exception(self):
+            skip()
+
+        def passed_to_upload(self):
+            skip()
+
+
+class namespace:
+    def contains_all_tasks(self):
+        names = """
+           all_
+           build
+           prepare
+           publish
+           status
+        """.split()
+        assert set(release_ns.task_names) == set(names)
+
+    def hides_stdout_by_default(self):
+        assert release_ns.configuration()['run']['hide'] == 'stdout'
