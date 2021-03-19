@@ -9,6 +9,7 @@ from invoke.vendor.six import PY2
 from invoke.vendor.lexicon import Lexicon
 from invoke import MockContext, Result, Config, Exit
 from mock import Mock, patch
+import pytest
 from pytest import skip
 from pytest_relaxed import trap, raises
 
@@ -935,68 +936,120 @@ class upload_:
         skip()
 
 
+class Kaboom(Exception):
+    pass
+
+
 class publish_:
     class base_case:
-        def does_all_the_things_basically(self):
-            # tmpdir
-            # build
-            # twine check
-            # upload
-            # tmpdir cleaned up
-            skip()
+        def does_all_the_things(self, fakepub):
+            c, mkdtemp, build, upload, rmtree = fakepub
+            # Execution
+            publish(c)
+            # Unhides stdout
+            assert c.config.run.hide is False
+            # Build
+            build.assert_called_once_with(
+                c, sdist=True, wheel=True, directory="tmpdir"
+            )
+            # Twine check
+            splat = path.join("tmpdir", "dist", "*")
+            c.run.assert_called_once_with(f"twine check {splat}")
+            # Upload
+            upload.assert_called_once_with(
+                c, directory="tmpdir", index=None, sign=False, dry_run=False
+            )
+            # Tmpdir cleaned up
+            rmtree.assert_called_once_with("tmpdir")
 
-        def unhides_stdout(self):
-            skip()
-
-        def cleans_up_on_error(self):
-            skip()
+        def cleans_up_on_error(self, fakepub):
+            _, mkdtemp, build, _, rmtree = fakepub
+            build.side_effect = Kaboom
+            with pytest.raises(Kaboom):
+                publish(MockContext(run=True))
+            rmtree.assert_called_once_with(mkdtemp.return_value)
 
     class index:
-        def passed_to_upload(self):
-            skip()
+        def passed_to_upload(self, fakepub):
+            c, _, _, upload, _ = fakepub
+            publish(c, index="dev")
+            assert upload.call_args[1]["index"] == "dev"
 
-        def honors_config(self):
-            skip()
+        def honors_config(self, fakepub):
+            c, _, _, upload, _ = fakepub
+            c.config.packaging = dict(index="prod")
+            publish(c)
+            assert upload.call_args[1]["index"] == "prod"
 
-        def kwarg_beats_config(self):
-            skip()
+        def kwarg_beats_config(self, fakepub):
+            c, _, _, upload, _ = fakepub
+            c.config.packaging = dict(index="prod")
+            publish(c, index="dev")
+            assert upload.call_args[1]["index"] == "dev"
 
     class sign:
-        def passed_to_upload(self):
-            skip()
+        def passed_to_upload(self, fakepub):
+            c, _, _, upload, _ = fakepub
+            publish(c, sign=True)
+            assert upload.call_args[1]["sign"] is True
 
-        def honors_config(self):
-            skip()
+        def honors_config(self, fakepub):
+            c, _, _, upload, _ = fakepub
+            c.config.packaging = dict(sign=True)
+            publish(c)
+            assert upload.call_args[1]["sign"] is True
 
-        def kwarg_beats_config(self):
-            skip()
+        def kwarg_beats_config(self, fakepub):
+            c, _, _, upload, _ = fakepub
+            c.config.packaging = dict(sign=False)
+            publish(c, sign=True)
+            assert upload.call_args[1]["sign"] is True
 
     class sdist:
-        def defaults_True_and_passed_to_build(self):
-            skip()
+        def defaults_True_and_passed_to_build(self, fakepub):
+            c, _, build, *_ = fakepub
+            publish(c)
+            assert build.call_args[1]["sdist"] is True
 
-        def may_be_overridden(self):
-            skip()
+        def may_be_overridden(self, fakepub):
+            c, _, build, *_ = fakepub
+            publish(c, sdist=False)
+            assert build.call_args[1]["sdist"] is False
 
     class wheel:
-        def defaults_True_and_passed_to_build(self):
-            skip()
+        def defaults_True_and_passed_to_build(self, fakepub):
+            c, _, build, *_ = fakepub
+            publish(c)
+            assert build.call_args[1]["wheel"] is True
 
-        def may_be_overridden(self):
-            skip()
+        def may_be_overridden(self, fakepub):
+            c, _, build, *_ = fakepub
+            publish(c, wheel=False)
+            assert build.call_args[1]["wheel"] is False
 
-    def directory_affects_tmpdir(self):
-        skip()
+    def directory_affects_tmpdir(self, fakepub):
+        c, mkdtemp, build, *_ = fakepub
+        publish(c, directory="explicit")
+        assert not mkdtemp.called
+        assert build.call_args[1]["directory"] == "explicit"
 
     class dry_run:
-        def causes_tmpdir_cleanup_to_be_skipped(self):
-            skip()
+        def causes_tmpdir_cleanup_to_be_skipped(self, fakepub):
+            c, *_, rmtree = fakepub
+            publish(c, dry_run=True)
+            assert not rmtree.called
 
-        def causes_tmpdir_cleanup_to_be_skipped_on_exception(self):
-            skip()
+        def causes_tmpdir_cleanup_to_be_skipped_on_exception(self, fakepub):
+            c, _, build, _, rmtree = fakepub
+            build.side_effect = Kaboom
+            with pytest.raises(Kaboom):
+                publish(c, dry_run=True)
+            assert not rmtree.called
 
-        def passed_to_upload(self):
-            skip()
+        def passed_to_upload(self, fakepub):
+            c, _, _, upload, _ = fakepub
+            publish(c, dry_run=True)
+            assert upload.call_args[1]["dry_run"] is True
 
 
 class namespace:
@@ -1011,4 +1064,4 @@ class namespace:
         assert set(release_ns.task_names) == set(names)
 
     def hides_stdout_by_default(self):
-        assert release_ns.configuration()['run']['hide'] == 'stdout'
+        assert release_ns.configuration()["run"]["hide"] == "stdout"
