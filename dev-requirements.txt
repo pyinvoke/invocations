@@ -7,6 +7,7 @@ twine==1.11.0
 # For testing
 pytest-relaxed>=1,<2
 pytest-cov==2.4.0
+pytest-mock==3.2.0
 mock==1.0.1
 watchdog==0.8.3
 coverage==4.4.2
