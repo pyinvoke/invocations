@@ -2,12 +2,12 @@
 Changelog
 =========
 
-- :bug:`- major` ``packaging.release.publish`` missed a spot when it grew
-  "kwargs beat configuration" behavior - the ``index`` kwarg still got
-  overwritten by the config value, if defined. This has been fixed.
 - :feature:`-` ``twine check`` (which validates packaging metadata's
   ``long_description``) as a pre-upload step within
   ``packaging.release.publish``.
+- :bug:`- major` ``packaging.release.publish`` missed a spot when it grew
+  "kwargs beat configuration" behavior - the ``index`` kwarg still got
+  overwritten by the config value, if defined. This has been fixed.
 - :bug:`- major` Correctly test for ``html`` report type inside of
   ``pytest.coverage`` when deciding whether to run ``open`` at the end.
 - :bug:`- major` ``pytest.coverage`` incorrectly concatenated its ``opts``
