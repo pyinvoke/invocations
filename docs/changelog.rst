@@ -8,10 +8,10 @@ Changelog
 - :feature:`-` ``twine check`` (which validates packaging metadata's
   ``long_description``) as a pre-upload step within
   ``packaging.release.publish``.
-- :bug:`-` Correctly test for ``html`` report type inside of
+- :bug:`- major` Correctly test for ``html`` report type inside of
   ``pytest.coverage`` when deciding whether to run ``open`` at the end.
-- :bug:`-` ``pytest.coverage`` incorrectly concatenated its ``opts`` argument
-  to internal options; this has been fixed.
+- :bug:`- major` ``pytest.coverage`` incorrectly concatenated its ``opts``
+  argument to internal options; this has been fixed.
 - :release:`2.0.0 <2021-01-24>`
 - :support:`-` Drop Python 3.4 support. We didn't actually do anything to make
   the code not work on 3.4, but we've removed some 3.4 related runtime (and
