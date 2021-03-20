@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :bug:`- major` ``packaging.release.publish`` missed a spot when it grew
+  "kwargs beat configuration" behavior - the ``index`` kwarg still got
+  overwritten by the config value, if defined. This has been fixed.
 - :feature:`-` ``twine check`` (which validates packaging metadata's
   ``long_description``) as a pre-upload step within
   ``packaging.release.publish``.
