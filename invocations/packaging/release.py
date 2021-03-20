@@ -700,7 +700,8 @@ def publish(
     # Executor that automatically does this on our behalf for any kwargs we
     # indicate should be configurable
     config = c.config.get("packaging", {})
-    index = config.get("index", index)
+    if index is None and "index" in config:
+        index = config["index"]
     if sign is False and "sign" in config:
         sign = config["sign"]
     if dual_wheels is False and "dual_wheels" in config:
