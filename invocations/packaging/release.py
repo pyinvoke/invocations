@@ -608,11 +608,6 @@ def find_gpg(c):
             return candidate
 
 
-# TODO: open some PRs for twine to push things like dual wheels, better
-# dry-run/cleanroom directory concerns, etc into it.
-# TODO: consider making this idempotent re: checking if the 'current release'
-# already exists on PyPI. Or just hope PyPI response on error is sufficiently
-# useful and trap/print that.
 @task
 def publish(
     c,
@@ -627,7 +622,7 @@ def publish(
     check_desc=False,
 ):
     """
-    Publish code to PyPI or index of choice.
+    Publish code to PyPI or index of choice. Wraps ``build`` and ``publish``.
 
     This uses the ``twine`` command under the hood, both its pre-upload
     ``check`` subcommand (which verifies the archives to be uploaded, including
@@ -761,9 +756,8 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
         )
     )
     # Sign each archive in turn
-    # TODO: twine has a --sign option; but the below is still nice insofar
-    # as it lets us dry-run, generate for web upload when pypi's API is
-    # being cranky, etc. Figure out which is better.
+    # NOTE: twine has a --sign option but it's not quite flexible enough &
+    # doesn't allow you to dry-run or upload manually when API is borked...
     if sign:
         prompt = "Please enter GPG passphrase for signing: "
         input_ = StringIO(getpass.getpass(prompt) + "\n")
