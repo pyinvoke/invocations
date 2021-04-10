@@ -25,6 +25,7 @@ from invocations.packaging.release import (
     _release_and_issues,
     _release_line,
     all_,
+    prepare,
     build,
     load_version,
     publish,
@@ -584,16 +585,15 @@ _confirm_false = _confirm(False)
 
 
 # This is shit but I'm too tired and angry right now to give a fuck.
-def _run_all(c, mute=True):
+def _run_prepare(c, mute=True):
     try:
-        return all_(c)
+        return prepare(c)
     except Exit:
         if not mute:
             raise
 
 
-class All:
-    "all_"  # mehhh
+class prepare_and_status:
 
     # NOTE: just testing the base case of 'everything needs updating',
     # all the permutations are tested elsewhere.
@@ -605,7 +605,7 @@ class All:
     @_confirm_false
     def displays_status_output(self, _):
         with _mock_context(self) as c:
-            _run_all(c)
+            _run_prepare(c)
         output = sys.stdout.getvalue()
         for action in (
             Changelog.NEEDS_RELEASE,
@@ -619,13 +619,13 @@ class All:
     @patch("invocations.console.input", return_value="no")
     def prompts_before_taking_action(self, mock_input):
         with _mock_context(self) as c:
-            _run_all(c)
+            _run_prepare(c)
         assert mock_input.call_args[0][0] == "Take the above actions? [Y/n] "
 
     @_confirm_false
     def if_prompt_response_negative_no_action_taken(self, _):
         with _mock_context(self) as c:
-            _run_all(c)
+            _run_prepare(c)
         # TODO: move all action-y code into subroutines, then mock them and
         # assert they were never called?
         # Expect that only the status-y run() calls were made.
@@ -637,7 +637,7 @@ class All:
     @_confirm_true
     def opens_EDITOR_with_changelog_when_it_needs_update(self, _):
         with _mock_context(self) as c:
-            _run_all(c)
+            _run_prepare(c)
             # Grab changelog path from the context config, why not
             path = c.config.packaging.changelog_file
             # TODO: real code should probs expand EDITOR explicitly so it can
@@ -648,7 +648,7 @@ class All:
     @_confirm_true
     def opens_EDITOR_with_version_file_when_it_needs_update(self, _):
         with _mock_context(self) as c:
-            _run_all(c)
+            _run_prepare(c)
             path = "{}/_version.py".format(FAKE_PACKAGE)
             # TODO: real code should probs expand EDITOR explicitly so it can
             # run w/o a shell wrap / require a full env?
@@ -658,7 +658,7 @@ class All:
     @_confirm_true
     def commits_and_adds_git_tag_when_needs_cutting(self, _):
         with _mock_context(self) as c:
-            _run_all(c)
+            _run_prepare(c)
             version = "1.1.2"  # as changelog has issues & prev was 1.1.1
             # Ensure the commit necessity test happened. (Default mock_context
             # sets it up to result in a commit being necessary.)
@@ -676,7 +676,7 @@ class All:
             # Set up for a no-commit-necessary result to check command
             check = 'git status --porcelain | egrep -v "^\\?"'
             c.set_result_for("run", check, Result("", exited=1))
-            _run_all(c)
+            _run_prepare(c)
             # Expect NO git commit
             commands = [x[0][0] for x in c.run.call_args_list]
             assert not any(x.startswith("git commit") for x in commands)
@@ -695,7 +695,7 @@ class All:
         @_confirm_true
         def no_changelog_update_needed_means_no_changelog_edit(self, _):
             with _mock_context(self) as c:
-                _run_all(c)
+                _run_prepare(c)
                 # TODO: as with the 'took no actions at all' test above,
                 # proving a negative sucks - eventually make this subroutine
                 # assert based. Meh.
@@ -705,8 +705,6 @@ class All:
                     cmd
                 )
                 assert cmd not in [x[0][0] for x in c.run.call_args_list], err
-
-    # TODO: rest...
 
 
 # NOTE: yea...this kinda pushes the limits of sane TDD...meh
