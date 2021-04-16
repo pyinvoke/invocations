@@ -322,7 +322,7 @@ def prepare(c):
                 hide=False,
             )
         # Tag!
-        c.run("git tag {}".format(state.expected_version), hide=False)
+        c.run("git tag -a {}".format(state.expected_version), hide=False)
         # TODO: print something to clarify/confirm tag was cut, if not just
         # adding echo=True to above
 

@@ -665,8 +665,7 @@ class prepare_and_status:
             check = 'git status --porcelain | egrep -v "^\\?"'
             c.run.assert_any_call(check, hide=True, warn=True)
             commit = 'git commit -am "Cut {}"'.format(version)
-            # TODO: annotated, signed, etc?
-            tag = "git tag {}".format(version)
+            tag = "git tag -a {}".format(version)
             for cmd in (commit, tag):
                 c.run.assert_any_call(cmd, hide=False)
 
@@ -681,7 +680,7 @@ class prepare_and_status:
             commands = [x[0][0] for x in c.run.call_args_list]
             assert not any(x.startswith("git commit") for x in commands)
             # Expect git tag
-            c.run.assert_any_call("git tag 1.1.2", hide=False)
+            c.run.assert_any_call("git tag -a 1.1.2", hide=False)
 
     def reruns_status_at_end_as_sanity_check(self):
         # I.e. you might have screwed up editing one of the files...
