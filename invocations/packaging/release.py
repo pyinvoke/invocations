@@ -310,12 +310,8 @@ def prepare(c):
         # assumption...GREAT opportunity for class/method based tasks!
         cmd = "$EDITOR {.packaging.changelog_file}".format(c)
         c.run(cmd, pty=True, hide=False)
-    # TODO: add a step for checking reqs.txt / setup.py vs virtualenv contents
     # Version file!
     if actions.version == VersionFile.NEEDS_BUMP:
-        # TODO: suggest the bump and/or overwrite the entire file? Assumes a
-        # specific file format. Could be bad for users which expose __version__
-        # but have other contents as well.
         version_file = os.path.join(
             _find_package(c),
             c.packaging.get("version_module", "_version") + ".py",
