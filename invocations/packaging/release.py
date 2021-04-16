@@ -790,6 +790,16 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
         c.run(cmd)
 
 
+@task
+def push(c, dry_run=False):
+    """
+    Push current branch and tags to default Git remote.
+    """
+    kwargs = dict(echo=True) if dry_run else dict()
+    opts = " --dry-run" if dry_run else ""
+    c.run("git push --follow-tags{}".format(opts), **kwargs)
+
+
 # Stitch together current partway-rewritten stuff into public namespace.
 # TODO: reconsider once fully done; may end up looking a lot like this anyways.
 ns = Collection("release", all_, status, prepare, build, publish)
