@@ -277,6 +277,9 @@ def all_(c):
 def prepare(c):
     """
     Edit changelog & version, git commit, and git tag, to set up for release.
+    
+    .. versionchanged:: 2.1
+        Generate annotated git tags instead of lightweight ones.
     """
     # Print dry-run/status/actions-to-take data & grab programmatic result
     # TODO: maybe expand the enum-based stuff to have values that split up
@@ -322,7 +325,10 @@ def prepare(c):
                 hide=False,
             )
         # Tag!
-        c.run("git tag {}".format(state.expected_version), hide=False)
+        c.run(
+            'git tag -a {} -m ""'.format(state.expected_version),
+            hide=False,
+        )
         # TODO: print something to clarify/confirm tag was cut, if not just
         # adding echo=True to above
 
