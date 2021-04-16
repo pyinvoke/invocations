@@ -6,6 +6,9 @@ Changelog
   instead of lightweight ones. This was a perplexing oversight (Git has always
   intended annotated tags to be used for release purposes) so we're considering
   it a bugfix instead of a backwards incompatible feature change.
+- :feature:`-` The ``packaging.release.all_`` task has been expanded to
+  actually do "ALL THE THINGS!!!", given a ``dry_run`` flag, and renamed on the
+  CLI to ``all`` (no trailing underscore).
 - :feature:`-` Add ``packaging.release.push`` for pushing Git objects as part
   of a release.
 - :feature:`-` ``twine check`` (which validates packaging metadata's

@@ -1066,10 +1066,37 @@ class push_:
         )
 
 
+class all_task:
+    @patch("invocations.packaging.release.prepare")
+    @patch("invocations.packaging.release.publish")
+    @patch("invocations.packaging.release.push")
+    def runs_primary_workflow(self, push, publish, prepare):
+        c = MockContext(run=True)
+        all_(c)
+        # TODO: this doesn't actually prove order of operations. not seeing an
+        # unhairy way to do that, but not really that worried either...:P
+        prepare.assert_called_once_with(c)
+        publish.assert_called_once_with(c, dry_run=False)
+        push.assert_called_once_with(c, dry_run=False)
+
+    @patch("invocations.packaging.release.prepare")
+    @patch("invocations.packaging.release.publish")
+    @patch("invocations.packaging.release.push")
+    def passes_through_dry_run_flag(self, push, publish, prepare):
+        c = MockContext(run=True)
+        all_(c, dry_run=True)
+        prepare.assert_called_once_with(c)
+        publish.assert_called_once_with(c, dry_run=True)
+        push.assert_called_once_with(c, dry_run=True)
+
+    def bound_to_name_without_underscore(self):
+        assert all_.name == "all"
+
+
 class namespace:
     def contains_all_tasks(self):
         names = """
-           all_
+           all
            build
            prepare
            publish
@@ -1077,6 +1104,9 @@ class namespace:
            status
         """.split()
         assert set(release_ns.task_names) == set(names)
+
+    def all_is_default_task(self):
+        assert release_ns.default == "all"
 
     def hides_stdout_by_default(self):
         assert release_ns.configuration()["run"]["hide"] == "stdout"

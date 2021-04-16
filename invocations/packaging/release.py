@@ -260,17 +260,24 @@ def status(c):
     return actions, state
 
 
-@task(default=True)
-def all_(c):
+# TODO: thought we had automatic trailing underscore stripping but...no?
+@task(name="all", default=True)
+def all_(c, dry_run=False):
     """
     Catchall version-bump/tag/changelog/PyPI upload task.
+
+    :param bool dry_run:
+        Handed to all subtasks which themselves have a ``dry_run`` flag.
+
+    .. versionchanged:: 2.1
+        Expanded functionality to run ``publish`` and ``push`` as well as
+        ``prepare``.
+    .. versionchanged:: 2.1
+        Added the ``dry_run`` flag.
     """
     prepare(c)
-    # TODO: below
-    # push(c)
-    # build(c)
-    # publish(c) # TODO: update publish() to accept some of our state and do
-    # things with it like be idempotent?
+    publish(c, dry_run=dry_run)
+    push(c, dry_run=dry_run)
 
 
 @task
@@ -800,8 +807,7 @@ def push(c, dry_run=False):
     c.run("git push --follow-tags{}".format(opts), **kwargs)
 
 
-# Stitch together current partway-rewritten stuff into public namespace.
-# TODO: reconsider once fully done; may end up looking a lot like this anyways.
-ns = Collection("release", all_, status, prepare, build, publish)
+# TODO: still need time to solve the 'just myself pls' problem
+ns = Collection("release", all_, status, prepare, build, publish, push)
 # Hide stdout by default, preferring to explicitly enable it when necessary.
 ns.configure({"run": {"hide": "stdout"}})
