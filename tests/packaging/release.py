@@ -26,6 +26,7 @@ from invocations.packaging.release import (
     _release_line,
     all_,
     prepare,
+    push,
     build,
     load_version,
     publish,
@@ -1049,6 +1050,22 @@ class publish_:
             assert upload.call_args[1]["dry_run"] is True
 
 
+class push_:
+    def pushes_with_follow_tags(self):
+        "git-pushes with --follow-tags"
+        c = MockContext(run=True)
+        push(c)
+        c.run.assert_called_once_with("git push --follow-tags")
+
+    @trap
+    def honors_dry_run(self):
+        c = MockContext(run=True)
+        push(c, dry_run=True)
+        c.run.assert_called_once_with(
+            "git push --follow-tags --dry-run", echo=True
+        )
+
+
 class namespace:
     def contains_all_tasks(self):
         names = """
@@ -1056,6 +1073,7 @@ class namespace:
            build
            prepare
            publish
+           push
            status
         """.split()
         assert set(release_ns.task_names) == set(names)

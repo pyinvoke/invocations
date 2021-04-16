@@ -6,6 +6,8 @@ Changelog
   instead of lightweight ones. This was a perplexing oversight (Git has always
   intended annotated tags to be used for release purposes) so we're considering
   it a bugfix instead of a backwards incompatible feature change.
+- :feature:`-` Add ``packaging.release.push`` for pushing Git objects as part
+  of a release.
 - :feature:`-` ``twine check`` (which validates packaging metadata's
   ``long_description``) as a pre-upload step within
   ``packaging.release.publish``.
