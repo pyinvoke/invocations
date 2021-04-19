@@ -275,15 +275,24 @@ def all_(c, dry_run=False):
     .. versionchanged:: 2.1
         Added the ``dry_run`` flag.
     """
-    prepare(c)
+    prepare(c, dry_run=dry_run)
     publish(c, dry_run=dry_run)
     push(c, dry_run=dry_run)
 
 
 @task
-def prepare(c):
+def prepare(c, dry_run=False):
     """
     Edit changelog & version, git commit, and git tag, to set up for release.
+
+    :param bool dry_run:
+        Whether to take any actual actions or just say what might occur.
+        Default: ``False``.
+
+    .. versionchanged:: 2.1
+        Added the ``dry_run`` parameter.
+    .. versionchanged:: 2.1
+        Generate annotated git tags instead of lightweight ones.
     """
     # Print dry-run/status/actions-to-take data & grab programmatic result
     # TODO: maybe expand the enum-based stuff to have values that split up
@@ -293,8 +302,9 @@ def prepare(c):
     # transmitted from status() into here...
     actions, state = status(c)
     # TODO: unless nothing-to-do in which case just say that & exit 0
-    if not confirm("Take the above actions?"):
-        raise Exit("Aborting.")
+    if not dry_run:
+        if not confirm("Take the above actions?"):
+            raise Exit("Aborting.")
 
     # TODO: factor out what it means to edit a file:
     # - $EDITOR or explicit expansion of it in case no shell involved
@@ -306,7 +316,7 @@ def prepare(c):
         # TODO: identify top of list and inject a ready-made line? Requires vim
         # assumption...GREAT opportunity for class/method based tasks!
         cmd = "$EDITOR {.packaging.changelog_file}".format(c)
-        c.run(cmd, pty=True, hide=False)
+        c.run(cmd, pty=True, hide=False, dry=dry_run)
     # Version file!
     if actions.version == VersionFile.NEEDS_BUMP:
         version_file = os.path.join(
@@ -314,7 +324,7 @@ def prepare(c):
             c.packaging.get("version_module", "_version") + ".py",
         )
         cmd = "$EDITOR {}".format(version_file)
-        c.run(cmd, pty=True, hide=False)
+        c.run(cmd, pty=True, hide=False, dry=dry_run)
     if actions.tag == Tag.NEEDS_CUTTING:
         # Commit, if necessary, so the tag includes everything.
         # NOTE: this strips out untracked files. effort.
@@ -323,11 +333,15 @@ def prepare(c):
             c.run(
                 'git commit -am "Cut {}"'.format(state.expected_version),
                 hide=False,
+                dry=dry_run,
             )
         # Tag!
-        c.run("git tag -a {}".format(state.expected_version), hide=False)
-        # TODO: print something to clarify/confirm tag was cut, if not just
-        # adding echo=True to above
+        c.run(
+            'git tag -a {} -m ""'.format(state.expected_version),
+            hide=False,
+            dry=dry_run,
+            echo=True,
+        )
 
 
 def _release_line(c):
@@ -799,7 +813,7 @@ def push(c, dry_run=False):
     Push current branch and tags to default Git remote.
     """
     kwargs = dict(echo=True) if dry_run else dict()
-    opts = " --dry-run" if dry_run else ""
+    opts = " --dry-run --no-verify" if dry_run else ""
     c.run("git push --follow-tags{}".format(opts), **kwargs)
 
 

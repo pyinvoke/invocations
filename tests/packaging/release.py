@@ -666,7 +666,7 @@ class prepare_and_status:
             check = 'git status --porcelain | egrep -v "^\\?"'
             c.run.assert_any_call(check, hide=True, warn=True)
             commit = 'git commit -am "Cut {}"'.format(version)
-            tag = "git tag -a {}".format(version)
+            tag = 'git tag -a {} -m ""'.format(version)
             for cmd in (commit, tag):
                 c.run.assert_any_call(cmd, hide=False)
 
