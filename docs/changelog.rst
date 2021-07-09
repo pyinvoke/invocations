@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :feature:`-` ``packaging.release.prepare`` grew a ``dry_run`` flag to match
+  the rest of its friends.
 - :bug:`- major` ``packaging.release.prepare`` now generates annotated Git tags
   instead of lightweight ones. This was a perplexing oversight (Git has always
   intended annotated tags to be used for release purposes) so we're considering
