@@ -25,10 +25,13 @@ from invoke.vendor.six import text_type, binary_type, PY2
 from invoke.vendor.lexicon import Lexicon
 
 from blessings import Terminal
+from docutils.utils import Reporter
 from enum import Enum
 from invoke import Collection, task, Exit
+import readme_renderer.rst
 from releases.util import parse_changelog
 from tabulate import tabulate
+from twine.commands.check import check as twine_check
 
 from .semantic_version_monkey import Version
 
@@ -37,6 +40,16 @@ from ..console import confirm
 
 
 debug = logging.getLogger("invocations.packaging.release").debug
+
+# Monkeypatch readme_renderer.rst so it acts more like Sphinx re: docutils
+# warning levels - otherwise it overlooks (and misrenders) stuff like bad
+# header formats etc!
+# (The defaults in readme_renderer are halt_level=WARNING and
+# report_level=SEVERE)
+# NOTE: this only works because we directly call twine via Python and not via
+# subprocess.
+for key in ("halt_level", "report_level"):
+    readme_renderer.rst.SETTINGS[key] = Reporter.INFO_LEVEL
 
 
 # TODO: this could be a good module to test out a more class-centric method of
@@ -741,7 +754,10 @@ def publish(
             build(c, sdist=False, wheel=True, directory=tmp, python=alt_python)
         # Use twine's check command on built artifacts (at present this just
         # validates long_description)
-        c.run("twine check {}".format(os.path.join(tmp, "dist", "*")))
+        print(c.config.run.echo_format.format(command="twine check"))
+        failure = twine_check(dists=[os.path.join(tmp, "dist", "*")])
+        if failure:
+            raise Exit(1)
         # Do the thing! (Maybe.)
         upload(c, directory=tmp, index=index, sign=sign, dry_run=dry_run)
 

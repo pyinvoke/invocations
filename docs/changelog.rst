@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :support:`-` Rely on Invoke 1.6+ for some of its new features.
 - :feature:`-` ``packaging.release.prepare`` grew a ``dry_run`` flag to match
   the rest of its friends.
 - :bug:`- major` ``packaging.release.prepare`` now generates annotated Git tags
@@ -13,9 +14,14 @@ Changelog
   CLI to ``all`` (no trailing underscore).
 - :feature:`-` Add ``packaging.release.push`` for pushing Git objects as part
   of a release.
-- :feature:`-` ``twine check`` (which validates packaging metadata's
+- :feature:`-` Added ``twine check`` (which validates packaging metadata's
   ``long_description``) as a pre-upload step within
   ``packaging.release.publish``.
+
+  - This includes some tweaking of ``readme_renderer`` behavior (used
+  internally by twine) so it correctly spots more malformed RST, as Sphinx
+  does.
+
 - :bug:`- major` ``packaging.release.publish`` missed a spot when it grew
   "kwargs beat configuration" behavior - the ``index`` kwarg still got
   overwritten by the config value, if defined. This has been fixed.
