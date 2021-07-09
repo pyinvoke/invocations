@@ -119,7 +119,7 @@ def integration(
 
 
 @task
-def coverage(c, report="term", opts="", tester=None):
+def coverage(c, report="term", opts="", tester=None, codecov=False):
     """
     Run pytest with coverage enabled.
 
@@ -134,6 +134,10 @@ def coverage(c, report="term", opts="", tester=None):
     :param tester:
         Specific test task object to invoke. If ``None`` (default), uses this
         module's local `test`.
+
+    :param bool codecov:
+        Whether to build XML and upload to Codecov. Requires ``codecov`` tool.
+        Default: ``False``.
     """
     my_opts = "--cov --no-cov-on-fail --cov-report={}".format(report)
     if opts:
@@ -142,3 +146,9 @@ def coverage(c, report="term", opts="", tester=None):
     (tester or test)(c, opts=my_opts)
     if report == "html":
         c.run("open htmlcov/index.html")
+    if codecov:
+        # Generate XML report from that already-gathered data (otherwise
+        # codecov generates it on its own and gets it wrong!)
+        c.run("coverage xml")
+        # Upload to Codecov
+        c.run("codecov")
