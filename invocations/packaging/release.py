@@ -299,8 +299,9 @@ def prepare(c, dry_run=False):
     Edit changelog & version, git commit, and git tag, to set up for release.
 
     :param bool dry_run:
-        Whether to take any actual actions or just say what might occur.
-        Default: ``False``.
+        Whether to take any actual actions or just say what might occur. Will
+        also non-fatally exit if not on some form of release branch. Default:
+        ``False``.
 
     .. versionchanged:: 2.1
         Added the ``dry_run`` parameter.
@@ -313,7 +314,15 @@ def prepare(c, dry_run=False):
     # definition too, re: just making them non-enum classes period.
     # TODO: otherwise, we at least want derived eg changelog/version/etc paths
     # transmitted from status() into here...
-    actions, state = status(c)
+    try:
+        actions, state = status(c)
+    except UndefinedReleaseType as e:
+        if not dry_run:
+            raise
+        raise Exit(
+            code=0,
+            message="Can't dry-run release tasks, not on a release branch; skipping.",
+        )
     # TODO: unless nothing-to-do in which case just say that & exit 0
     if not dry_run:
         if not confirm("Take the above actions?"):
@@ -815,7 +824,7 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
     if index:
         parts.append("--repository {}".format(index))
     paths = archives[:]
-    if sign:
+    if sign and not dry_run:
         paths.append(os.path.join(directory, "dist", "*.asc"))
     parts.extend(paths)
     cmd = " ".join(parts)
