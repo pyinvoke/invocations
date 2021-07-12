@@ -773,7 +773,7 @@ def publish(
 
 def upload(c, directory, index=None, sign=False, dry_run=False):
     """
-    Upload (potentially also signing) all artifacts in ``directory``.
+    Upload (potentially also signing) all artifacts in ``directory/dist``.
 
     :param str index:
         Custom upload index/repository name.
