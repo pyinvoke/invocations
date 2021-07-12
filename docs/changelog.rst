@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :feature:`-` Add ``packaging.release.test_install`` task and call it just
+  prior to the final step in ``packaging.release.upload`` (so that one doesn't
+  upload packages which build OK but don't actually install OK).
 - :feature:`-` Add Codecov support to ``pytest.coverage``.
 - :support:`-` Rely on Invoke 1.6+ for some of its new features.
 - :feature:`-` ``packaging.release.prepare`` grew a ``dry_run`` flag to match

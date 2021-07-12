@@ -767,8 +767,43 @@ def publish(
         failure = twine_check(dists=[os.path.join(tmp, "dist", "*")])
         if failure:
             raise Exit(1)
+        # Test installation of built artifacts into virtualenvs (even during
+        # dry run)
+        test_install(c, directory=tmp)
         # Do the thing! (Maybe.)
         upload(c, directory=tmp, index=index, sign=sign, dry_run=dry_run)
+
+
+@task
+def test_install(c, directory):
+    """
+    Test installation of previously built artifacts found in ``directory``.
+
+    Uses the `venv` module to build temporary virtualenvs.
+    """
+    # TODO: streamline all this in 3.0 when we drop all Py2 support both here
+    # and in downstream repos
+    if PY2:
+        print("WARNING: skipping installation test due to no venv on Python 2")
+        return
+    import venv
+    builder = venv.EnvBuilder(with_pip=True)
+    for archive in get_archives(directory):
+        # Skip Python 2 wheels that aren't universal (we're dropping that
+        # entirely soon)
+        if "py2" in archive and "py3" not in archive:
+            continue
+        with tmpdir() as tmp:
+            builder.create(tmp)
+            # Does it install cleanly?
+            # TODO: might be nice to have a further 'can you import whatever it
+            # was' test
+            # TODO: obligatory "is it worth upgrading pip always?"
+            c.run(
+                "{} install --disable-pip-version-check {}".format(
+                    os.path.join(tmp, "bin", "pip"), archive
+                )
+            )
 
 
 def get_archives(directory):
@@ -854,6 +889,8 @@ def push(c, dry_run=False):
 
 
 # TODO: still need time to solve the 'just myself pls' problem
-ns = Collection("release", all_, status, prepare, build, publish, push)
+ns = Collection(
+    "release", all_, status, prepare, build, publish, push, test_install
+)
 # Hide stdout by default, preferring to explicitly enable it when necessary.
 ns.configure({"run": {"hide": "stdout"}})
