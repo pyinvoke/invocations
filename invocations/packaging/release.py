@@ -771,6 +771,18 @@ def publish(
         upload(c, directory=tmp, index=index, sign=sign, dry_run=dry_run)
 
 
+def get_archives(directory):
+    # Obtain list of archive filenames, then ensure any wheels come first
+    # so their improved metadata is what PyPI sees initially (otherwise, it
+    # only honors the sdist's lesser data).
+    return list(
+        itertools.chain.from_iterable(
+            glob(os.path.join(directory, "dist", "*.{}".format(extension)))
+            for extension in ("whl", "tar.gz")
+        )
+    )
+
+
 def upload(c, directory, index=None, sign=False, dry_run=False):
     """
     Upload (potentially also signing) all artifacts in ``directory/dist``.
@@ -791,15 +803,7 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
         This also prevents cleanup of the temporary build/dist directories, so
         you can examine the build artifacts.
     """
-    # Obtain list of archive filenames, then ensure any wheels come first
-    # so their improved metadata is what PyPI sees initially (otherwise, it
-    # only honors the sdist's lesser data).
-    archives = list(
-        itertools.chain.from_iterable(
-            glob(os.path.join(directory, "dist", "*.{}".format(extension)))
-            for extension in ("whl", "tar.gz")
-        )
-    )
+    archives = get_archives(directory)
     # Sign each archive in turn
     # NOTE: twine has a --sign option but it's not quite flexible enough &
     # doesn't allow you to dry-run or upload manually when API is borked...
