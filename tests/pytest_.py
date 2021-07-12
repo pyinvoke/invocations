@@ -56,3 +56,9 @@ class coverage_:
         faketest = Mock()
         coverage(c, tester=faketest)
         faketest.assert_called_once_with(c, opts=self.FLAGS.format("term"))
+
+    def open_html_report(self):
+        c = MockContext(run=True, repeat=True)
+        coverage(c, report='html')
+        print(c.run.mock_calls)
+        c.run.assert_any_call("open htmlcov/index.html")
