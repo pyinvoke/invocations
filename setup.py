@@ -10,7 +10,7 @@ version = _locals["__version__"]
 
 requirements = [
     # Core dependency
-    "invoke>=1.0,<2.0",
+    "invoke>=1.6,<2.0",
     # Dependencies for various subpackages.
     # NOTE: these used to be all optional (only complained about at import
     # time if missing), but that got hairy fast, and these are all
@@ -22,6 +22,7 @@ requirements = [
     "semantic_version>=2.4,<2.7",
     "tabulate==0.7.5",
     "tqdm>=4.8.1",
+    "twine>=1.15",
     "wheel>=0.24.0",
 ]
 

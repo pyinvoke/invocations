@@ -25,10 +25,13 @@ from invoke.vendor.six import text_type, binary_type, PY2
 from invoke.vendor.lexicon import Lexicon
 
 from blessings import Terminal
+from docutils.utils import Reporter
 from enum import Enum
 from invoke import Collection, task, Exit
+import readme_renderer.rst
 from releases.util import parse_changelog
 from tabulate import tabulate
+from twine.commands.check import check as twine_check
 
 from .semantic_version_monkey import Version
 
@@ -37,6 +40,16 @@ from ..console import confirm
 
 
 debug = logging.getLogger("invocations.packaging.release").debug
+
+# Monkeypatch readme_renderer.rst so it acts more like Sphinx re: docutils
+# warning levels - otherwise it overlooks (and misrenders) stuff like bad
+# header formats etc!
+# (The defaults in readme_renderer are halt_level=WARNING and
+# report_level=SEVERE)
+# NOTE: this only works because we directly call twine via Python and not via
+# subprocess.
+for key in ("halt_level", "report_level"):
+    readme_renderer.rst.SETTINGS[key] = Reporter.INFO_LEVEL
 
 
 # TODO: this could be a good module to test out a more class-centric method of
@@ -286,8 +299,9 @@ def prepare(c, dry_run=False):
     Edit changelog & version, git commit, and git tag, to set up for release.
 
     :param bool dry_run:
-        Whether to take any actual actions or just say what might occur.
-        Default: ``False``.
+        Whether to take any actual actions or just say what might occur. Will
+        also non-fatally exit if not on some form of release branch. Default:
+        ``False``.
 
     .. versionchanged:: 2.1
         Added the ``dry_run`` parameter.
@@ -300,7 +314,15 @@ def prepare(c, dry_run=False):
     # definition too, re: just making them non-enum classes period.
     # TODO: otherwise, we at least want derived eg changelog/version/etc paths
     # transmitted from status() into here...
-    actions, state = status(c)
+    try:
+        actions, state = status(c)
+    except UndefinedReleaseType as e:
+        if not dry_run:
+            raise
+        raise Exit(
+            code=0,
+            message="Can't dry-run release tasks, not on a release branch; skipping.",
+        )
     # TODO: unless nothing-to-do in which case just say that & exit 0
     if not dry_run:
         if not confirm("Take the above actions?"):
@@ -707,6 +729,8 @@ def publish(
     """
     # Don't hide by default, this step likes to be verbose most of the time.
     c.config.run.hide = False
+    # Including echoing!
+    c.config.run.echo = True
     # Config hooks
     # TODO: this pattern is too widespread. Really needs something in probably
     # Executor that automatically does this on our behalf for any kwargs we
@@ -739,14 +763,64 @@ def publish(
             build(c, sdist=False, wheel=True, directory=tmp, python=alt_python)
         # Use twine's check command on built artifacts (at present this just
         # validates long_description)
-        c.run("twine check {}".format(os.path.join(tmp, "dist", "*")))
+        print(c.config.run.echo_format.format(command="twine check"))
+        failure = twine_check(dists=[os.path.join(tmp, "dist", "*")])
+        if failure:
+            raise Exit(1)
+        # Test installation of built artifacts into virtualenvs (even during
+        # dry run)
+        test_install(c, directory=tmp)
         # Do the thing! (Maybe.)
         upload(c, directory=tmp, index=index, sign=sign, dry_run=dry_run)
 
 
+@task
+def test_install(c, directory):
+    """
+    Test installation of previously built artifacts found in ``directory``.
+
+    Uses the `venv` module to build temporary virtualenvs.
+    """
+    # TODO: streamline all this in 3.0 when we drop all Py2 support both here
+    # and in downstream repos
+    if PY2:
+        print("WARNING: skipping installation test due to no venv on Python 2")
+        return
+    import venv
+    builder = venv.EnvBuilder(with_pip=True)
+    for archive in get_archives(directory):
+        # Skip Python 2 wheels that aren't universal (we're dropping that
+        # entirely soon)
+        if "py2" in archive and "py3" not in archive:
+            continue
+        with tmpdir() as tmp:
+            builder.create(tmp)
+            # Does it install cleanly?
+            # TODO: might be nice to have a further 'can you import whatever it
+            # was' test
+            # TODO: obligatory "is it worth upgrading pip always?"
+            c.run(
+                "{} install --disable-pip-version-check {}".format(
+                    os.path.join(tmp, "bin", "pip"), archive
+                )
+            )
+
+
+def get_archives(directory):
+    # Obtain list of archive filenames, then ensure any wheels come first
+    # so their improved metadata is what PyPI sees initially (otherwise, it
+    # only honors the sdist's lesser data).
+    return list(
+        itertools.chain.from_iterable(
+            glob(os.path.join(directory, "dist", "*.{}".format(extension)))
+            for extension in ("whl", "tar.gz")
+        )
+    )
+
+
 def upload(c, directory, index=None, sign=False, dry_run=False):
     """
-    Upload (potentially also signing) all artifacts in ``directory``.
+    Upload (potentially also signing) all artifacts in ``directory/dist``.
 
     :param str index:
         Custom upload index/repository name.
@@ -758,26 +832,20 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
         Whether to sign the built archive(s) via GPG.
 
     :param bool dry_run:
-        Skip actual publication step if ``True``.
+        Skip actual publication step (and dry-run actions like signing) if
+        ``True``.
 
         This also prevents cleanup of the temporary build/dist directories, so
         you can examine the build artifacts.
     """
-    # Obtain list of archive filenames, then ensure any wheels come first
-    # so their improved metadata is what PyPI sees initially (otherwise, it
-    # only honors the sdist's lesser data).
-    archives = list(
-        itertools.chain.from_iterable(
-            glob(os.path.join(directory, "dist", "*.{}".format(extension)))
-            for extension in ("whl", "tar.gz")
-        )
-    )
+    archives = get_archives(directory)
     # Sign each archive in turn
     # NOTE: twine has a --sign option but it's not quite flexible enough &
     # doesn't allow you to dry-run or upload manually when API is borked...
     if sign:
         prompt = "Please enter GPG passphrase for signing: "
-        input_ = StringIO(getpass.getpass(prompt) + "\n")
+        passphrase = "" if dry_run else getpass.getpass(prompt)
+        input_ = StringIO(passphrase + "\n")
         gpg_bin = find_gpg(c)
         if not gpg_bin:
             raise Exit(
@@ -788,14 +856,14 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
             cmd = "{} --detach-sign -a --passphrase-fd 0 {{}}".format(
                 gpg_bin
             )  # noqa
-            c.run(cmd.format(archive), in_stream=input_)
+            c.run(cmd.format(archive), in_stream=input_, dry=dry_run)
             input_.seek(0)  # So it can be replayed by subsequent iterations
     # Upload
     parts = ["twine", "upload"]
     if index:
         parts.append("--repository {}".format(index))
     paths = archives[:]
-    if sign:
+    if sign and not dry_run:
         paths.append(os.path.join(directory, "dist", "*.asc"))
     parts.extend(paths)
     cmd = " ".join(parts)
@@ -813,11 +881,16 @@ def push(c, dry_run=False):
     Push current branch and tags to default Git remote.
     """
     kwargs = dict(echo=True) if dry_run else dict()
-    opts = " --dry-run --no-verify" if dry_run else ""
+    # At this stage pre-push hooks will be more trouble than they're worth.
+    opts = " --no-verify"
+    if dry_run:
+        opts += " --dry-run"
     c.run("git push --follow-tags{}".format(opts), **kwargs)
 
 
 # TODO: still need time to solve the 'just myself pls' problem
-ns = Collection("release", all_, status, prepare, build, publish, push)
+ns = Collection(
+    "release", all_, status, prepare, build, publish, push, test_install
+)
 # Hide stdout by default, preferring to explicitly enable it when necessary.
 ns.configure({"run": {"hide": "stdout"}})
