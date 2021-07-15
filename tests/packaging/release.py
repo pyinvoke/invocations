@@ -1116,6 +1116,7 @@ class namespace:
            publish
            push
            status
+           test-install
         """.split()
         assert set(release_ns.task_names) == set(names)
 
