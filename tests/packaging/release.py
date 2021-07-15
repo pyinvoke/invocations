@@ -898,13 +898,21 @@ class build_:
 
 
 class upload_:
-    def _fake(self, c, kwargs=None, flags=None):
+    def _check_upload(self, c, kwargs=None, flags=None):
+        """
+        Expect/call upload() with common environment and settings/mocks.
+
+        Returns the full command constructed, typically for further
+        examination.
+        """
+
         def mkpath(x):
             return path.join("somedir", "dist", x)
 
         with patch("invocations.packaging.release.glob") as glob:
             tgz, whl = mkpath("foo.tar.gz"), mkpath("foo.whl")
             glob.side_effect = lambda x: [tgz if x.endswith("gz") else whl]
+            # Do the thing!
             upload(c, "somedir", **(kwargs or {}))
             glob.assert_any_call(mkpath("*.tar.gz"))
             glob.assert_any_call(mkpath("*.whl"))
@@ -917,21 +925,24 @@ class upload_:
 
     def twine_uploads_dist_contents_with_wheels_first(self):
         c = MockContext(run=True)
-        c.run.assert_called_once_with(self._fake(c))
+        c.run.assert_called_once_with(self._check_upload(c))
 
     def may_target_alternate_index(self):
         c = MockContext(run=True)
-        cmd = self._fake(c, kwargs=dict(index="lol"), flags="--repository lol")
+        cmd = self._check_upload(
+            c, kwargs=dict(index="lol"), flags="--repository lol"
+        )
         c.run.assert_called_once_with(cmd)
 
     @patch("builtins.print")
     def dry_run_just_prints_and_ls(self, print):
         c = MockContext(run=True)
-        cmd = self._fake(c, kwargs=dict(dry_run=True))
+        cmd = self._check_upload(c, kwargs=dict(dry_run=True))
         print.assert_any_call("Would publish via: {}".format(cmd))
         c.run.assert_called_once_with("ls -l {}".format(self.files))
 
     def allows_signing_via_gpg(self):
+        # Kind of a pain to test :(
         skip()
 
 
