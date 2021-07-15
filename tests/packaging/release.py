@@ -8,6 +8,7 @@ import sys
 from invoke.vendor.six import PY2
 from invoke.vendor.lexicon import Lexicon
 from invoke import MockContext, Result, Config, Exit
+from docutils.utils import Reporter
 from mock import Mock, patch
 import pytest
 from pytest import skip
@@ -966,6 +967,19 @@ class publish_:
             with pytest.raises(Kaboom):
                 publish(MockContext(run=True))
             rmtree.assert_called_once_with(mkdtemp.return_value)
+
+        def monkeypatches_readme_renderer(self, fakepub):
+            # Happens at module load time but is just a data structure change
+            import readme_renderer.rst
+
+            assert (
+                readme_renderer.rst.SETTINGS["halt_level"]
+                == Reporter.INFO_LEVEL
+            )
+            assert (
+                readme_renderer.rst.SETTINGS["report_level"]
+                == Reporter.INFO_LEVEL
+            )
 
     class index:
         def passed_to_upload(self, fakepub):
