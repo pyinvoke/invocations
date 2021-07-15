@@ -59,6 +59,6 @@ class coverage_:
 
     def open_html_report(self):
         c = MockContext(run=True, repeat=True)
-        coverage(c, report='html')
+        coverage(c, report="html")
         print(c.run.mock_calls)
         c.run.assert_any_call("open htmlcov/index.html")

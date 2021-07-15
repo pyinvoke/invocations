@@ -787,6 +787,7 @@ def test_install(c, directory):
         print("WARNING: skipping installation test due to no venv on Python 2")
         return
     import venv
+
     builder = venv.EnvBuilder(with_pip=True)
     for archive in get_archives(directory):
         # Skip Python 2 wheels that aren't universal (we're dropping that
