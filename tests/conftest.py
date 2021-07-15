@@ -11,13 +11,21 @@ def ctx():
     return MockContext(run=True)
 
 
+class Mocks:
+    pass
+
+
 # For use in packaging.release.publish tests
 @fixture
 def fakepub(mocker):
-    rmtree = mocker.patch("invocations.util.rmtree")
-    upload = mocker.patch("invocations.packaging.release.upload")
-    build = mocker.patch("invocations.packaging.release.build")
-    mkdtemp = mocker.patch("invocations.util.mkdtemp")
-    mkdtemp.return_value = "tmpdir"
+    mocks = Mocks()
+    mocks.rmtree = mocker.patch("invocations.util.rmtree")
+    mocks.upload = mocker.patch("invocations.packaging.release.upload")
+    mocks.build = mocker.patch("invocations.packaging.release.build")
+    mocks.test_install = mocker.patch(
+        "invocations.packaging.release.test_install"
+    )
+    mocks.mkdtemp = mocker.patch("invocations.util.mkdtemp")
+    mocks.mkdtemp.return_value = "tmpdir"
     c = MockContext(run=True)
-    yield c, mkdtemp, build, upload, rmtree
+    yield c, mocks

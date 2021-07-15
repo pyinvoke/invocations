@@ -953,31 +953,31 @@ class Kaboom(Exception):
 class publish_:
     class base_case:
         def does_all_the_things(self, fakepub):
-            c, mkdtemp, build, upload, rmtree = fakepub
+            c, mocks = fakepub
             # Execution
             publish(c)
             # Unhides stdout
             assert c.config.run.hide is False
             # Build
-            build.assert_called_once_with(
+            mocks.build.assert_called_once_with(
                 c, sdist=True, wheel=True, directory="tmpdir"
             )
             # Twine check
             splat = path.join("tmpdir", "dist", "*")
             c.run.assert_called_once_with(f"twine check {splat}")
             # Upload
-            upload.assert_called_once_with(
+            mocks.upload.assert_called_once_with(
                 c, directory="tmpdir", index=None, sign=False, dry_run=False
             )
             # Tmpdir cleaned up
-            rmtree.assert_called_once_with("tmpdir")
+            mocks.rmtree.assert_called_once_with("tmpdir")
 
         def cleans_up_on_error(self, fakepub):
-            _, mkdtemp, build, _, rmtree = fakepub
-            build.side_effect = Kaboom
+            c, mocks = fakepub
+            mocks.build.side_effect = Kaboom
             with pytest.raises(Kaboom):
                 publish(MockContext(run=True))
-            rmtree.assert_called_once_with(mkdtemp.return_value)
+            mocks.rmtree.assert_called_once_with(mocks.mkdtemp.return_value)
 
         def monkeypatches_readme_renderer(self, fakepub):
             # Happens at module load time but is just a data structure change
@@ -994,85 +994,85 @@ class publish_:
 
     class index:
         def passed_to_upload(self, fakepub):
-            c, _, _, upload, _ = fakepub
+            c, mocks = fakepub
             publish(c, index="dev")
-            assert upload.call_args[1]["index"] == "dev"
+            assert mocks.upload.call_args[1]["index"] == "dev"
 
         def honors_config(self, fakepub):
-            c, _, _, upload, _ = fakepub
+            c, mocks = fakepub
             c.config.packaging = dict(index="prod")
             publish(c)
-            assert upload.call_args[1]["index"] == "prod"
+            assert mocks.upload.call_args[1]["index"] == "prod"
 
         def kwarg_beats_config(self, fakepub):
-            c, _, _, upload, _ = fakepub
+            c, mocks = fakepub
             c.config.packaging = dict(index="prod")
             publish(c, index="dev")
-            assert upload.call_args[1]["index"] == "dev"
+            assert mocks.upload.call_args[1]["index"] == "dev"
 
     class sign:
         def passed_to_upload(self, fakepub):
-            c, _, _, upload, _ = fakepub
+            c, mocks = fakepub
             publish(c, sign=True)
-            assert upload.call_args[1]["sign"] is True
+            assert mocks.upload.call_args[1]["sign"] is True
 
         def honors_config(self, fakepub):
-            c, _, _, upload, _ = fakepub
+            c, mocks = fakepub
             c.config.packaging = dict(sign=True)
             publish(c)
-            assert upload.call_args[1]["sign"] is True
+            assert mocks.upload.call_args[1]["sign"] is True
 
         def kwarg_beats_config(self, fakepub):
-            c, _, _, upload, _ = fakepub
+            c, mocks = fakepub
             c.config.packaging = dict(sign=False)
             publish(c, sign=True)
-            assert upload.call_args[1]["sign"] is True
+            assert mocks.upload.call_args[1]["sign"] is True
 
     class sdist:
         def defaults_True_and_passed_to_build(self, fakepub):
-            c, _, build, *_ = fakepub
+            c, mocks = fakepub
             publish(c)
-            assert build.call_args[1]["sdist"] is True
+            assert mocks.build.call_args[1]["sdist"] is True
 
         def may_be_overridden(self, fakepub):
-            c, _, build, *_ = fakepub
+            c, mocks = fakepub
             publish(c, sdist=False)
-            assert build.call_args[1]["sdist"] is False
+            assert mocks.build.call_args[1]["sdist"] is False
 
     class wheel:
         def defaults_True_and_passed_to_build(self, fakepub):
-            c, _, build, *_ = fakepub
+            c, mocks = fakepub
             publish(c)
-            assert build.call_args[1]["wheel"] is True
+            assert mocks.build.call_args[1]["wheel"] is True
 
         def may_be_overridden(self, fakepub):
-            c, _, build, *_ = fakepub
+            c, mocks = fakepub
             publish(c, wheel=False)
-            assert build.call_args[1]["wheel"] is False
+            assert mocks.build.call_args[1]["wheel"] is False
 
     def directory_affects_tmpdir(self, fakepub):
-        c, mkdtemp, build, *_ = fakepub
+        c, mocks = fakepub
         publish(c, directory="explicit")
-        assert not mkdtemp.called
-        assert build.call_args[1]["directory"] == "explicit"
+        assert not mocks.mkdtemp.called
+        assert mocks.build.call_args[1]["directory"] == "explicit"
 
     class dry_run:
         def causes_tmpdir_cleanup_to_be_skipped(self, fakepub):
-            c, *_, rmtree = fakepub
+            c, mocks = fakepub
             publish(c, dry_run=True)
-            assert not rmtree.called
+            assert not mocks.rmtree.called
 
         def causes_tmpdir_cleanup_to_be_skipped_on_exception(self, fakepub):
-            c, _, build, _, rmtree = fakepub
-            build.side_effect = Kaboom
+            c, mocks = fakepub
+            mocks.build.side_effect = Kaboom
             with pytest.raises(Kaboom):
                 publish(c, dry_run=True)
-            assert not rmtree.called
+            assert not mocks.rmtree.called
 
         def passed_to_upload(self, fakepub):
-            c, _, _, upload, _ = fakepub
+            c, mocks = fakepub
             publish(c, dry_run=True)
-            assert upload.call_args[1]["dry_run"] is True
+            assert mocks.upload.call_args[1]["dry_run"] is True
 
 
 class push_:
