@@ -890,6 +890,14 @@ def push(c, dry_run=False):
     c.run("git push {}".format(opts), **kwargs)
 
 
+@task
+def tidelift(c, dry_run=False):
+    """
+    Add current latest version to Tidelift & set changelog link.
+    """
+    pass
+
+
 # TODO: still need time to solve the 'just myself pls' problem
 ns = Collection(
     "release", all_, status, prepare, build, publish, push, test_install
