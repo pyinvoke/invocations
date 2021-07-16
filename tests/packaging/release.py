@@ -1082,14 +1082,14 @@ class push_:
         "git-pushes with --follow-tags"
         c = MockContext(run=True)
         push(c)
-        c.run.assert_called_once_with("git push --follow-tags")
+        c.run.assert_called_once_with("git push --follow-tags --no-verify")
 
     @trap
     def honors_dry_run(self):
         c = MockContext(run=True)
         push(c, dry_run=True)
         c.run.assert_called_once_with(
-            "git push --follow-tags --dry-run", echo=True
+            "git push --follow-tags --no-verify --dry-run", echo=True
         )
 
 

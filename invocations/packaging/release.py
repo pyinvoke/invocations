@@ -882,11 +882,12 @@ def push(c, dry_run=False):
     Push current branch and tags to default Git remote.
     """
     kwargs = dict(echo=True) if dry_run else dict()
-    # At this stage pre-push hooks will be more trouble than they're worth.
-    opts = " --no-verify"
+    # Push tags, not just branches; and at this stage pre-push hooks will be
+    # more trouble than they're worth.
+    opts = "--follow-tags --no-verify"
     if dry_run:
         opts += " --dry-run"
-    c.run("git push --follow-tags{}".format(opts), **kwargs)
+    c.run("git push {}".format(opts), **kwargs)
 
 
 # TODO: still need time to solve the 'just myself pls' problem
