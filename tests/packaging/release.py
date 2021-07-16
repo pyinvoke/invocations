@@ -1102,7 +1102,7 @@ class all_task:
         all_(c)
         # TODO: this doesn't actually prove order of operations. not seeing an
         # unhairy way to do that, but not really that worried either...:P
-        prepare.assert_called_once_with(c)
+        prepare.assert_called_once_with(c, dry_run=False)
         publish.assert_called_once_with(c, dry_run=False)
         push.assert_called_once_with(c, dry_run=False)
 
@@ -1112,7 +1112,7 @@ class all_task:
     def passes_through_dry_run_flag(self, push, publish, prepare):
         c = MockContext(run=True)
         all_(c, dry_run=True)
-        prepare.assert_called_once_with(c)
+        prepare.assert_called_once_with(c, dry_run=True)
         publish.assert_called_once_with(c, dry_run=True)
         push.assert_called_once_with(c, dry_run=True)
 
