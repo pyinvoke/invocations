@@ -964,7 +964,9 @@ class publish_:
             )
             # Twine check
             splat = path.join("tmpdir", "dist", "*")
-            c.run.assert_called_once_with(f"twine check {splat}")
+            mocks.twine_check.assert_called_once_with(dists=[splat])
+            # Install test
+            mocks.test_install.assert_called_once_with(c, directory="tmpdir")
             # Upload
             mocks.upload.assert_called_once_with(
                 c, directory="tmpdir", index=None, sign=False, dry_run=False

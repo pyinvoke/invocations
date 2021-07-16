@@ -20,6 +20,9 @@ class Mocks:
 def fakepub(mocker):
     mocks = Mocks()
     mocks.rmtree = mocker.patch("invocations.util.rmtree")
+    mocks.twine_check = mocker.patch(
+        "invocations.packaging.release.twine_check", return_value=False
+    )
     mocks.upload = mocker.patch("invocations.packaging.release.upload")
     mocks.build = mocker.patch("invocations.packaging.release.build")
     mocks.test_install = mocker.patch(
