@@ -688,6 +688,20 @@ class prepare_and_status:
         # I.e. you might have screwed up editing one of the files...
         skip()
 
+    class dry_run_prepare:
+        def does_not_fail_fast_on_bad_status(self):
+            skip()
+
+        def does_not_confirm(self):
+            skip()
+
+        def dry_runs_all_commands(self):
+            # Changelog edit
+            # Version edit
+            # Commit
+            # Tag
+            skip()
+
     # Don't want a full re-enactment of status_ test tree, but do want to spot
     # check that actions not needing to be taken, aren't...
     class lack_of_action:
@@ -1075,6 +1089,17 @@ class publish_:
             c, mocks = fakepub
             publish(c, dry_run=True)
             assert mocks.upload.call_args[1]["dry_run"] is True
+
+
+class test_install_:
+    def pip_installs_into_venv(self):
+        skip()
+
+    def aborts_on_python2(self):
+        skip()
+
+    def skips_non_universal_python2_wheels(self):
+        skip()
 
 
 class push_:

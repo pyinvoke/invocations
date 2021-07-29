@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from invoke import MockContext
 from invocations.pytest import test, coverage
 from mock import Mock
+from pytest import skip
 
 
 @contextmanager
@@ -62,3 +63,10 @@ class coverage_:
         coverage(c, report="html")
         print(c.run.mock_calls)
         c.run.assert_any_call("open htmlcov/index.html")
+
+    class codecov_support:
+        def defaults_False(self):
+            skip()
+
+        def runs_xml_and_codecov_when_True(self):
+            skip()
