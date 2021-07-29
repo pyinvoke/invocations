@@ -291,6 +291,7 @@ def all_(c, dry_run=False):
     prepare(c, dry_run=dry_run)
     publish(c, dry_run=dry_run)
     push(c, dry_run=dry_run)
+    tidelift(c, dry_run=dry_run)
 
 
 @task
@@ -356,6 +357,7 @@ def prepare(c, dry_run=False):
                 'git commit -am "Cut {}"'.format(state.expected_version),
                 hide=False,
                 dry=dry_run,
+                echo=True,
             )
         # Tag!
         c.run(
@@ -900,7 +902,15 @@ def tidelift(c, dry_run=False):
 
 # TODO: still need time to solve the 'just myself pls' problem
 ns = Collection(
-    "release", all_, status, prepare, build, publish, push, test_install
+    "release",
+    all_,
+    status,
+    prepare,
+    build,
+    publish,
+    push,
+    test_install,
+    tidelift,
 )
 # Hide stdout by default, preferring to explicitly enable it when necessary.
 ns.configure({"run": {"hide": "stdout"}})

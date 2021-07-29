@@ -645,7 +645,7 @@ class prepare_and_status:
             # TODO: real code should probs expand EDITOR explicitly so it can
             # run w/o a shell wrap / require a full env?
             cmd = "$EDITOR {}".format(path)
-            c.run.assert_any_call(cmd, pty=True, hide=False)
+            c.run.assert_any_call(cmd, pty=True, hide=False, dry=False)
 
     @_confirm_true
     def opens_EDITOR_with_version_file_when_it_needs_update(self, _):
@@ -655,7 +655,7 @@ class prepare_and_status:
             # TODO: real code should probs expand EDITOR explicitly so it can
             # run w/o a shell wrap / require a full env?
             cmd = "$EDITOR {}".format(path)
-            c.run.assert_any_call(cmd, pty=True, hide=False)
+            c.run.assert_any_call(cmd, pty=True, hide=False, dry=False)
 
     @_confirm_true
     def commits_and_adds_git_tag_when_needs_cutting(self, _):
@@ -669,7 +669,7 @@ class prepare_and_status:
             commit = 'git commit -am "Cut {}"'.format(version)
             tag = 'git tag -a {} -m ""'.format(version)
             for cmd in (commit, tag):
-                c.run.assert_any_call(cmd, hide=False)
+                c.run.assert_any_call(cmd, hide=False, dry=False, echo=True)
 
     @_confirm_true
     def does_not_commit_if_no_commit_necessary(self, _):
@@ -682,7 +682,9 @@ class prepare_and_status:
             commands = [x[0][0] for x in c.run.call_args_list]
             assert not any(x.startswith("git commit") for x in commands)
             # Expect git tag
-            c.run.assert_any_call("git tag -a 1.1.2", hide=False)
+            c.run.assert_any_call(
+                'git tag -a 1.1.2 -m ""', hide=False, dry=False, echo=True
+            )
 
     def reruns_status_at_end_as_sanity_check(self):
         # I.e. you might have screwed up editing one of the files...
