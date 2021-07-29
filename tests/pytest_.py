@@ -2,7 +2,7 @@ from contextlib import contextmanager
 
 from invoke import MockContext
 from invocations.pytest import test, coverage
-from mock import Mock
+from mock import Mock, call
 from pytest import skip
 
 
@@ -66,7 +66,11 @@ class coverage_:
 
     class codecov_support:
         def defaults_False(self):
-            skip()
+            c = MockContext(run=True, repeat=True)
+            coverage(c)
+            assert call("codecov") not in c.run.mock_calls
 
         def runs_xml_and_codecov_when_True(self):
-            skip()
+            c = MockContext(run=True, repeat=True)
+            coverage(c, codecov=True)
+            c.run.assert_has_calls([call("coverage xml"), call("codecov")])
