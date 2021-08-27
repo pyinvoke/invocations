@@ -590,9 +590,9 @@ def _run_prepare(c, mute=True):
             raise
 
 
-class prepare_and_status:
+class prepare_:
 
-    # NOTE: just testing the base case of 'everything needs updating',
+    # NOTE: mostly testing the base case of 'everything needs updating',
     # all the permutations are tested elsewhere.
     _branch = "1.1"
     _changelog = "unreleased_1.1_bugs"
