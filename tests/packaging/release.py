@@ -9,7 +9,7 @@ from invoke.vendor.six import PY2
 from invoke.vendor.lexicon import Lexicon
 from invoke import MockContext, Result, Config, Exit
 from docutils.utils import Reporter
-from mock import Mock, patch
+from mock import Mock, patch, call
 import pytest
 from pytest import skip
 from pytest_relaxed import trap, raises
@@ -582,9 +582,9 @@ _confirm_false = _confirm(False)
 
 
 # This is shit but I'm too tired and angry right now to give a fuck.
-def _run_prepare(c, mute=True):
+def _run_prepare(c, mute=True, **kwargs):
     try:
-        return prepare(c)
+        return prepare(c, **kwargs)
     except Exit:
         if not mute:
             raise
@@ -732,18 +732,58 @@ class prepare_:
                 assert status.call_count == 2
 
     class dry_run_prepare:
-        def does_not_fail_fast_on_bad_status(self):
-            skip()
+        @patch("invocations.packaging.release.status")
+        def exits_early_like_non_dry_run_on_all_okay(self, status):
+            status.return_value = Lexicon(all_okay=True), Lexicon()
+            with _mock_context(self) as c:
+                assert _run_prepare(c, dry_run=True) is True
+                assert status.call_count == 1
 
-        def does_not_confirm(self):
-            skip()
+        @patch("invocations.packaging.release.status")
+        def does_not_fail_fast_on_bad_release_type(self, status):
+            status.side_effect = UndefinedReleaseType
+            with _mock_context(self) as c:
+                _run_prepare(c, dry_run=True)
 
-        def dry_runs_all_commands(self):
-            # Changelog edit
-            # Version edit
-            # Commit
-            # Tag
-            skip()
+        @patch("invocations.console.input")
+        def does_not_prompt_to_confirm(self, mock_input):
+            with _mock_context(self) as c:
+                _run_prepare(c, dry_run=True)
+            assert not mock_input.called
+
+        def dry_runs_all_prep_commands(self):
+            # Reminder: default state of mocked context is "everything needs
+            # updates"
+            with _mock_context(self) as c:
+                _run_prepare(c, dry_run=True)
+                dry_runs = [
+                    x[1][0] for x in c.run.mock_calls if x[2].get("dry", False)
+                ]
+                for pattern in (
+                    r"\$EDITOR .*\.rst",
+                    r"\$EDITOR .*_version\.py",
+                    r"git commit.*",
+                    r"git tag -a.*",
+                ):
+                    assert any(re.match(pattern, x) for x in dry_runs)
+
+        @patch("invocations.packaging.release.status")
+        def does_not_run_final_status_check(self, status):
+            # Slight cheat: other actions all actually ok even tho all_okay is
+            # false. means no needing to mock the run() calls etc.
+            status.return_value = (
+                Lexicon(
+                    changelog=Changelog.OKAY,
+                    version=VersionFile.OKAY,
+                    tag=Tag.OKAY,
+                    all_okay=False,
+                ),
+                Lexicon(),
+            )
+            with _mock_context(self) as c:
+                _run_prepare(c, dry_run=True)
+                # The end step was skipped
+                assert status.call_count == 1
 
     # Don't want a full re-enactment of status_ test tree, but do want to spot
     # check that actions not needing to be taken, aren't...

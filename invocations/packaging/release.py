@@ -380,7 +380,7 @@ def prepare(c, dry_run=False):
     # If top-of-task status check wasn't all_okay, it means the code between
     # there and here was expected to alter state. Run another check to make
     # sure those actions actually succeeded!
-    if not actions.all_okay:
+    if not dry_run and not actions.all_okay:
         actions, state = status(c)
         if not actions.all_okay:
             raise Exit("Something went wrong! Please fix.")
