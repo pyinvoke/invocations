@@ -240,12 +240,6 @@ def _mock_context(self):
     - Where not possible (eg things which must be Python-level and not
       shell-level, such as version imports), mock with the 'mock' lib as usual.
 
-    The MockContext's `run` method has been further mocked by wrapping it in a
-    pass-through `mock.Mock`. It will act like regular `MockContext.run`
-    (returning the result value it's been configured to return) but will be a
-    `mock.Mock` object and thus exhibit all the usual call-tracking attributes
-    and methods such as ``.called``, ``.call_args_list``, etc.
-
     :yields:
         an `invoke.context.MockContext` created & modified as described above.
     """
