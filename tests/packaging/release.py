@@ -368,6 +368,7 @@ Tag +{tag}
                 changelog=Changelog.NEEDS_RELEASE,
                 version=VersionFile.NEEDS_BUMP,
                 tag=Tag.NEEDS_CUTTING,
+                all_okay=False,
             )
             found_actions, found_state = _mock_status(self)
             assert found_actions == actions
@@ -611,6 +612,15 @@ class prepare_and_status:
             err = "Didn't see '{}' text in status output!".format(action.name)
             assert action.value in output, err
 
+    @patch("invocations.packaging.release.status")
+    def short_circuits_when_no_work_to_do(self, status):
+        status.return_value = Lexicon(all_okay=True), Lexicon()
+        with _mock_context(self) as c:
+            # True retval, one call to status(), and no barfing on lack of
+            # run() mocking, all point to the short circuit happening
+            assert _run_prepare(c) is True
+            assert status.call_count == 1
+
     @trap
     @patch("invocations.console.input", return_value="no")
     def prompts_before_taking_action(self, mock_input):
@@ -680,9 +690,46 @@ class prepare_and_status:
                 'git tag -a 1.1.2 -m ""', hide=False, dry=False, echo=True
             )
 
-    def reruns_status_at_end_as_sanity_check(self):
-        # I.e. you might have screwed up editing one of the files...
-        skip()
+    class final_status_check:
+        @_confirm_true
+        @patch("invocations.packaging.release.status")
+        def run_twice_when_not_short_circuiting(self, status, _):
+            status.side_effect = [
+                (
+                    Lexicon(
+                        changelog=Changelog.NEEDS_RELEASE,
+                        version=VersionFile.OKAY,
+                        tag=Tag.OKAY,
+                        all_okay=False,
+                    ),
+                    Lexicon(),
+                ),
+                (Lexicon(all_okay=True), Lexicon()),
+            ]
+            with _mock_context(self) as c:
+                # Mute off - want kaboom if Exit raised
+                _run_prepare(c, mute=False)
+                assert status.call_count == 2
+
+        @_confirm_true
+        @patch("invocations.packaging.release.status")
+        def exits_if_still_not_all_okay(self, status, _):
+            status.side_effect = [
+                (
+                    Lexicon(
+                        changelog=Changelog.NEEDS_RELEASE,
+                        version=VersionFile.OKAY,
+                        tag=Tag.OKAY,
+                        all_okay=False,
+                    ),
+                    Lexicon(),
+                ),
+                (Lexicon(all_okay=False), Lexicon()),
+            ]
+            with _mock_context(self) as c:
+                with pytest.raises(Exit, match=r"Something went wrong"):
+                    _run_prepare(c, mute=False)
+                assert status.call_count == 2
 
     class dry_run_prepare:
         def does_not_fail_fast_on_bad_status(self):

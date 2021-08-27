@@ -7,6 +7,9 @@ Changelog
   upload packages which build OK but don't actually install OK).
 - :feature:`-` Add Codecov support to ``pytest.coverage``.
 - :support:`-` Rely on Invoke 1.6+ for some of its new features.
+- :support:`-` ``packaging.release.prepare`` now runs its internal status check
+  twice, once at the start (as before) and again at the end (to prove that the
+  actions taken did in fact satisfy needs).
 - :feature:`-` ``packaging.release.prepare`` grew a ``dry_run`` flag to match
   the rest of its friends.
 - :bug:`- major` ``packaging.release.prepare`` now generates annotated Git tags

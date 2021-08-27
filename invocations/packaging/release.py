@@ -246,6 +246,12 @@ def _converge(c):
     if state.expected_version not in state.tags:
         actions.tag = Tag.NEEDS_CUTTING
 
+    actions.all_okay = (
+        actions.changelog == Changelog.OKAY
+        and actions.version == VersionFile.OKAY
+        and actions.tag == Tag.OKAY
+    )
+
     #
     # Return
     #
@@ -304,6 +310,8 @@ def prepare(c, dry_run=False):
         also non-fatally exit if not on some form of release branch. Default:
         ``False``.
 
+    :returns: ``True`` if short-circuited due to all-ok, ``None`` otherwise.
+
     .. versionchanged:: 2.1
         Added the ``dry_run`` parameter.
     .. versionchanged:: 2.1
@@ -324,7 +332,10 @@ def prepare(c, dry_run=False):
             code=0,
             message="Can't dry-run release tasks, not on a release branch; skipping.",
         )
-    # TODO: unless nothing-to-do in which case just say that & exit 0
+    # Short-circuit if nothing to do
+    if actions.all_okay:
+        return True
+    # If work to do and not dry-running, make sure user confirms to move ahead
     if not dry_run:
         if not confirm("Take the above actions?"):
             raise Exit("Aborting.")
@@ -335,7 +346,7 @@ def prepare(c, dry_run=False):
     # - what else?
 
     # Changelog! (pty for non shite editing, eg vim sure won't like non-pty)
-    if actions.changelog is Changelog.NEEDS_RELEASE:
+    if actions.changelog == Changelog.NEEDS_RELEASE:
         # TODO: identify top of list and inject a ready-made line? Requires vim
         # assumption...GREAT opportunity for class/method based tasks!
         cmd = "$EDITOR {.packaging.changelog_file}".format(c)
@@ -366,6 +377,13 @@ def prepare(c, dry_run=False):
             dry=dry_run,
             echo=True,
         )
+    # If top-of-task status check wasn't all_okay, it means the code between
+    # there and here was expected to alter state. Run another check to make
+    # sure those actions actually succeeded!
+    if not actions.all_okay:
+        actions, state = status(c)
+        if not actions.all_okay:
+            raise Exit("Something went wrong! Please fix.")
 
 
 def _release_line(c):
