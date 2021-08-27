@@ -325,12 +325,12 @@ def prepare(c, dry_run=False):
     # transmitted from status() into here...
     try:
         actions, state = status(c)
-    except UndefinedReleaseType as e:
+    except UndefinedReleaseType:
         if not dry_run:
             raise
         raise Exit(
             code=0,
-            message="Can't dry-run release tasks, not on a release branch; skipping.",
+            message="Can't dry-run release tasks, not on a release branch; skipping.",  # noqa
         )
     # Short-circuit if nothing to do
     if actions.all_okay:

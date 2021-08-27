@@ -9,7 +9,7 @@ from invoke.vendor.six import PY2
 from invoke.vendor.lexicon import Lexicon
 from invoke import MockContext, Result, Config, Exit
 from docutils.utils import Reporter
-from mock import Mock, patch, call
+from mock import Mock, patch
 import pytest
 from pytest import skip
 from pytest_relaxed import trap, raises

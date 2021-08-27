@@ -3,7 +3,6 @@ from contextlib import contextmanager
 from invoke import MockContext
 from invocations.pytest import test, coverage
 from mock import Mock, call
-from pytest import skip
 
 
 @contextmanager
