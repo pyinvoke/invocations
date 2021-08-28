@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`2.1.0 <2021-08-27>`
 - :feature:`-` Add ``packaging.release.test_install`` task and call it just
   prior to the final step in ``packaging.release.upload`` (so one doesn't
   upload packages which build OK but don't actually install OK).
