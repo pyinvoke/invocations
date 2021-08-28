@@ -28,7 +28,7 @@ from blessings import Terminal
 from docutils.utils import Reporter
 from enum import Enum
 from invoke import Collection, task, Exit
-import readme_renderer.rst
+import readme_renderer.rst  # transitively required via twine in setup.py
 from releases.util import parse_changelog
 from tabulate import tabulate
 from twine.commands.check import check as twine_check
