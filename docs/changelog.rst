@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :bug:`- major` ``packaging.release.status`` (and its use elsewhere, eg
+  ``prepare``) didn't adequately reload the local project's version module
+  during its second/final recheck; this causes that check to fail when said
+  version was edited as part of a ``prepare`` run. It now force-reloads said
+  version module.
 - :feature:`-` ``packaging.release.push``, in dry-run mode, now dry-runs its
   ``git push`` subcommand -- meaning the subcommand itself is what is
   "dry-ran", instead of truly executing ``git push --dry-run`` -- when a CI

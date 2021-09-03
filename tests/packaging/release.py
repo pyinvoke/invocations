@@ -179,6 +179,14 @@ class load_version_:
     def can_configure_which_module_holds_version_data(self):
         self._expect_version("1.0.1", config_val="otherversion")
 
+    @patch("invocations.packaging.release.sys.modules", wraps=sys.modules)
+    def reloads_version_in_case_edited_during_run(self, modules):
+        # Necessary as default mocks don't mock dunder-attrs
+        modules.__getitem__.return_value._version = Mock(__version__="1.0.0")
+        self._expect_version("1.0.0")
+        modules.pop.assert_any_call("fakepackage._version", None)
+        modules.pop.assert_any_call("fakepackage", None)
+
     def errors_usefully_if_version_module_not_found(self):
         skip()
 

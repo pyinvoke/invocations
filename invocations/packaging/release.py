@@ -563,6 +563,14 @@ def _find_package(c):
 def load_version(c):
     package_name = _find_package(c)
     version_module = c.packaging.get("version_module", "_version")
+    # Evict from sys.modules in case we're running at the end of an in-session
+    # edit (eg within prepare()). Otherwise we'll always only see what was
+    # on-disk at first import.
+    # NOTE: must do both the top level package and the version module! Unclear
+    # why. May be due to the specific import strategy; def try using the
+    # cleaner options available under Python 3 when we drop 2.
+    sys.modules.pop("{}.{}".format(package_name, version_module), None)
+    sys.modules.pop(package_name, None)
     # NOTE: have to explicitly give it a bytestr (Python 2) or unicode (Python
     # 3) because https://bugs.python.org/issue21720 HOORAY
     cast = binary_type if PY2 else text_type
