@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`2.2.0 <2021-09-03>`
 - :bug:`- major` ``packaging.release.status`` (and its use elsewhere, eg
   ``prepare``) didn't adequately reload the local project's version module
   during its second/final recheck; this causes that check to fail when said
