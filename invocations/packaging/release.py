@@ -268,8 +268,6 @@ def status(c):
     Doubles as a subroutine, returning the return values from its inner call to
     ``_converge`` (an ``(actions, state)`` two-tuple of Lexicons).
     """
-    # TODO: wants some holistic "you don't actually HAVE any changes to
-    # release" final status - i.e. all steps were at no-op status.
     actions, state = _converge(c)
     table = []
     # NOTE: explicit 'sensible' sort (in rough order of how things are usually
