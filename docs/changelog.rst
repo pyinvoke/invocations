@@ -2,6 +2,17 @@
 Changelog
 =========
 
+- :feature:`-` ``packaging.release.push``, in dry-run mode, now dry-runs its
+  ``git push`` subcommand -- meaning the subcommand itself is what is
+  "dry-ran", instead of truly executing ``git push --dry-run`` -- when a CI
+  environment is detected.
+
+  - This prevents spurious errors when the git remote (eg Github) bails out on
+    read-only authentication credentials, which is common within CI systems.
+  - It's also just not very useful to dry-run a real git push within CI, since
+    almost certainly the commands to generate git objects to get pushed will
+    themselves not have truly run!
+
 - :feature:`-` Added the ``invocations.environment`` module with top-level
   functions such as `~invocations.environment.in_ci`.
 - :release:`2.1.0 <2021-08-27>`

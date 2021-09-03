@@ -35,8 +35,9 @@ from twine.commands.check import check as twine_check
 
 from .semantic_version_monkey import Version
 
-from ..util import tmpdir
 from ..console import confirm
+from ..environment import in_ci
+from ..util import tmpdir
 
 
 debug = logging.getLogger("invocations.packaging.release").debug
@@ -901,12 +902,19 @@ def push(c, dry_run=False):
     """
     Push current branch and tags to default Git remote.
     """
-    kwargs = dict(echo=True) if dry_run else dict()
     # Push tags, not just branches; and at this stage pre-push hooks will be
     # more trouble than they're worth.
     opts = "--follow-tags --no-verify"
+    # Dry run: echo, and either tack on git's own dry-run (if not CI) or
+    # dry-run the run() itself (if CI - which probably can't push to the remote
+    # and might thus error uselessly)
+    kwargs = dict()
     if dry_run:
-        opts += " --dry-run"
+        kwargs["echo"] = True
+        if in_ci():
+            kwargs["dry"] = True
+        else:
+            opts += " --dry-run"
     c.run("git push {}".format(opts), **kwargs)
 
 

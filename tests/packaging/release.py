@@ -1200,6 +1200,23 @@ class push_:
             "git push --follow-tags --no-verify --dry-run", echo=True
         )
 
+    @trap
+    @patch("invocations.environment.os.environ", dict(CIRCLECI="true"))
+    def dry_run_dry_runs_the_invocation_itself_if_in_ci(self):
+        c = MockContext(run=True)
+        push(c, dry_run=True)
+        c.run.assert_called_once_with(
+            "git push --follow-tags --no-verify", echo=True, dry=True
+        )
+
+    @trap
+    @patch("invocations.environment.os.environ", dict(CIRCLECI="true"))
+    def ci_check_only_applies_to_dry_run_behavior(self):
+        # Yes, technically already covered by base tests, but...
+        c = MockContext(run=True)
+        push(c, dry_run=False)
+        c.run.assert_called_once_with("git push --follow-tags --no-verify")
+
 
 class tidelift_:
     def adds_new_version_with_changelog_link(self):
