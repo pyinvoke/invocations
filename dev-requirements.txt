@@ -6,7 +6,9 @@ mock==1.0.1
 watchdog==0.8.3
 coverage==4.4.2
 codecov==2.1.11
-# For linting
+# Formatting
+black==19.10b0
+# Linting
 flake8==3.6.0
 # For docs (explicit, even tho we currently commutatively require these
 # anyways, how meta)
