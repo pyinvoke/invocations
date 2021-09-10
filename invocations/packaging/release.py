@@ -846,6 +846,7 @@ def get_archives(directory):
     )
 
 
+@task
 def upload(c, directory, index=None, sign=False, dry_run=False):
     """
     Upload (potentially also signing) all artifacts in ``directory/dist``.
@@ -943,6 +944,7 @@ ns = Collection(
     push,
     test_install,
     tidelift,
+    upload,
 )
 # Hide stdout by default, preferring to explicitly enable it when necessary.
 ns.configure({"run": {"hide": "stdout"}})

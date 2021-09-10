@@ -1279,6 +1279,7 @@ class namespace:
            status
            test-install
            tidelift
+           upload
         """.split()
         assert set(release_ns.task_names) == set(names)
 

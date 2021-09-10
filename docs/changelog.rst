@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :bug:`-` The ``packaging.release.upload`` task wasn't properly exposed
+  externally, even though another task's docstring referenced it. Fixed.
 - :release:`2.2.0 <2021-09-03>`
 - :bug:`- major` ``packaging.release.status`` (and its use elsewhere, eg
   ``prepare``) didn't adequately reload the local project's version module
