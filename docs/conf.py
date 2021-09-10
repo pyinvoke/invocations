@@ -32,7 +32,7 @@ html_theme_options = {
     "github_repo": "invocations",
     # TODO: make new UA property? only good for full domains and not RTD.io?
     # 'analytics_id': 'UA-18486793-X',
-    "travis_button": True,
+    "travis_button": False,
     # 'codecov_button': True, # TODO: get better coverage sometime, heh
     "tidelift_url": "https://tidelift.com/subscription/pkg/pypi-invocations?utm_source=pypi-invocations&utm_medium=referral&utm_campaign=docs",  # noqa
 }
