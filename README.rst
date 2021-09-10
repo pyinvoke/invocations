@@ -34,3 +34,21 @@ Currently implemented topics include (but are not limited to):
 - console utilities such as confirmation prompts
 
 and more.
+
+Roadmap
+=======
+
+While Invocations has been released with a major version number to signal
+adherence to semantic versioning, it's somewhat early in development and has
+not fully achieved its design vision yet.
+
+We expect it to gain maturity in tandem with the adoption and development of
+Invoke post-1.x. It's also highly likely that Invocations will see a few major
+releases as its API (and those of its sister library, `patchwork
+<https://fabric-patchwork.readthedocs.io>`_) matures.
+
+Development
+===========
+
+This project uses the same dev methodology as Invoke proper - please see its
+development page `here <https://www.pyinvoke.org/development.html>`_.
