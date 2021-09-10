@@ -35,6 +35,12 @@ setup(
     author="Jeff Forcier",
     author_email="jeff@bitprophet.org",
     url="https://invocations.readthedocs.io",
+    project_urls={
+        "Source": "https://github.com/pyinvoke/invocations",
+        "Changelog": "https://invocations.readthedocs.io/en/latest/changelog.html",  # noqa
+        "CI": "https://app.circleci.com/pipelines/github/pyinvoke/invocations",
+        "Issues": "https://github.com/pyinvoke/invocations/issues",
+    },
     # Release requirements. See dev-requirements.txt for dev version reqs.
     install_requires=requirements,
     packages=find_packages(),
