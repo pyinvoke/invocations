@@ -1201,6 +1201,7 @@ class push_:
         c.run.assert_called_once_with("git push --follow-tags --no-verify")
 
     @trap
+    @patch("invocations.environment.os.environ", dict(CIRCLECI=""))
     def honors_dry_run(self):
         c = MockContext(run=True)
         push(c, dry_run=True)
