@@ -181,9 +181,18 @@ class load_version_:
 
     @patch("invocations.packaging.release.sys.modules", wraps=sys.modules)
     def reloads_version_in_case_edited_during_run(self, modules):
-        # Necessary as default mocks don't mock dunder-attrs
-        modules.__getitem__.return_value._version = Mock(__version__="1.0.0")
+        # NOTE: mock doesn't mock/wrap dunder-attrs well (eg see python core
+        # bug #25597) so we gotta rub some more on top, esp for eg
+        # Python 3.8+ importlib which does additional setattrs and pops.
+        # (but we still wraps= in @patch as it smooths over other bits we don't
+        # care about mocking, at least under Python <3.8)
+        even_faker_package = Mock(_version=Mock(__version__="1.0.0"))
+        modules.__getitem__.return_value = even_faker_package
+        modules.get.return_value = even_faker_package
         self._expect_version("1.0.0")
+        # Expect our own internal pops (the stdlib ones, eg under 3.8+, don't
+        # exactly match these - no 2nd arg - so we can be pretty sure this
+        # won't incorrectly pass due to them)
         modules.pop.assert_any_call("fakepackage._version", None)
         modules.pop.assert_any_call("fakepackage", None)
 
