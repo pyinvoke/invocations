@@ -1,3 +1,5 @@
 [run]
 branch = True
-include = invocations/*
+include =
+    invocations/*
+    tests/*
