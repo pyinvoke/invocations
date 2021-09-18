@@ -28,6 +28,7 @@ from blessings import Terminal
 from docutils.utils import Reporter
 from enum import Enum
 from invoke import Collection, task, Exit
+from pip import __version__ as pip_version
 import readme_renderer.rst  # transitively required via twine in setup.py
 from releases.util import parse_changelog
 from tabulate import tabulate
@@ -822,14 +823,19 @@ def test_install(c, directory):
         if "py2" in archive and "py3" not in archive:
             continue
         with tmpdir() as tmp:
+            # Make temp venv
             builder.create(tmp)
-            # Does it install cleanly?
+            # Obligatory: make inner pip match outer pip (version obtained from
+            # this file's executable env, up in import land); very frequently
+            # venv-made envs have a bundled, older pip :(
+            pip = os.path.join(tmp, "bin", "pip")
+            c.run("{} install pip=={}".format(pip, pip_version))
+            # Does the package under test install cleanly?
             # TODO: might be nice to have a further 'can you import whatever it
             # was' test
-            # TODO: obligatory "is it worth upgrading pip always?"
             c.run(
                 "{} install --disable-pip-version-check {}".format(
-                    os.path.join(tmp, "bin", "pip"), archive
+                    pip, archive
                 )
             )
 
