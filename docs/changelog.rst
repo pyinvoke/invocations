@@ -2,7 +2,14 @@
 Changelog
 =========
 
-- :bug:`-` The ``packaging.release.upload`` task wasn't properly exposed
+- :bug:`- major` Ensure that the venv used for
+  ``packaging.release.test_install`` has its ``pip`` upgraded to match the
+  invoking interpreter's version of same; this avoids common pitfalls where the
+  "inner" pip is a bundled-with-venv, much-older version incapable of modern
+  package installations.
+- :support:`-` Overhaul testing and release procedures to use CircleCI & modern
+  Invocations.
+- :bug:`- major` The ``packaging.release.upload`` task wasn't properly exposed
   externally, even though another task's docstring referenced it. Fixed.
 - :release:`2.2.0 <2021-09-03>`
 - :bug:`- major` ``packaging.release.status`` (and its use elsewhere, eg
