@@ -47,6 +47,9 @@ Invoke post-1.x. It's also highly likely that Invocations will see a few major
 releases as its API (and those of its sister library, `patchwork
 <https://fabric-patchwork.readthedocs.io>`_) matures.
 
+For a high level roadmap re: when Invocations will get significant updates, see
+the maintainer's `roadmap page <http://bitprophet.org/projects#roadmap>`_.
+
 Development
 ===========
 
