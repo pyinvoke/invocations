@@ -805,7 +805,7 @@ def publish(
 @task
 def test_install(c, directory):
     """
-    Test installation of previously built artifacts found in ``directory``.
+    Test installation of build artifacts found in ``$directory/dist``.
 
     Uses the `venv` module to build temporary virtualenvs.
     """
