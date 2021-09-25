@@ -9,7 +9,7 @@ from invoke.vendor.six import PY2
 from invoke.vendor.lexicon import Lexicon
 from invoke import MockContext, Result, Config, Exit
 from docutils.utils import Reporter
-from mock import Mock, patch
+from mock import Mock, patch, call
 import pytest
 from pytest import skip
 from pytest_relaxed import trap, raises
@@ -33,6 +33,7 @@ from invocations.packaging.release import (
     publish,
     status,
     upload,
+    test_install,
     ns as release_ns,
 )
 
@@ -1192,14 +1193,39 @@ class publish_:
 
 
 class test_install_:
-    def pip_installs_into_venv(self):
-        skip()
-
-    def aborts_on_python2(self):
-        skip()
-
-    def skips_non_universal_python2_wheels(self):
-        skip()
+    @patch("invocations.packaging.release.pip_version", "lmao")
+    @patch("invocations.packaging.release.get_archives")
+    @patch("invocations.util.mkdtemp")
+    @patch("invocations.util.rmtree", Mock("rmtree"))  # Just a neuter
+    @patch("venv.EnvBuilder")
+    def installs_all_archives_in_fresh_venv_with_matching_pip(
+        self, builder, mkdtemp, get_archives
+    ):
+        # Setup & run
+        c = MockContext(run=True, repeat=True)
+        mkdtemp.return_value = "tmpdir"
+        get_archives.return_value = ["foo.tgz", "foo.whl"]
+        test_install(c, directory="whatever")
+        # Create factory
+        builder.assert_called_once_with(with_pip=True)
+        # Used helper to get artifacts
+        get_archives.assert_called_once_with("whatever")
+        # venv factory ran twice in some temp dir
+        builder.return_value.create.assert_has_calls(
+            [call("tmpdir"), call("tmpdir")]
+        )
+        pip_base = "tmpdir/bin/pip install --disable-pip-version-check"
+        c.run.assert_has_calls(
+            [
+                # Pip installed to same version as running interpreter's pip
+                call("tmpdir/bin/pip install pip==lmao"),
+                # Archives installed into venv
+                call("{} foo.tgz".format(pip_base)),
+                # And repeat
+                call("tmpdir/bin/pip install pip==lmao"),
+                call("{} foo.whl".format(pip_base)),
+            ]
+        )
 
 
 class push_:
