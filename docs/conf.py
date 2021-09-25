@@ -3,6 +3,8 @@ from os import environ, getcwd
 from os.path import abspath, join, dirname
 import sys
 
+from invocations.environment import in_ci
+
 
 # Core settings
 extensions = [
@@ -33,7 +35,6 @@ html_theme_options = {
     # TODO: make new UA property? only good for full domains and not RTD.io?
     # 'analytics_id': 'UA-18486793-X',
     "travis_button": False,
-    # 'codecov_button': True, # TODO: get better coverage sometime, heh
     "tidelift_url": "https://tidelift.com/subscription/pkg/pypi-invocations?utm_source=pypi-invocations&utm_medium=referral&utm_campaign=docs",  # noqa
 }
 html_sidebars = {
@@ -47,8 +48,7 @@ releases_github_path = "pyinvoke/invocations"
 # Intersphinx
 # TODO: this could probably get wrapped up into us or some other shared lib?
 on_rtd = environ.get("READTHEDOCS") == "True"
-on_travis = environ.get("TRAVIS", False)
-on_dev = not (on_rtd or on_travis)
+on_dev = not (on_rtd or in_ci())
 
 # Invoke
 inv_target = join(
