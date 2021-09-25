@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`2.3.0 <2021-09-24>`
 - :bug:`- major` Ensure that the venv used for
   ``packaging.release.test_install`` has its ``pip`` upgraded to match the
   invoking interpreter's version of same; this avoids common pitfalls where the
