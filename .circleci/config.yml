@@ -12,10 +12,8 @@ workflows:
           name: Style check
       - orb/coverage:
           name: Test 3.6 (w/ coverage)
-          context: invocations
       - orb/test-release:
           name: Release test
-          context: invocations
       - orb/test:
           name: Test << matrix.version >>
           # It's not worth testing on other interpreters if the baseline one
