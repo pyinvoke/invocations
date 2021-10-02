@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  orb: invocations/orb@1.0.0
+  orb: invocations/orb@1.0.2
 
 workflows:
   main:
