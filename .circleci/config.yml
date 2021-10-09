@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  orb: invocations/orb@1.0.2
+  orb: invocations/orb@1.0.4
 
 workflows:
   main:
@@ -22,3 +22,7 @@ workflows:
           matrix:
             parameters:
               version: ["3.7", "3.8", "3.9"]
+      - orb/docs:
+          name: "Docs"
+          requires: ["Test 3.6 (w/ coverage)"]
+          task: "docs --nitpick"
