@@ -888,7 +888,7 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
                 "installed to GPG-sign!"
             )
         for archive in archives:
-            cmd = "{} --detach-sign -a --passphrase-fd 0 {{}}".format(
+            cmd = "{} --detach-sign --armor --passphrase-fd 0 {{}}".format(
                 gpg_bin
             )  # noqa
             c.run(cmd.format(archive), in_stream=input_, dry=dry_run)
