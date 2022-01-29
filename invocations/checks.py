@@ -16,10 +16,6 @@ def blacken(
     r"""
     Run black on the current source tree (all ``.py`` files).
 
-    .. warning::
-        ``black`` only runs on Python 3.6 or above. (However, it can be
-        executed against Python 2 compatible code.)
-
     :param int line_length:
         Line length argument. Default: ``79``.
     :param list folders:
