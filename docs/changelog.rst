@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :feature:`-` Add a new `invocations.ci` task module for somewhat-more-generic
+  CI support than the now legacy `invocations.travis` tasks.
 - :release:`2.3.0 <2021-09-24>`
 - :bug:`- major` Ensure that the venv used for
   ``packaging.release.test_install`` has its ``pip`` upgraded to match the
