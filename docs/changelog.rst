@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :feature:`-` Add a new `invocations.ci` task module for somewhat-more-generic
+  CI support than the now legacy ``invocations.travis`` tasks.
 - :feature:`-` Add additional CLI flags to the use of ``gpg`` when signing
   releases, to support headless passphrase entry. It was found that modern GPG
   versions require ``--batch`` and ``--pinentry-mode=loopback`` for
