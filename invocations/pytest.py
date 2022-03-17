@@ -118,8 +118,15 @@ def integration(
     )
 
 
-@task
-def coverage(c, report="term", opts="", tester=None, codecov=False):
+@task(iterable=["additional_testers"])
+def coverage(
+    c,
+    report="term",
+    opts="",
+    tester=None,
+    codecov=False,
+    additional_testers=None,
+):
     """
     Run pytest with coverage enabled.
 
@@ -138,12 +145,25 @@ def coverage(c, report="term", opts="", tester=None, codecov=False):
     :param bool codecov:
         Whether to build XML and upload to Codecov. Requires ``codecov`` tool.
         Default: ``False``.
+
+    :param additional_testers:
+        List of additional test functions to call besides ``tester``. If given,
+        implies the use of ``--cov-append`` on these subsequent test runs.
+
+    .. versionchanged:: 2.4
+        Added the ``additional_testers`` argument.
     """
     my_opts = "--cov --no-cov-on-fail --cov-report={}".format(report)
     if opts:
         my_opts += " " + opts
     # TODO: call attached suite's test(), not the one in here, if they differ
+    # TODO: arguably wants ability to lookup task string when tester(s) given
+    # on CLI, but, eh
     (tester or test)(c, opts=my_opts)
+    if additional_testers:
+        my_opts += " --cov-append"
+        for tester in additional_testers:
+            tester(c, opts=my_opts)
     if report == "html":
         c.run("open htmlcov/index.html")
     if codecov:

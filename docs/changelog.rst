@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :feature:`-` Allow supplying additional test runners to ``pytest.coverage``;
+  primarily useful for setting up multiple additive test runs before publishing
+  reports.
 - :feature:`-` Add a new `invocations.ci` task module for somewhat-more-generic
   CI support than the now legacy ``invocations.travis`` tasks.
 - :feature:`-` Add additional CLI flags to the use of ``gpg`` when signing
