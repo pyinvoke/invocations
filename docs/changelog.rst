@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :feature:`-` Add additional CLI flags to the use of ``gpg`` when signing
+  releases, to support headless passphrase entry. It was found that modern GPG
+  versions require ``--batch`` and ``--pinentry-mode=loopback`` for
+  ``--passphrase-fd`` to function correctly.
 - :release:`2.3.0 <2021-09-24>`
 - :bug:`- major` Ensure that the venv used for
   ``packaging.release.test_install`` has its ``pip`` upgraded to match the

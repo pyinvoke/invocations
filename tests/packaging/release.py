@@ -1013,7 +1013,7 @@ class build_:
 
 
 class upload_:
-    def _check_upload(self, c, kwargs=None, flags=None):
+    def _check_upload(self, c, kwargs=None, flags=None, extra=None):
         """
         Expect/call upload() with common environment and settings/mocks.
 
@@ -1036,6 +1036,8 @@ class upload_:
         if flags:
             cmd += " {}".format(flags)
         cmd += " {}".format(self.files)
+        if extra:
+            cmd += " {}".format(extra)
         return cmd
 
     def twine_uploads_dist_contents_with_wheels_first(self):
@@ -1056,9 +1058,26 @@ class upload_:
         print.assert_any_call("Would publish via: {}".format(cmd))
         c.run.assert_called_once_with("ls -l {}".format(self.files))
 
-    def allows_signing_via_gpg(self):
-        # Kind of a pain to test :(
-        skip()
+    @patch("invocations.packaging.release.getpass.getpass")
+    def allows_signing_via_gpg(self, getpass):
+        c = MockContext(run=True, repeat=True)
+        getpass.return_value = "super sekrit"
+        twine_upload = self._check_upload(
+            c, kwargs=dict(sign=True), extra="somedir/dist/*.asc"
+        )
+        calls = c.run.mock_calls
+        # Looked for gpg
+        assert calls[0] == call("which gpg", hide=True, warn=True)
+        # Signed wheel
+        flags = "--detach-sign --armor --passphrase-fd=0 --batch --pinentry-mode=loopback"  # noqa
+        template = "gpg {} somedir/dist/foo.{{}}".format(flags)
+        assert calls[1][1][0] == template.format("whl")
+        # Spot check: did use in_stream to submit passphrase
+        assert "in_stream" in calls[1][2]
+        # Signed tgz
+        assert calls[2][1][0] == template.format("tar.gz")
+        # Uploaded (and w/ asc's)
+        c.run.assert_any_call(twine_upload)
 
 
 class Kaboom(Exception):
