@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`2.4.0 <2022-03-17>`
 - :feature:`-` Allow supplying additional test runners to ``pytest.coverage``;
   primarily useful for setting up multiple additive test runs before publishing
   reports.
