@@ -838,6 +838,7 @@ def test_install(c, directory):
                     pip, archive
                 )
             )
+            # TODO: install wheel and try again to make sure wheels work ok?
 
 
 def get_archives(directory):
