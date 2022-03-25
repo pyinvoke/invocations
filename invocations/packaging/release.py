@@ -297,7 +297,6 @@ def all_(c, dry_run=False):
     prepare(c, dry_run=dry_run)
     publish(c, dry_run=dry_run)
     push(c, dry_run=dry_run)
-    tidelift(c, dry_run=dry_run)
 
 
 @task
@@ -932,14 +931,6 @@ def push(c, dry_run=False):
     c.run("git push {}".format(opts), **kwargs)
 
 
-@task
-def tidelift(c, dry_run=False):
-    """
-    Add current latest version to Tidelift & set changelog link.
-    """
-    pass
-
-
 # TODO: still need time to solve the 'just myself pls' problem
 ns = Collection(
     "release",
@@ -950,7 +941,6 @@ ns = Collection(
     publish,
     push,
     test_install,
-    tidelift,
     upload,
 )
 # Hide stdout by default, preferring to explicitly enable it when necessary.
