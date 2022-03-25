@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`2.5.0 <2022-03-25>`
 - :feature:`-` Port ``make-sshable`` from the ``travis`` module to the new
   ``ci`` one.
 - :release:`2.4.0 <2022-03-17>`
