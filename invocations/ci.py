@@ -74,7 +74,24 @@ def sudo_run(c, command):
     )
 
 
-ns = Collection(make_sudouser, sudo_run)
+@task
+def make_sshable(c):
+    """
+    Set up passwordless SSH keypair & authorized_hosts access to localhost.
+    """
+    user = c.ci.sudo.user
+    home = "~{}".format(user)
+    # Run sudo() as the new sudo user; means less chown'ing, etc.
+    c.config.sudo.user = user
+    c.config.sudo.password = c.ci.sudo.password
+    ssh_dir = "{}/.ssh".format(home)
+    for cmd in ("mkdir {0}", "chmod 0700 {0}"):
+        sudo_run(c, cmd.format(ssh_dir, user))
+    sudo_run(c, 'ssh-keygen -t rsa -f {}/id_rsa -N \'\''.format(ssh_dir))
+    sudo_run(c, f"cp {ssh_dir}/id_rsa.pub {ssh_dir}/authorized_keys")
+
+
+ns = Collection(make_sudouser, sudo_run, make_sshable)
 ns.configure(
     {
         "ci": {
