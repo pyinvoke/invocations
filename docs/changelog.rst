@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :feature:`-` Update ``packaging.release.publish`` with a new config option,
+  ``rebuild_with_env``, to support a downstream (Fabric) release use-case.
 - :release:`2.5.0 <2022-03-25>`
 - :feature:`-` Port ``make-sshable`` from the ``travis`` module to the new
   ``ci`` one.

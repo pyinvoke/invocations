@@ -16,6 +16,7 @@ import logging
 import os
 import re
 import sys
+from functools import partial
 from glob import glob
 from shutil import rmtree
 
@@ -779,7 +780,8 @@ def publish(
     # files)
     with tmpdir(skip_cleanup=dry_run, explicit=directory) as tmp:
         # Build default archives
-        build(c, sdist=sdist, wheel=wheel, directory=tmp)
+        builder = partial(build, c, sdist=sdist, wheel=wheel, directory=tmp)
+        builder()
         # Build opposing interpreter archive, if necessary
         # TODO: delete dual wheels when dropping Py2 support
         if dual_wheels:
@@ -787,7 +789,22 @@ def publish(
                 alt_python = "python2"
                 if sys.version_info[0] == 2:
                     alt_python = "python3"
-            build(c, sdist=False, wheel=True, directory=tmp, python=alt_python)
+            builder(sdist=False, wheel=True, python=alt_python)
+        # Rebuild with env (mostly for Fabric 2)
+        # TODO: code smell; implies this really wants to be class/hook based?
+        # TODO: or at least invert sometime so it's easier to say "do random
+        # stuff to arrive at dists, then test and upload".
+        rebuild_with_env = config.get("rebuild_with_env", None)
+        if rebuild_with_env:
+            old_environ = os.environ.copy()
+            os.environ.update(rebuild_with_env)
+            try:
+                builder()
+            finally:
+                os.environ.update(old_environ)
+                for key in rebuild_with_env:
+                    if key not in old_environ:
+                        del os.environ[key]
         # Use twine's check command on built artifacts (at present this just
         # validates long_description)
         print(c.config.run.echo_format.format(command="twine check"))
