@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`2.6.0 <2022-03-25>`
 - :feature:`-` Enhance ``packaging.release.test-install`` so it's more flexible
   about the primary directory argument (re: a ``dist`` dir, or a parent of one)
   and errors usefully when you (probably) gave it an incorrect path.
