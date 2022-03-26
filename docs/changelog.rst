@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :feature:`-` Enhance ``packaging.release.test-install`` so it's more flexible
+  about the primary directory argument (re: a ``dist`` dir, or a parent of one)
+  and errors usefully when you (probably) gave it an incorrect path.
 - :feature:`-` Update ``packaging.release.publish`` with a new config option,
   ``rebuild_with_env``, to support a downstream (Fabric) release use-case.
 - :release:`2.5.0 <2022-03-25>`

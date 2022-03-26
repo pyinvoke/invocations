@@ -819,9 +819,12 @@ def publish(
 
 
 @task
-def test_install(c, directory):
+def test_install(c, directory, verbose=False):
     """
-    Test installation of build artifacts found in ``$directory/dist``.
+    Test installation of build artifacts found in ``$directory``.
+
+    Directory should either be a ``dist`` directory itself, or the parent of
+    one.
 
     Uses the `venv` module to build temporary virtualenvs.
     """
@@ -832,8 +835,17 @@ def test_install(c, directory):
         return
     import venv
 
+    # TODO: wants contextmanager or similar for only altering a setting within
+    # a given scope or block - this may pollute subsequent subroutine calls
+    if verbose:
+        old_hide = c.config.run.hide
+        c.config.run.hide = False
+
     builder = venv.EnvBuilder(with_pip=True)
-    for archive in get_archives(directory):
+    archives = get_archives(directory)
+    if not archives:
+        raise Exit("No archive files found in {}!".format(directory))
+    for archive in archives:
         # Skip Python 2 wheels that aren't universal (we're dropping that
         # entirely soon)
         if "py2" in archive and "py3" not in archive:
@@ -856,14 +868,18 @@ def test_install(c, directory):
             )
             # TODO: install wheel and try again to make sure wheels work ok?
 
+    if verbose:
+        c.config.run.hide = old_hide
+
 
 def get_archives(directory):
     # Obtain list of archive filenames, then ensure any wheels come first
     # so their improved metadata is what PyPI sees initially (otherwise, it
     # only honors the sdist's lesser data).
+    dist = "" if directory.endswith("dist") else "dist"
     return list(
         itertools.chain.from_iterable(
-            glob(os.path.join(directory, "dist", "*.{}".format(extension)))
+            glob(os.path.join(directory, dist, "*.{}".format(extension)))
             for extension in ("whl", "tar.gz")
         )
     )
