@@ -2,6 +2,12 @@
 Changelog
 =========
 
+- :support:`-` The ``invocations.travis`` module has been removed. If you
+  relied upon it, we may accept PRs to make the newer ``invocations.ci`` module
+  more generic.
+
+  .. warning:: This is a backwards-incompatible change.
+
 - :support:`-` Drop Python 2 (and 3.5) support. We now support Python
   3.6+ only.
 
