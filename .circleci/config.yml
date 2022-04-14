@@ -21,7 +21,7 @@ workflows:
           requires: ["Test 3.6 (w/ coverage)"]
           matrix:
             parameters:
-              version: ["3.7", "3.8", "3.9"]
+              version: ["3.7", "3.8", "3.9", "3.10"]
       - orb/docs:
           name: "Docs"
           requires: ["Test 3.6 (w/ coverage)"]
