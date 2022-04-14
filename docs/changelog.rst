@@ -2,6 +2,11 @@
 Changelog
 =========
 
+- :support:`-` Drop Python 2 (and 3.5) support. We now support Python
+  3.6+ only.
+
+  .. warning:: This is a backwards-incompatible change.
+
 - :release:`2.6.0 <2022-03-25>`
 - :feature:`-` Enhance ``packaging.release.test-install`` so it's more flexible
   about the primary directory argument (re: a ``dist`` dir, or a parent of one)
