@@ -1276,23 +1276,11 @@ class push_:
         c.run.assert_called_once_with("git push --follow-tags --no-verify")
 
 
-class tidelift_:
-    def adds_new_version_with_changelog_link(self):
-        # new version created
-        # release line etc stuff? prob just defaults?
-        # changelog link
-        skip()
-
-    def dry_run_does_not_hit_api(self):
-        skip()
-
-
 class all_task:
     @patch("invocations.packaging.release.prepare")
     @patch("invocations.packaging.release.publish")
     @patch("invocations.packaging.release.push")
-    @patch("invocations.packaging.release.tidelift")
-    def runs_primary_workflow(self, tidelift, push, publish, prepare):
+    def runs_primary_workflow(self, push, publish, prepare):
         c = MockContext(run=True)
         all_(c)
         # TODO: this doesn't actually prove order of operations. not seeing an
@@ -1300,19 +1288,16 @@ class all_task:
         prepare.assert_called_once_with(c, dry_run=False)
         publish.assert_called_once_with(c, dry_run=False)
         push.assert_called_once_with(c, dry_run=False)
-        tidelift.assert_called_once_with(c, dry_run=False)
 
     @patch("invocations.packaging.release.prepare")
     @patch("invocations.packaging.release.publish")
     @patch("invocations.packaging.release.push")
-    @patch("invocations.packaging.release.tidelift")
-    def passes_through_dry_run_flag(self, tidelift, push, publish, prepare):
+    def passes_through_dry_run_flag(self, push, publish, prepare):
         c = MockContext(run=True)
         all_(c, dry_run=True)
         prepare.assert_called_once_with(c, dry_run=True)
         publish.assert_called_once_with(c, dry_run=True)
         push.assert_called_once_with(c, dry_run=True)
-        tidelift.assert_called_once_with(c, dry_run=True)
 
     def bound_to_name_without_underscore(self):
         assert all_.name == "all"
@@ -1328,7 +1313,6 @@ class namespace:
            push
            status
            test-install
-           tidelift
            upload
         """.split()
         assert set(release_ns.task_names) == set(names)
