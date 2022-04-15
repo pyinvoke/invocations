@@ -168,7 +168,7 @@ class load_version_:
         assert load_version(c) == expected
 
     # NOTE: these all also happen to test the Python bug re: a unicode value
-    # given to `__import__(xxx, fromlist=[u'onoz'])`. No real point making
+    # given to `__import__(xxx, fromlist=['onoz'])`. No real point making
     # another one.
 
     def defaults_to_underscore_version(self):
