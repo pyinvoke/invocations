@@ -31,12 +31,12 @@ def _unpack(c, tmp, package, version, git_url=None):
     #       set real_version to that value
     else:
         cwd = os.getcwd()
-        print("Moving into temp dir %s" % tmp)
+        print(f"Moving into temp dir {tmp}")
         os.chdir(tmp)
         try:
             # Nab from index. Skip wheels; we want to unpack an sdist.
             flags = "--download=. --build=build --no-use-wheel"
-            cmd = "pip install %s %s==%s" % (flags, package, version)
+            cmd = f"pip install {flags} {package}=={version}"
             c.run(cmd)
             # Identify basename
             # TODO: glob is bad here because pip install --download gets all
@@ -105,13 +105,13 @@ def vendorize(
         # Ensure source package exists
         if not os.path.exists(source_package):
             rel_package = os.path.join(source, package)
-            raise ValueError("Source package %s doesn't exist!" % rel_package)
+            raise ValueError(f"Source package {rel_package} doesn't exist!")
         # Nuke target if exists
         if os.path.exists(target):
-            print("Removing pre-existing vendorized folder %s" % target)
+            print(f"Removing pre-existing vendorized folder {target}")
             rmtree(target)
         # Perform the copy
-        print("Copying %s => %s" % (source_package, target))
+        print(f"Copying {source_package} => {target}")
         copytree(source_package, target)
         # Explicit license if needed
         if license:
