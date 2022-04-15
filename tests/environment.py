@@ -1,4 +1,4 @@
-from mock import patch
+from unittest.mock import patch
 from pytest import mark
 
 from invocations.environment import in_ci
