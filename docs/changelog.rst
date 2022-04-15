@@ -2,6 +2,18 @@
 Changelog
 =========
 
+- :support:`-` The ``dual_wheels``, ``alt_python``, and ``check_desc``
+  arguments/config options for the ``invocations.packaging.release`` module
+  have been removed.
+
+  .. warning:: This is a backwards-incompatible change.
+
+  .. note::
+      If you were using ``check_desc``, note that the release tasks have been
+      using ``twine check`` for a few releases now, as a default part of
+      execution, and will continue doing so; ``check_desc`` only impacted the
+      use of the older ``setup.py check`` command.
+
 - :support:`-` The ``invocations.travis`` module has been removed. If you
   relied upon it, we may accept PRs to make the newer ``invocations.ci`` module
   more generic.

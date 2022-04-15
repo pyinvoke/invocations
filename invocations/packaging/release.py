@@ -16,13 +16,12 @@ import logging
 import os
 import re
 import sys
+import venv
 from functools import partial
 from glob import glob
+from io import StringIO
 from shutil import rmtree
 
-from invoke.vendor.six import StringIO
-
-from invoke.vendor.six import text_type, binary_type, PY2
 from invoke.vendor.lexicon import Lexicon
 
 from blessings import Terminal
@@ -481,7 +480,7 @@ def _release_and_issues(changelog, branch, release_type):
     release = None
     # And requires scanning changelog, for bugfix lines
     if release_type is Release.BUGFIX:
-        versions = [text_type(x) for x in _versions_from_changelog(changelog)]
+        versions = [str(x) for x in _versions_from_changelog(changelog)]
         release = [x for x in versions if x.startswith(bucket)][-1]
     return release, issues
 
@@ -568,14 +567,12 @@ def load_version(c):
     # edit (eg within prepare()). Otherwise we'll always only see what was
     # on-disk at first import.
     # NOTE: must do both the top level package and the version module! Unclear
-    # why. May be due to the specific import strategy; def try using the
-    # cleaner options available under Python 3 when we drop 2.
+    # why. May be due to the specific import strategy
+    # TODO 3.0: def try using the cleaner options available under Python 3 when
+    # we drop 2.
     sys.modules.pop("{}.{}".format(package_name, version_module), None)
     sys.modules.pop(package_name, None)
-    # NOTE: have to explicitly give it a bytestr (Python 2) or unicode (Python
-    # 3) because https://bugs.python.org/issue21720 HOORAY
-    cast = binary_type if PY2 else text_type
-    package = __import__(package_name, fromlist=[cast(version_module)])
+    package = __import__(package_name, fromlist=[str(version_module)])
     # TODO: explode nicely if it lacks a _version/etc, or a __version__
     # TODO: make this a Version()?
     return getattr(package, version_module).__version__
@@ -684,9 +681,6 @@ def publish(
     sign=False,
     dry_run=False,
     directory=None,
-    dual_wheels=False,
-    alt_python=None,
-    check_desc=False,
 ):
     """
     Publish code to PyPI or index of choice. Wraps ``build`` and ``publish``.
@@ -728,32 +722,6 @@ def publish(
 
         Defaults to a temporary directory which is cleaned up after the run
         finishes.
-
-    :param bool dual_wheels:
-        When ``True``, builds individual wheels for Python 2 and Python 3.
-
-        Useful for situations where you can't build universal wheels, but still
-        want to distribute for both interpreter versions.
-
-        Requires that you have a useful ``python3`` (or ``python2``, if you're
-        on Python 3 already) binary in your ``$PATH``. Also requires that this
-        other python have the ``wheel`` package installed in its
-        ``site-packages``; usually this will mean the global site-packages for
-        that interpreter.
-
-        See also the ``alt_python`` argument.
-
-    :param str alt_python:
-        Path to the 'alternate' Python interpreter to use when
-        ``dual_wheels=True``.
-
-        When ``None`` (the default) will be ``python3`` or ``python2``,
-        depending on the currently active interpreter.
-
-    :param bool check_desc:
-        Whether to run ``setup.py check -r -s`` (uses ``readme_renderer``)
-        before trying to publish - catches long_description bugs. Default:
-        ``False``.
     """
     # Don't hide by default, this step likes to be verbose most of the time.
     c.config.run.hide = False
@@ -768,28 +736,12 @@ def publish(
         index = config["index"]
     if sign is False and "sign" in config:
         sign = config["sign"]
-    if dual_wheels is False and "dual_wheels" in config:
-        dual_wheels = config["dual_wheels"]
-    if check_desc is False and "check_desc" in config:
-        check_desc = config["check_desc"]
-    # Initial sanity check, if needed. Will die usefully.
-    # TODO: remove next backwards incompat release, twine check replaces it
-    if check_desc:
-        c.run("python setup.py check -r -s")
     # Build, into controlled temp dir (avoids attempting to re-upload old
     # files)
     with tmpdir(skip_cleanup=dry_run, explicit=directory) as tmp:
         # Build default archives
         builder = partial(build, c, sdist=sdist, wheel=wheel, directory=tmp)
         builder()
-        # Build opposing interpreter archive, if necessary
-        # TODO: delete dual wheels when dropping Py2 support
-        if dual_wheels:
-            if not alt_python:
-                alt_python = "python2"
-                if sys.version_info[0] == 2:
-                    alt_python = "python3"
-            builder(sdist=False, wheel=True, python=alt_python)
         # Rebuild with env (mostly for Fabric 2)
         # TODO: code smell; implies this really wants to be class/hook based?
         # TODO: or at least invert sometime so it's easier to say "do random
@@ -828,13 +780,6 @@ def test_install(c, directory, verbose=False):
 
     Uses the `venv` module to build temporary virtualenvs.
     """
-    # TODO: streamline all this in 3.0 when we drop all Py2 support both here
-    # and in downstream repos
-    if PY2:
-        print("WARNING: skipping installation test due to no venv on Python 2")
-        return
-    import venv
-
     # TODO: wants contextmanager or similar for only altering a setting within
     # a given scope or block - this may pollute subsequent subroutine calls
     if verbose:
@@ -846,10 +791,6 @@ def test_install(c, directory, verbose=False):
     if not archives:
         raise Exit("No archive files found in {}!".format(directory))
     for archive in archives:
-        # Skip Python 2 wheels that aren't universal (we're dropping that
-        # entirely soon)
-        if "py2" in archive and "py3" not in archive:
-            continue
         with tmpdir() as tmp:
             # Make temp venv
             builder.create(tmp)
