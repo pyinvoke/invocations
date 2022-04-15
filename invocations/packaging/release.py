@@ -8,8 +8,6 @@ This module assumes:
   conventions (``__version_info__`` tuple and ``__version__`` string).
 """
 
-from __future__ import unicode_literals, print_function
-
 import getpass
 import itertools
 import logging

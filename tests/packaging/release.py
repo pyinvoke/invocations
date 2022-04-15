@@ -1,5 +1,3 @@
-from __future__ import unicode_literals, print_function
-
 from contextlib import contextmanager
 from os import path
 import re
