@@ -18,11 +18,10 @@ import re
 import sys
 from functools import partial
 from glob import glob
+from io import StringIO
 from shutil import rmtree
 
-from invoke.vendor.six import StringIO
-
-from invoke.vendor.six import text_type, binary_type, PY2
+from invoke.vendor.six import PY2
 from invoke.vendor.lexicon import Lexicon
 
 from blessings import Terminal
@@ -481,7 +480,7 @@ def _release_and_issues(changelog, branch, release_type):
     release = None
     # And requires scanning changelog, for bugfix lines
     if release_type is Release.BUGFIX:
-        versions = [text_type(x) for x in _versions_from_changelog(changelog)]
+        versions = [str(x) for x in _versions_from_changelog(changelog)]
         release = [x for x in versions if x.startswith(bucket)][-1]
     return release, issues
 
@@ -574,8 +573,7 @@ def load_version(c):
     sys.modules.pop(package_name, None)
     # NOTE: have to explicitly give it a bytestr (Python 2) or unicode (Python
     # 3) because https://bugs.python.org/issue21720 HOORAY
-    cast = binary_type if PY2 else text_type
-    package = __import__(package_name, fromlist=[cast(version_module)])
+    package = __import__(package_name, fromlist=[str(version_module)])
     # TODO: explode nicely if it lacks a _version/etc, or a __version__
     # TODO: make this a Version()?
     return getattr(package, version_module).__version__
@@ -828,11 +826,6 @@ def test_install(c, directory, verbose=False):
 
     Uses the `venv` module to build temporary virtualenvs.
     """
-    # TODO: streamline all this in 3.0 when we drop all Py2 support both here
-    # and in downstream repos
-    if PY2:
-        print("WARNING: skipping installation test due to no venv on Python 2")
-        return
     import venv
 
     # TODO: wants contextmanager or similar for only altering a setting within

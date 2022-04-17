@@ -4,9 +4,6 @@ Monkey patches for ``semantic_version.Version``.
 We never like monkey-patching, but for now this is easier than either vendoring
 or distributing our own fork.
 """
-
-from invoke.vendor.six import text_type
-
 from semantic_version import Version
 
 
@@ -17,7 +14,7 @@ def clone(self):
     Useful when you need to generate a new object that can be mutated
     separately from the original.
     """
-    return Version(text_type(self))
+    return Version(str(self))
 
 
 Version.clone = clone

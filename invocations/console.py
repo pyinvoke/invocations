@@ -6,8 +6,6 @@ from __future__ import unicode_literals, print_function
 
 import sys
 
-from invoke.vendor.six.moves import input
-
 
 # NOTE: originally cribbed from fab 1's contrib.console.confirm
 def confirm(question, assume_yes=True):
