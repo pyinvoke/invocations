@@ -21,7 +21,6 @@ from glob import glob
 from io import StringIO
 from shutil import rmtree
 
-from invoke.vendor.six import PY2
 from invoke.vendor.lexicon import Lexicon
 
 from blessings import Terminal

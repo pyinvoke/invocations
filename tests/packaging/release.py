@@ -5,7 +5,6 @@ from os import path
 import re
 import sys
 
-from invoke.vendor.six import PY2
 from invoke.vendor.lexicon import Lexicon
 from invoke import MockContext, Result, Config, Exit
 from docutils.utils import Reporter
@@ -308,10 +307,8 @@ def _mock_context(self):
             return real_import(*args, **kwargs)
         return Mock(_version=Mock(__version__=self._version))
 
-    # Because I can't very well patch six.moves.builtins itself, can I? =/
-    builtins = "__builtin__" if PY2 else "builtins"
     import_patcher = patch(
-        "{}.__import__".format(builtins), side_effect=fake_import
+        "{}.__import__".format("builtins"), side_effect=fake_import
     )
 
     with import_patcher:
