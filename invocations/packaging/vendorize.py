@@ -1,8 +1,8 @@
 """
 Tasks for importing external code into a vendor subdirectory.
 """
-import os
 from glob import glob
+from os import chdir
 from shutil import copy, copytree, rmtree
 
 from invoke import task
@@ -30,9 +30,9 @@ def _unpack(c, tmp, package, version, git_url=None):
     #       in the checkout, obtain SHA from that branch
     #       set real_version to that value
     else:
-        cwd = os.getcwd()
+        cwd = Path.cwd()
         print(f"Moving into temp dir {tmp}")
-        os.chdir(tmp)
+        chdir(tmp)
         try:
             # Nab from index. Skip wheels; we want to unpack an sdist.
             flags = "--download=. --build=build --no-use-wheel"
@@ -49,14 +49,15 @@ def _unpack(c, tmp, package, version, git_url=None):
                 ("tar.gz", "tar xzvf"),
             ):
                 globexpr = "*.{}".format(extension)
-                globs = glob(globexpr)
+                globs = cwd.glob(globexpr)
                 if globs:
                     break
-            archive = os.path.basename(globs[0])
+            archive = globs[0].name
+            # TODO: weird how there's no "mega-.stem" in Pathlib, o well
             source, _, _ = archive.rpartition(".{}".format(extension))
             c.run("{} {}".format(opener, globexpr))
         finally:
-            os.chdir(cwd)
+            chdir(cwd)
     return real_version, source
 
 
@@ -97,17 +98,17 @@ def vendorize(
     """
     with tmpdir() as tmp:
         package = package or distribution
-        target = os.path.join(vendor_dir, package)
+        target = Path(vendor_dir) / package
         # Unpack source
         real_version, source = _unpack(c, tmp, distribution, version, git_url)
-        abs_source = os.path.join(tmp, source)
-        source_package = os.path.join(abs_source, package)
+        abs_source = tmp / source
+        source_package = abs_source / package
         # Ensure source package exists
-        if not os.path.exists(source_package):
-            rel_package = os.path.join(source, package)
+        if not source_package.exists():
+            rel_package = source_package.relative_to(Path.cwd())
             raise ValueError(f"Source package {rel_package} doesn't exist!")
         # Nuke target if exists
-        if os.path.exists(target):
+        if target.exists():
             print(f"Removing pre-existing vendorized folder {target}")
             rmtree(target)
         # Perform the copy
@@ -115,5 +116,5 @@ def vendorize(
         copytree(source_package, target)
         # Explicit license if needed
         if license:
-            copy(os.path.join(abs_source, license), target)
+            copy(abs_source / license, target)
         # git commit -a -m "Update $package to $version ($real_version if different)" # noqa
