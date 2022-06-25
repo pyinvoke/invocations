@@ -47,7 +47,8 @@ class autodoc_:
     def regular_functions_only_appear_once(self):
         # Paranoid sanity check re: our
         # very-much-like-FunctionDocumenter-documenter not accidentally loading
-        # up non-task objects. SHRUG.
+        # up non-task objects (and thus having them autodoc'd twice: once
+        # regularly and once incorrectly 'as tasks'). SHRUG.
         # TODO: incredibly stupid "is HTML string literal" test because too
         # lazy to whip up something with BeautifulSoup et al.
         for sentinel in (">not_a_task", ">I am a regular function"):
