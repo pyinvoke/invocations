@@ -10,14 +10,14 @@ version = _locals["__version__"]
 
 requirements = [
     # Core dependency
-    "invoke>=1.6,<3.0",
+    "invoke>=1.6",
     # Dependencies for various subpackages.
     # NOTE: these used to be all optional (only complained about at import
     # time if missing), but that got hairy fast, and these are all
     # pure-Python packages, so it shouldn't be a huge burden for users to
     # obtain them.
-    "blessings>=1.6,<2",
-    "releases>=2,<3",
+    "blessings>=1.6",
+    "releases>=1.6",
     "semantic_version>=2.4,<2.7",
     "tabulate==0.7.5",
     "tqdm>=4.8.1",
