@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`2.6.1 <2022-06-26>`
 - :support:`- backported` Remove upper bounds pinning on many deps; this makes
   it easier for related projects to test upgrades, run CI, etc. In general,
   we're moving away from this tactic.
