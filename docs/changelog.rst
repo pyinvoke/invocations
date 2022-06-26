@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :support:`- backported` Remove upper bounds pinning on many deps; this makes
+  it easier for related projects to test upgrades, run CI, etc. In general,
+  we're moving away from this tactic.
 - :release:`2.6.0 <2022-03-25>`
 - :feature:`-` Enhance ``packaging.release.test-install`` so it's more flexible
   about the primary directory argument (re: a ``dist`` dir, or a parent of one)
