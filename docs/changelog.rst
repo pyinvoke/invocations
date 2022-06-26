@@ -21,7 +21,8 @@ Changelog
   .. warning:: This is a backwards-incompatible change.
 
 - :support:`-` Drop Python 2 (and 3.5) support. We now support Python
-  3.6+ only.
+  3.6+ only. This naturally includes a number of dependency updates (direct and
+  indirect) as well.
 
   .. warning:: This is a backwards-incompatible change.
 
