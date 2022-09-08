@@ -88,4 +88,4 @@ def setup(app):
     # real function documenting.
     # NOTE: sooo for now, since a bunch of our other shit breaks on Sphinx 1.7,
     # we are just explicitly calling autodoc's add_documenter. Sadface.
-    autodoc.add_documenter(TaskDocumenter)
+    app.add_autodocumenter(TaskDocumenter)
