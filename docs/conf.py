@@ -41,7 +41,13 @@ html_sidebars = {
 }
 
 # Other extension configs
-autodoc_default_flags = ["members", "special-members"]
+autodoc_default_options = {
+    "members": True,
+    "special-members": True,
+}
+# Without this, as of Sphinx 4-ish? our autodoc plugin goes boom because its
+# parent class (in sphinx itself!) isn't in our reference tree & the ref fails
+autodoc_inherit_docstrings = False
 releases_github_path = "pyinvoke/invocations"
 
 # Intersphinx

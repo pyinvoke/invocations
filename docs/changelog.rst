@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :support:`-` Various fixes and doc updates re: the `~invocations.autodoc`
+  module's compatibility with modern Sphinx versions.
 - :support:`-` The ``dual_wheels``, ``alt_python``, and ``check_desc``
   arguments/config options for the ``invocations.packaging.release`` module
   have been removed.

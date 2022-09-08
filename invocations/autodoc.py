@@ -27,11 +27,11 @@ To use:
     - As noted above, this only works for modules that are importable, like any
       other Sphinx autodoc use case.
     - Unless you want to opt-in which module members get documented, use
-      ``:members:`` or add ``"members"`` to your ``conf.py``'s
-      ``autodoc_default_flags``.
+      ``:members:`` or add ``"members": True`` to your ``conf.py``'s
+      ``autodoc_default_options``.
     - By default, only tasks with docstrings will be picked up, unless you also
       give the ``:undoc-members:`` flag or add ``:undoc-members:`` / add
-      ``"undoc-members"`` to ``autodoc_default_flags``.
+      ``"undoc-members": True`` to ``autodoc_default_options``.
     - Please see the `autodoc`_ docs for details on these settings and more!
 
 - Build your docs, and you should see your tasks showing up as documented
