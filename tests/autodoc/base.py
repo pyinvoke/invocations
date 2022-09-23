@@ -35,10 +35,10 @@ class autodoc_:
     def teardown_class(self):
         shutil.rmtree(self.build_dir, ignore_errors=True)
 
-    @patch("sphinx.ext.autodoc.add_documenter")
-    def setup_adds_TaskDocumenter_as_documenter(self, add_documenter):
-        setup(Mock())
-        add_documenter.assert_called_once_with(TaskDocumenter)
+    def setup_adds_TaskDocumenter_as_autodocumenter(self):
+        app = Mock()
+        setup(app)
+        app.add_autodocumenter.assert_called_once_with(TaskDocumenter)
 
     def module_docstring_unmodified(self):
         # Just a sanity test, really.

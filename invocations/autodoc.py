@@ -77,15 +77,4 @@ class TaskDocumenter(
 
 
 def setup(app):
-    # NOTE: the "correct", forward compatible call to make here is
-    # app.add_autodocumenter() - because as of Sphinx 1.7, the inner API we are
-    # manipulating here got changed around a bunch (but the outer
-    # API of add_autodocumenter() remained the same, on purpose).
-    # Unfortunately, in both cases add_autodocumenter() both registers the
-    # documenter AND adds an `auto<type>` directive - meaning it's not possible
-    # to register a "acts kinda like another" Documenter or you double-define
-    # e.g. autofunction, which Sphinx warns about and also presumably kills
-    # real function documenting.
-    # NOTE: sooo for now, since a bunch of our other shit breaks on Sphinx 1.7,
-    # we are just explicitly calling autodoc's add_documenter. Sadface.
     app.add_autodocumenter(TaskDocumenter)
