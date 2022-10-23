@@ -30,7 +30,7 @@ from invocations.packaging.release import (
     publish,
     status,
     upload,
-    test_install,
+    test_install as release_test_install,  # so pytest leaves it alone
     ns as release_ns,
 )
 
@@ -1219,7 +1219,7 @@ class test_install_:
         c = MockContext(run=True, repeat=True)
         mkdtemp.return_value = "tmpdir"
         get_archives.return_value = ["foo.tgz", "foo.whl"]
-        test_install(c, directory="whatever")
+        release_test_install(c, directory="whatever")
         # Create factory
         builder.assert_called_once_with(with_pip=True)
         # Used helper to get artifacts

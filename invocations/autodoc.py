@@ -49,10 +49,14 @@ from invoke import Task
 from sphinx.ext import autodoc
 
 
+# TODO: may make sense later to inherit from FunctionDocumenter and:
+# - make sure objtype override still works
+# - still override format_args but base closely on upstream
 class TaskDocumenter(
     autodoc.DocstringSignatureMixin, autodoc.ModuleLevelDocumenter
 ):
     objtype = "task"
+    # TODO: this maybe gone now??
     directivetype = "function"
 
     @classmethod
