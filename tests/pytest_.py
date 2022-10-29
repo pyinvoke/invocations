@@ -37,25 +37,25 @@ class test_:
 
 
 class coverage_:
-    FLAGS = "--cov --no-cov-on-fail --cov-report={}"
+    _FLAGS = "--cov --no-cov-on-fail --cov-report={}"
 
     def default_args(self):
-        with _expect(extra_flags=self.FLAGS.format("term")) as c:
+        with _expect(extra_flags=self._FLAGS.format("term")) as c:
             coverage(c)
 
     def report_type(self):
-        with _expect(extra_flags=self.FLAGS.format("xml")) as c:
+        with _expect(extra_flags=self._FLAGS.format("xml")) as c:
             coverage(c, report="xml")
 
     def opts(self):
-        with _expect(extra_flags=self.FLAGS.format("term") + " --meh") as c:
+        with _expect(extra_flags=self._FLAGS.format("term") + " --meh") as c:
             coverage(c, opts="--meh")
 
     def test_function(self):
         c = MockContext()
         faketest = Mock()
         coverage(c, tester=faketest)
-        faketest.assert_called_once_with(c, opts=self.FLAGS.format("term"))
+        faketest.assert_called_once_with(c, opts=self._FLAGS.format("term"))
 
     def open_html_report(self):
         c = MockContext(run=True, repeat=True)
