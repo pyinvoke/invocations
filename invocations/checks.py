@@ -4,8 +4,6 @@ Tasks for common project sanity-checking such as linting or type checking.
 .. versionadded:: 1.2
 """
 
-from __future__ import unicode_literals
-
 from invoke import task
 
 

@@ -27,11 +27,11 @@ To use:
     - As noted above, this only works for modules that are importable, like any
       other Sphinx autodoc use case.
     - Unless you want to opt-in which module members get documented, use
-      ``:members:`` or add ``"members"`` to your ``conf.py``'s
-      ``autodoc_default_flags``.
+      ``:members:`` or add ``"members": True`` to your ``conf.py``'s
+      ``autodoc_default_options``.
     - By default, only tasks with docstrings will be picked up, unless you also
       give the ``:undoc-members:`` flag or add ``:undoc-members:`` / add
-      ``"undoc-members"`` to ``autodoc_default_flags``.
+      ``"undoc-members": True`` to ``autodoc_default_options``.
     - Please see the `autodoc`_ docs for details on these settings and more!
 
 - Build your docs, and you should see your tasks showing up as documented
@@ -41,8 +41,9 @@ To use:
 .. _autodoc: http://www.sphinx-doc.org/en/master/ext/autodoc.html
 """
 
+import inspect
+
 from invoke import Task
-from sphinx.util.inspect import getargspec  # Improved over raw stdlib
 
 # For sane mock patching. Meh.
 from sphinx.ext import autodoc
@@ -67,7 +68,7 @@ class TaskDocumenter(
         # after which point "call tasks as raw functions" may be less common.
         # TODO: also, it may become moot-ish if we turn this all into emission
         # of custom domain objects and/or make the CLI arguments the focus
-        return autodoc.formatargspec(function, *getargspec(function))
+        return autodoc.stringify_signature(inspect.signature(function))
 
     def document_members(self, all_members=False):
         # Neuter this so superclass bits don't introspect & spit out autodoc
@@ -76,15 +77,4 @@ class TaskDocumenter(
 
 
 def setup(app):
-    # NOTE: the "correct", forward compatible call to make here is
-    # app.add_autodocumenter() - because as of Sphinx 1.7, the inner API we are
-    # manipulating here got changed around a bunch (but the outer
-    # API of add_autodocumenter() remained the same, on purpose).
-    # Unfortunately, in both cases add_autodocumenter() both registers the
-    # documenter AND adds an `auto<type>` directive - meaning it's not possible
-    # to register a "acts kinda like another" Documenter or you double-define
-    # e.g. autofunction, which Sphinx warns about and also presumably kills
-    # real function documenting.
-    # NOTE: sooo for now, since a bunch of our other shit breaks on Sphinx 1.7,
-    # we are just explicitly calling autodoc's add_documenter. Sadface.
-    autodoc.add_documenter(TaskDocumenter)
+    app.add_autodocumenter(TaskDocumenter)

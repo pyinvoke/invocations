@@ -2,7 +2,7 @@ from os.path import join, dirname
 import re
 import shutil
 
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 from invoke import Context
 from invocations.autodoc import setup, TaskDocumenter
@@ -35,10 +35,10 @@ class autodoc_:
     def teardown_class(self):
         shutil.rmtree(self.build_dir, ignore_errors=True)
 
-    @patch("sphinx.ext.autodoc.add_documenter")
-    def setup_adds_TaskDocumenter_as_documenter(self, add_documenter):
-        setup(Mock())
-        add_documenter.assert_called_once_with(TaskDocumenter)
+    def setup_adds_TaskDocumenter_as_autodocumenter(self):
+        app = Mock()
+        setup(app)
+        app.add_autodocumenter.assert_called_once_with(TaskDocumenter)
 
     def module_docstring_unmodified(self):
         # Just a sanity test, really.
@@ -47,7 +47,8 @@ class autodoc_:
     def regular_functions_only_appear_once(self):
         # Paranoid sanity check re: our
         # very-much-like-FunctionDocumenter-documenter not accidentally loading
-        # up non-task objects. SHRUG.
+        # up non-task objects (and thus having them autodoc'd twice: once
+        # regularly and once incorrectly 'as tasks'). SHRUG.
         # TODO: incredibly stupid "is HTML string literal" test because too
         # lazy to whip up something with BeautifulSoup et al.
         for sentinel in (">not_a_task", ">I am a regular function"):

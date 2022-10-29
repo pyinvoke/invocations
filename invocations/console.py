@@ -2,8 +2,6 @@
 Text console UI helpers and patterns, e.g. 'Y/n' prompts and the like.
 """
 
-from __future__ import unicode_literals, print_function
-
 import sys
 
 from invoke.vendor.six.moves import input

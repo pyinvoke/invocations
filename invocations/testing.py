@@ -24,7 +24,7 @@ def test(c, module=None, runner=None, opts=None, pty=True):
     """
     runner = runner or "spec"
     # Allow selecting specific submodule
-    specific_module = " --tests=tests/%s.py" % module
+    specific_module = f" --tests=tests/{module}.py"
     args = specific_module if module else ""
     if opts:
         args += " " + opts
@@ -33,7 +33,7 @@ def test(c, module=None, runner=None, opts=None, pty=True):
     # Allow client to configure some other Nose-related things.
     logformat = c.config.get("tests", {}).get("logformat", None)
     if logformat is not None:
-        args += " --logging-format='{}'".format(logformat)
+        args += f" --logging-format='{logformat}'"
     # Use pty by default so the spec/nose/Python process buffers "correctly"
     c.run(runner + args, pty=pty)
 
@@ -46,7 +46,7 @@ def integration(c, module=None, runner=None, opts=None, pty=True):
     opts = opts or ""
     override = " --tests=integration/"
     if module:
-        override += "{}.py".format(module)
+        override += f"{module}.py"
     opts += override
     test(c, runner=runner, opts=opts, pty=pty)
 

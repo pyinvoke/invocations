@@ -10,14 +10,13 @@ version = _locals["__version__"]
 
 requirements = [
     # Core dependency
-    "invoke>=1.6",
+    "invoke>=1.7.2",
     # Dependencies for various subpackages.
     # NOTE: these used to be all optional (only complained about at import
     # time if missing), but that got hairy fast, and these are all
     # pure-Python packages, so it shouldn't be a huge burden for users to
     # obtain them.
     "blessings>=1.6",
-    "enum34>=1.1,<2; python_version < '3'",
     "releases>=1.6",
     "semantic_version>=2.4,<2.7",
     "tabulate==0.7.5",
@@ -42,6 +41,7 @@ setup(
         "Issues": "https://github.com/pyinvoke/invocations/issues",
     },
     # Release requirements. See dev-requirements.txt for dev version reqs.
+    python_requires=">=3.6",
     install_requires=requirements,
     packages=find_packages(),
     classifiers=[
@@ -55,14 +55,12 @@ setup(
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Topic :: Software Development",
         "Topic :: Software Development :: Build Tools",
         "Topic :: Software Development :: Libraries",

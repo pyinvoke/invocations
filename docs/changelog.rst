@@ -2,6 +2,32 @@
 Changelog
 =========
 
+- :support:`-` Various fixes and doc updates re: the `~invocations.autodoc`
+  module's compatibility with modern Sphinx versions.
+- :support:`-` The ``dual_wheels``, ``alt_python``, and ``check_desc``
+  arguments/config options for the ``invocations.packaging.release`` module
+  have been removed.
+
+  .. warning:: This is a backwards-incompatible change.
+
+  .. note::
+      If you were using ``check_desc``, note that the release tasks have been
+      using ``twine check`` for a few releases now, as a default part of
+      execution, and will continue doing so; ``check_desc`` only impacted the
+      use of the older ``setup.py check`` command.
+
+- :support:`-` The ``invocations.travis`` module has been removed. If you
+  relied upon it, we may accept PRs to make the newer ``invocations.ci`` module
+  more generic.
+
+  .. warning:: This is a backwards-incompatible change.
+
+- :support:`-` Drop Python 2 (and 3.5) support. We now support Python
+  3.6+ only. This naturally includes a number of dependency updates (direct and
+  indirect) as well.
+
+  .. warning:: This is a backwards-incompatible change.
+
 - :release:`2.6.1 <2022-06-26>`
 - :support:`- backported` Remove upper bounds pinning on many deps; this makes
   it easier for related projects to test upgrades, run CI, etc. In general,
