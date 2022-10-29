@@ -373,7 +373,7 @@ Tag +{tag}
             err = "Expected:\n\n{}\n\nGot:\n\n{}".format(regex, output)
             err += "\n\nRepr edition...\n\n"
             err += "Expected:\n\n{!r}\n\nGot:\n\n{!r}".format(regex, output)
-            assert re.match(regex, output), err
+            assert re.match(regex, output) is not None, err
 
         @trap  # just for cleaner test output
         def returns_lexica_for_reuse(self):
