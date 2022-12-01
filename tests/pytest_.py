@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 
 from invoke import MockContext
-from invocations.pytest import test, coverage
+from invocations.pytest import test as _test_task, coverage
 from unittest.mock import Mock, call
 
 
@@ -21,19 +21,19 @@ class test_:
     def defaults_to_verbose_color_and_syscapture_with_pty_True(self):
         # Relies on default flags within expect helper
         with _expect() as c:
-            test(c)
+            _test_task(c)
 
     def can_turn_off_or_change_defaults(self):
         with _expect(flags="--capture=no", kwargs=dict(pty=False)) as c:
-            test(c, verbose=False, color=False, pty=False, capture="no")
+            _test_task(c, verbose=False, color=False, pty=False, capture="no")
 
     def can_passthru_k_x_and_arbitrary_opts(self):
         with _expect(extra_flags="--whatever -man -k 'lmao' -x") as c:
-            test(c, k="lmao", x=True, opts="--whatever -man")
+            _test_task(c, k="lmao", x=True, opts="--whatever -man")
 
     def can_disable_warnings(self):
         with _expect(extra_flags="--disable-warnings") as c:
-            test(c, warnings=False)
+            _test_task(c, warnings=False)
 
 
 class coverage_:
