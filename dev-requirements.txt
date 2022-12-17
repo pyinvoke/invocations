@@ -9,6 +9,8 @@ codecov==2.1.11
 black==19.10b0
 # Linting
 flake8==3.6.0
+# Modern setuptools, eg automatic license file detection
+setuptools>=56
 
 # Self, for runtime/task dependencies
 -e .
