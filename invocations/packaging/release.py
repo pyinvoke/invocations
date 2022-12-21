@@ -15,6 +15,7 @@ import os
 import re
 import sys
 import venv
+from enum import Enum
 from functools import partial
 from glob import glob
 from io import StringIO
@@ -22,14 +23,13 @@ from shutil import rmtree
 
 from invoke.vendor.lexicon import Lexicon
 
-from blessings import Terminal
+from rich.console import Console
+from rich.table import Table
 from docutils.utils import Reporter
-from enum import Enum
 from invoke import Collection, task, Exit
 from pip import __version__ as pip_version
 import readme_renderer.rst  # transitively required via twine in setup.py
 from releases.util import parse_changelog
-from tabulate import tabulate
 from twine.commands.check import check as twine_check
 
 from .semantic_version_monkey import Version
@@ -77,11 +77,11 @@ for key in ("halt_level", "report_level"):
 # State junk
 #
 
-# Blessings Terminal object for ANSI colorization.
+# Rich Console object for ANSI colorization etc
 # NOTE: mildly uncomfortable with the instance living at module level, but also
 # pretty sure it's unlikely to change meaningfully over time, between
 # threads/etc - and it'd be otherwise a PITA to cart around/re-instantiate.
-t = Terminal()
+console = Console()
 check = "\u2714"
 ex = "\u2718"
 
@@ -91,20 +91,21 @@ Release = Enum("Release", "BUGFIX FEATURE UNDEFINED")
 # Actions to take for various components - done as enums whose values are
 # useful one-line status outputs.
 
+check, ex = ":white_check_mark:", ":cross_mark:"
 
 class Changelog(Enum):
-    OKAY = t.green(check + " no unreleased issues")
-    NEEDS_RELEASE = t.red(ex + " needs :release: entry")
+    OKAY = ("no unreleased issues", check)
+    NEEDS_RELEASE = ("needs release entry", ex)
 
 
 class VersionFile(Enum):
-    OKAY = t.green(check + " version up to date")
-    NEEDS_BUMP = t.red(ex + " needs version bump")
+    OKAY = ("version up to date", check)
+    NEEDS_BUMP = ("needs version bump", ex)
 
 
 class Tag(Enum):
-    OKAY = t.green(check + " all set")
-    NEEDS_CUTTING = t.red(ex + " needs cutting")
+    OKAY = ("all set", check)
+    NEEDS_CUTTING = ("needs cutting", ex)
 
 
 # Bits for testing branch names to determine release type
@@ -268,12 +269,13 @@ def status(c):
     ``_converge`` (an ``(actions, state)`` two-tuple of Lexicons).
     """
     actions, state = _converge(c)
-    table = []
+    # TODO: test this API a bit
+    table = Table(title="Release status", show_header=False)
     # NOTE: explicit 'sensible' sort (in rough order of how things are usually
     # modified, and/or which depend on one another, e.g. tags are near the end)
     for component in "changelog version tag".split():
-        table.append((component.capitalize(), actions[component].value))
-    print(tabulate(table))
+        table.add_row(component.capitalize(), *actions[component].value)
+    console.print(table)
     return actions, state
 
 

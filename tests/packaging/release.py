@@ -7,6 +7,7 @@ from invoke.vendor.lexicon import Lexicon
 from invoke import MockContext, Result, Config, Exit
 from docutils.utils import Reporter
 from unittest.mock import Mock, patch, call
+from rich.table import Table
 import pytest
 from pytest import skip
 from pytest_relaxed import trap, raises
@@ -356,6 +357,8 @@ class status_:
                 version=VersionFile.NEEDS_BUMP.value,
                 tag=Tag.NEEDS_CUTTING.value,
             )
+            # TODO: work in an expectation that we called
+            # rich.console.Console.return_value.print with the below strings
             for part in parts:
                 parts[part] = re.escape(parts[part])
             parts["header_footer"] = r"-+ +-+"
@@ -613,17 +616,23 @@ class prepare_:
     _tags = ("1.1.0",)
 
     @_confirm_false
-    def displays_status_output(self, _):
+    @patch("invocations.packaging.release.console")
+    def displays_status_output(self, console, _):
         with _mock_context(self) as c:
             _run_prepare(c)
-        output = sys.stdout.getvalue()
-        for action in (
+        assert console.print.called
+        table = console.print.call_args[0][0]
+        assert isinstance(table, Table)
+        assert len(table.rows) == 3
+        cols = table.columns
+        # Odd that Table is a heavily column-centered API but eh
+        assert len(cols) == 2
+        assert list(cols[0].cells) == ["Changelog", "Version", "Tag"]
+        assert list(cols[1].cells) == [action.value for action in (
             Changelog.NEEDS_RELEASE,
             VersionFile.NEEDS_BUMP,
             Tag.NEEDS_CUTTING,
-        ):
-            err = "Didn't see '{}' text in status output!".format(action.name)
-            assert action.value in output, err
+        )]
 
     @patch("invocations.packaging.release.status")
     def short_circuits_when_no_work_to_do(self, status):
@@ -818,38 +827,31 @@ class prepare_:
                 assert cmd not in [x[0][0] for x in c.run.call_args_list], err
 
 
-# NOTE: yea...this kinda pushes the limits of sane TDD...meh
-# NOTE: possible that the actual codes blessings emits differ based on
-# termcap/etc; consider sucking it up and just calling blessings directly in
-# that case, even though it makes the tests kinda tautological.
-# TODO: yes, when I personally went from TERM=xterm-256color to
-# TERM=screen-256color, that made these tests break! Updating test machinery to
-# account for now, but...not ideal!
 class component_state_enums_contain_human_readable_values:
     class changelog:
         def okay(self):
-            expected = "\x1b[32m\u2714 no unreleased issues\x1b(B\x1b[m"
+            expected = "[green]\u2714 no unreleased issues"
             assert Changelog.OKAY.value == expected
 
         def needs_release(self):
-            expected = "\x1b[31m\u2718 needs :release: entry\x1b(B\x1b[m"
+            expected = "[red]\u2718 needs :release: entry"
             assert Changelog.NEEDS_RELEASE.value == expected
 
     class version_file:
         def okay(self):
-            expected = "\x1b[32m\u2714 version up to date\x1b(B\x1b[m"
+            expected = "[green]\u2714 version up to date"
             assert VersionFile.OKAY.value == expected
 
         def needs_bump(self):
-            expected = "\x1b[31m\u2718 needs version bump\x1b(B\x1b[m"
+            expected = "[red]\u2718 needs version bump"
             assert VersionFile.NEEDS_BUMP.value == expected
 
     class tag:
         def okay(self):
-            assert Tag.OKAY.value == "\x1b[32m\u2714 all set\x1b(B\x1b[m"
+            assert Tag.OKAY.value == "[green]\u2714 all set"
 
         def needs_cutting(self):
-            expected = "\x1b[31m\u2718 needs cutting\x1b(B\x1b[m"
+            expected = "[red]\u2718 needs cutting"
             assert Tag.NEEDS_CUTTING.value == expected
 
 

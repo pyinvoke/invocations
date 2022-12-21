@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :support:`-` Our use of the ``tabulate``, ``tqdm``, and ``blessings``
+  libraries (for tables, progress bars, and ANSI colors respectively) has been
+  replaced by a dependency on ``rich``. The specific console output of various
+  tasks may have changed somewhat as a result.
 - :support:`-` Various fixes and doc updates re: the `~invocations.autodoc`
   module's compatibility with modern Sphinx versions.
 - :support:`-` The ``dual_wheels``, ``alt_python``, and ``check_desc``

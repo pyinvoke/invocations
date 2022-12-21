@@ -16,11 +16,9 @@ requirements = [
     # time if missing), but that got hairy fast, and these are all
     # pure-Python packages, so it shouldn't be a huge burden for users to
     # obtain them.
-    "blessings>=1.6",
+    "rich>=12.6",
     "releases>=1.6",
     "semantic_version>=2.4,<2.7",
-    "tabulate==0.7.5",
-    "tqdm>=4.8.1",
     "twine>=1.15",
     "wheel>=0.24.0",
 ]
