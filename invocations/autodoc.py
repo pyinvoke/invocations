@@ -18,8 +18,8 @@ Invoke tasks and similar Invoke objects.
 
 To use:
 
-- Add ``"sphinx.ext.autodoc"`` and ``"invocations.autodoc"`` to your Sphinx
-  ``conf.py``'s ``extensions`` list.
+- Add ``"invocations.autodoc"`` to your Sphinx ``conf.py``'s ``extensions``
+  list.
 - Use Sphinx autodoc's ``automodule`` directive normally, aiming it at your
   tasks module(s), e.g. ``.. automodule:: myproject.tasks`` in some ``.rst``
   document of your choosing.
@@ -77,4 +77,5 @@ class TaskDocumenter(
 
 
 def setup(app):
+    app.setup_extension('sphinx.ext.autodoc')
     app.add_autodocumenter(TaskDocumenter)

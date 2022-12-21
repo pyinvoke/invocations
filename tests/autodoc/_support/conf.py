@@ -6,5 +6,5 @@ import sys
 sys.path.insert(0, dirname(__file__))
 
 master_doc = "index"
-extensions = ["sphinx.ext.autodoc", "invocations.autodoc"]
+extensions = ["invocations.autodoc"]
 autodoc_default_options = dict(members=True)

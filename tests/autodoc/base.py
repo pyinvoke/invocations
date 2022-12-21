@@ -5,7 +5,7 @@ import shutil
 from unittest.mock import Mock, patch
 
 from invoke import Context
-from invocations.autodoc import setup, TaskDocumenter
+from invocations.autodoc import setup as our_setup, TaskDocumenter
 
 
 def _build():
@@ -35,9 +35,10 @@ class autodoc_:
     def teardown_class(self):
         shutil.rmtree(self.build_dir, ignore_errors=True)
 
-    def setup_adds_TaskDocumenter_as_autodocumenter(self):
+    def setup_requires_autodoc_and_adds_autodocumenter(self):
         app = Mock()
-        setup(app)
+        our_setup(app)
+        app.setup_extension.assert_called_once_with('sphinx.ext.autodoc')
         app.add_autodocumenter.assert_called_once_with(TaskDocumenter)
 
     def module_docstring_unmodified(self):
