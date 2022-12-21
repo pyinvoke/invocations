@@ -1,5 +1,9 @@
 # For testing
-pytest-relaxed>=1,<2
+pytest-relaxed @ git+https://github.com/bitprophet/pytest-relaxed@main
+# TODO: NUKEME vvv
+invoke @ git+https://github.com/pyinvoke/invoke@main
+releases @ git+https://github.com/bitprophet/releases@main
+# TODO: NUKEME ^^^
 pytest-cov==2.4.0
 pytest-mock==3.2.0
 watchdog==0.8.3
