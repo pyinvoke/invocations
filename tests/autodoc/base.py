@@ -50,10 +50,11 @@ class autodoc_:
         # very-much-like-FunctionDocumenter-documenter not accidentally loading
         # up non-task objects (and thus having them autodoc'd twice: once
         # regularly and once incorrectly 'as tasks'). SHRUG.
-        # TODO: incredibly stupid "is HTML string literal" test because too
-        # lazy to whip up something with BeautifulSoup et al.
-        for sentinel in (">not_a_task", ">I am a regular function"):
-            assert len(re.findall(sentinel, self.api_docs)) == 1
+        # NOTE: as of Sphinx 5.2, ToC now shows name of object too, so we test
+        # for the identifier and the docstring separately (and expect the 1st
+        # twice)
+        assert len(re.findall(">not_a_task", self.api_docs)) == 2
+        assert len(re.findall(">I am a regular function", self.api_docs)) == 1
 
     def undocumented_members_do_not_appear_by_default(self):
         # This really just tests basic Sphinx/autodoc stuff for now...meh
