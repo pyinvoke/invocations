@@ -2,7 +2,7 @@ from os.path import join, dirname
 import re
 import shutil
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from invoke import Context
 from invocations.autodoc import setup as our_setup, TaskDocumenter

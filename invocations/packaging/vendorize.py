@@ -1,8 +1,8 @@
 """
 Tasks for importing external code into a vendor subdirectory.
 """
-from glob import glob
 from os import chdir
+from pathlib import Path
 from shutil import copy, copytree, rmtree
 
 from invoke import task
