@@ -38,7 +38,7 @@ class autodoc_:
     def setup_requires_autodoc_and_adds_autodocumenter(self):
         app = Mock()
         our_setup(app)
-        app.setup_extension.assert_called_once_with('sphinx.ext.autodoc')
+        app.setup_extension.assert_called_once_with("sphinx.ext.autodoc")
         app.add_autodocumenter.assert_called_once_with(TaskDocumenter)
 
     def module_docstring_unmodified(self):

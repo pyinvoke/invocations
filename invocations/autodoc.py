@@ -77,5 +77,5 @@ class TaskDocumenter(
 
 
 def setup(app):
-    app.setup_extension('sphinx.ext.autodoc')
+    app.setup_extension("sphinx.ext.autodoc")
     app.add_autodocumenter(TaskDocumenter)

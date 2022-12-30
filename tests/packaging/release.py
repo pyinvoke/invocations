@@ -305,9 +305,7 @@ def _mock_context(self):
             return real_import(*args, **kwargs)
         return Mock(_version=Mock(__version__=self._version))
 
-    import_patcher = patch(
-        "builtins.__import__", side_effect=fake_import
-    )
+    import_patcher = patch("builtins.__import__", side_effect=fake_import)
 
     with import_patcher:
         yield context

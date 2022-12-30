@@ -87,7 +87,7 @@ def make_sshable(c):
     ssh_dir = "{}/.ssh".format(home)
     for cmd in ("mkdir {0}", "chmod 0700 {0}"):
         sudo_run(c, cmd.format(ssh_dir, user))
-    sudo_run(c, 'ssh-keygen -t rsa -f {}/id_rsa -N \'\''.format(ssh_dir))
+    sudo_run(c, "ssh-keygen -t rsa -f {}/id_rsa -N ''".format(ssh_dir))
     sudo_run(c, f"cp {ssh_dir}/id_rsa.pub {ssh_dir}/authorized_keys")
 
 
