@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`3.0.0 <2022-12-31>`
 - :support:`-` Various fixes and doc updates re: the `~invocations.autodoc`
   module's compatibility with modern Sphinx versions.
 - :support:`-` The ``dual_wheels``, ``alt_python``, and ``check_desc``
