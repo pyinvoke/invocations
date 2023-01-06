@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :bug:`-` We neglected to remove references to ``six`` in a few spots -
+  including some that utilized Invoke's old vendor of same; this causes issues
+  when trying to use development and upcoming versions of Invoke. Six is now
+  truly gone!
 - :release:`3.0.0 <2022-12-31>`
 - :support:`-` Various fixes and doc updates re: the `~invocations.autodoc`
   module's compatibility with modern Sphinx versions.

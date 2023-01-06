@@ -4,8 +4,6 @@ Text console UI helpers and patterns, e.g. 'Y/n' prompts and the like.
 
 import sys
 
-from invoke.vendor.six.moves import input
-
 
 # NOTE: originally cribbed from fab 1's contrib.console.confirm
 def confirm(question, assume_yes=True):

@@ -1,8 +1,6 @@
 import sys
 import time
 from collections import defaultdict
-from invoke.vendor.six import iteritems
-from invoke.vendor.six.moves import range
 
 from invoke import task
 from tqdm import tqdm
@@ -164,7 +162,7 @@ def count_errors(c, command, trials=10, verbose=False, fail_fast=False):
     counts = defaultdict(int)
     for period in periods:
         counts[period] += 1
-    mode = sorted((value, key) for key, value in iteritems(counts))[-1][1]
+    mode = sorted((value, key) for key, value in counts.items())[-1][1]
     # Emission of stats!
     if fail_fast:
         print("First failure occurred after {} successes".format(successes))
