@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`3.0.1 <2023-01-06>`
 - :bug:`-` We neglected to remove references to ``six`` in a few spots -
   including some that utilized Invoke's old vendor of same; this causes issues
   when trying to use development and upcoming versions of Invoke. Six is now
