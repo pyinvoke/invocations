@@ -1,6 +1,6 @@
 # For testing
 pytest-relaxed>=2
-invoke @ git+https://github.com/pyinvoke/invoke@main
+invoke>=2
 releases>=2
 pytest-cov==2.4.0
 pytest-mock==3.2.0
