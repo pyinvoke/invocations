@@ -356,7 +356,7 @@ class status_:
             )
             for part in parts:
                 parts[part] = re.escape(parts[part])
-            parts["header_footer"] = r"-+ +-+"
+            parts["header_footer"] = r"-+( +-+)?"
             # NOTE: forces impl to follow specific order, which is good
             regex = r"""
 {header_footer}
