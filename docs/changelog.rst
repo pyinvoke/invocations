@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`3.0.2 <2023-04-28>`
 - :support:`- backported` Unpin ``tabulate`` in our install requirements, it's
   had many more releases since we instituted a defensive pin vs some bugs in
   its later 0.7 line!
