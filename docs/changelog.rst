@@ -2,6 +2,9 @@
 Changelog
 =========
 
+- :support:`- backported` Unpin ``tabulate`` in our install requirements, it's
+  had many more releases since we instituted a defensive pin vs some bugs in
+  its later 0.7 line!
 - :release:`3.0.1 <2023-01-06>`
 - :bug:`-` We neglected to remove references to ``six`` in a few spots -
   including some that utilized Invoke's old vendor of same; this causes issues
