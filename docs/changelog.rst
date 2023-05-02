@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`3.1.0 <2023-05-02>`
 - :feature:`-` Updated ``packaging.release.test_install`` to attempt imports of
   freshly test-installed packages, to catch import-time errors on top of
   install-time ones. This can be opted out of by giving the ``skip_import``
