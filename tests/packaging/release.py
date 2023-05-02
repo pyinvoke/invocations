@@ -134,9 +134,6 @@ class release_and_issues_:
 
 class find_package_:
     def can_be_short_circuited_with_config_value(self):
-        # TODO: should we just bundle this + the version part into one
-        # function and setting? do we ever peep into the package for anything
-        # else besides version module?
         skip()
 
     def seeks_directories_with_init_py_in_em(self):
@@ -1210,6 +1207,7 @@ class test_install_:
     @patch("invocations.util.mkdtemp")
     @patch("invocations.util.rmtree", Mock("rmtree"))  # Just a neuter
     @patch("venv.EnvBuilder")
+    @patch("invocations.packaging.release._find_package", lambda c: "foo")
     def installs_all_archives_in_fresh_venv_with_matching_pip(
         self, builder, mkdtemp, get_archives
     ):
@@ -1233,10 +1231,40 @@ class test_install_:
                 call("tmpdir/bin/pip install pip==lmao"),
                 # Archives installed into venv
                 call("{} foo.tgz".format(pip_base)),
+                # Import attempt was made
+                call("tmpdir/bin/python -c 'import foo'"),
+                # And repeat
+                call("tmpdir/bin/pip install pip==lmao"),
+                call("{} foo.whl".format(pip_base)),
+                call("tmpdir/bin/python -c 'import foo'"),
+            ]
+        )
+
+    @patch("invocations.packaging.release.pip_version", "lmao")
+    @patch("invocations.packaging.release.get_archives")
+    @patch("invocations.util.mkdtemp")
+    @patch("invocations.util.rmtree", Mock("rmtree"))  # Just a neuter
+    @patch("invocations.packaging.release._find_package", lambda c: "foo")
+    def skips_import_test_when_asked_to(self, mkdtemp, get_archives):
+        # Setup & run
+        c = MockContext(run=True, repeat=True)
+        mkdtemp.return_value = "tmpdir"
+        get_archives.return_value = ["foo.tgz", "foo.whl"]
+        install_test_task(c, directory="whatever", skip_import=True)
+        pip_base = "tmpdir/bin/pip install --disable-pip-version-check"
+        c.run.assert_has_calls(
+            [
+                # Pip installed to same version as running interpreter's pip
+                call("tmpdir/bin/pip install pip==lmao"),
+                # Archives installed into venv
+                call("{} foo.tgz".format(pip_base)),
                 # And repeat
                 call("tmpdir/bin/pip install pip==lmao"),
                 call("{} foo.whl".format(pip_base)),
             ]
+        )
+        assert (
+            call("tmpdir/bin/python -c 'import foo'") not in c.run.mock_calls
         )
 
 

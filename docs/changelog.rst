@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :feature:`-` Updated ``packaging.release.test_install`` to attempt imports of
+  freshly test-installed packages, to catch import-time errors on top of
+  install-time ones. This can be opted out of by giving the ``skip_import``
+  kwarg (aka the ``--skip-import`` flag on the CLI).
 - :release:`3.0.2 <2023-04-28>`
 - :support:`- backported` Unpin ``tabulate`` in our install requirements, it's
   had many more releases since we instituted a defensive pin vs some bugs in

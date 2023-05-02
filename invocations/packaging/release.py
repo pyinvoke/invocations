@@ -18,6 +18,7 @@ import venv
 from functools import partial
 from glob import glob
 from io import StringIO
+from pathlib import Path
 from shutil import rmtree
 
 from invoke.vendor.lexicon import Lexicon
@@ -537,6 +538,8 @@ def _find_package(c):
     """
     # TODO: is there a way to get this from the same place setup.py does w/o
     # setup.py barfing (since setup() runs at import time and assumes CLI use)?
+    # TODO Python 3.7: seems like a job for the then-in-stdlib
+    # importlib.metadata?
     configured_value = c.get("packaging", {}).get("package", None)
     if configured_value:
         return configured_value
@@ -769,7 +772,7 @@ def publish(
 
 
 @task
-def test_install(c, directory, verbose=False):
+def test_install(c, directory, verbose=False, skip_import=False):
     """
     Test installation of build artifacts found in ``$directory``.
 
@@ -777,6 +780,9 @@ def test_install(c, directory, verbose=False):
     one.
 
     Uses the `venv` module to build temporary virtualenvs.
+
+    :param bool verbose: Whether to print subprocess output.
+    :param bool skip_import: If True, don't try importing the installed module.
     """
     # TODO: wants contextmanager or similar for only altering a setting within
     # a given scope or block - this may pollute subsequent subroutine calls
@@ -795,17 +801,21 @@ def test_install(c, directory, verbose=False):
             # Obligatory: make inner pip match outer pip (version obtained from
             # this file's executable env, up in import land); very frequently
             # venv-made envs have a bundled, older pip :(
-            pip = os.path.join(tmp, "bin", "pip")
+            envbin = Path(tmp) / "bin"
+            pip = envbin / "pip"
             c.run("{} install pip=={}".format(pip, pip_version))
             # Does the package under test install cleanly?
-            # TODO: might be nice to have a further 'can you import whatever it
-            # was' test
             c.run(
                 "{} install --disable-pip-version-check {}".format(
                     pip, archive
                 )
             )
-            # TODO: install wheel and try again to make sure wheels work ok?
+            # Can we actually import it? (Will catch certain classes of
+            # import-time-but-not-install-time explosions, eg busted dependency
+            # specifications or imports).
+            if not skip_import:
+                package = _find_package(c)
+                c.run(f"{envbin / 'python'} -c 'import {package}'")
 
     if verbose:
         c.config.run.hide = old_hide
