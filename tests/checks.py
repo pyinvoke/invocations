@@ -1,6 +1,8 @@
+from unittest.mock import call
+
 import pytest
 
-from invocations.checks import blacken
+from invocations.checks import blacken, lint, all_ as all_task
 
 
 class checks:
@@ -84,3 +86,22 @@ class checks:
             ctx.blacken = dict(find_opts="-and -not -name foo.py")
             blacken(ctx, find_opts="-or -name '*.js'")
             assert "find . -name '*.py' -or -name '*.js'" in ctx.run_command
+
+        def aliased_to_format(self):
+            assert blacken.aliases == ["format"]
+
+    class lint_:
+        def runs_flake8_by_default(self, ctx):
+            lint(ctx)
+            assert ctx.run_command == "flake8"
+
+    class all_:
+        def runs_blacken_and_lint(self, ctx):
+            all_task(ctx)
+            assert ctx.run.call_args_list == [
+                call("find . -name '*.py' | xargs black -l 79", pty=True),
+                call("flake8", pty=True, warn=True),
+            ]
+
+        def is_default_task(self):
+            assert all_task.is_default

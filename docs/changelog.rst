@@ -2,6 +2,17 @@
 Changelog
 =========
 
+- :feature:`-` Minor enhancements to the ``checks`` module:
+
+    - ``blacken`` now has a ``format`` alias (and will likely reverse the real
+      name and the alias in 4.0)
+    - Added ``lint`` task which currently just runs ``flake8``, will likely
+      learn how to be configurable later.
+    - Added ``all_`` default task for the collection, which runs both
+      ``blacken`` (in regular, not diff-only mode - idea is to be useful for
+      devs, not CI, which already does both independently) and ``lint`` in
+      series.
+
 - :release:`3.1.0 <2023-05-02>`
 - :feature:`-` Updated ``packaging.release.test_install`` to attempt imports of
   freshly test-installed packages, to catch import-time errors on top of

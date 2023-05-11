@@ -7,7 +7,7 @@ Tasks for common project sanity-checking such as linting or type checking.
 from invoke import task
 
 
-@task(name="blacken", iterable=["folders"])
+@task(name="blacken", aliases=["format"], iterable=["folders"])
 def blacken(
     c, line_length=79, folders=None, check=False, diff=False, find_opts=None
 ):
@@ -33,6 +33,8 @@ def blacken(
     .. versionadded:: 1.2
     .. versionchanged:: 1.4
         Added the ``find_opts`` argument.
+    .. versionchanged:: 3.2
+        Added the ``format`` alias.
     """
     config = c.config.get("blacken", {})
     default_folders = ["."]
@@ -57,3 +59,27 @@ def blacken(
         " ".join(folders), find_opts, black_command_line
     )
     c.run(cmd, pty=True)
+
+
+@task
+def lint(c):
+    """
+    Apply linting.
+
+    .. versionadded:: 3.2
+    """
+    # TODO: configurable and/or switch to ruff
+    c.run("flake8", warn=True, pty=True)
+
+
+@task(default=True)
+def all_(c):
+    """
+    Run all common formatters/linters for the project.
+
+    .. versionadded:: 3.2
+    """
+    # TODO: contextmanager config, if we don't already have that
+    c.config.run.echo = True
+    blacken(c)
+    lint(c)
