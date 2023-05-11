@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`3.2.0 <2023-05-11>`
 - :feature:`-` Minor enhancements to the ``checks`` module:
 
     - ``blacken`` now has a ``format`` alias (and will likely reverse the real
