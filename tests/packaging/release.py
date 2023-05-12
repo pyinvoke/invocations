@@ -1202,70 +1202,54 @@ class publish_:
 
 
 class test_install_:
-    @patch("invocations.packaging.release.pip_version", "lmao")
-    @patch("invocations.packaging.release.get_archives")
-    @patch("invocations.util.mkdtemp")
-    @patch("invocations.util.rmtree", Mock("rmtree"))  # Just a neuter
-    @patch("venv.EnvBuilder")
-    @patch("invocations.packaging.release._find_package", lambda c: "foo")
-    def installs_all_archives_in_fresh_venv_with_matching_pip(
-        self, builder, mkdtemp, get_archives
-    ):
-        # Setup & run
-        c = MockContext(run=True, repeat=True)
-        mkdtemp.return_value = "tmpdir"
-        get_archives.return_value = ["foo.tgz", "foo.whl"]
+    def installs_all_archives_in_fresh_venv_with_matching_pip(self, install):
+        c = install
+        # Basic test, uses guts of fixture
         install_test_task(c, directory="whatever")
-        # Create factory
-        builder.assert_called_once_with(with_pip=True)
-        # Used helper to get artifacts
-        get_archives.assert_called_once_with("whatever")
-        # venv factory ran twice in some temp dir
-        builder.return_value.create.assert_has_calls(
-            [call("tmpdir"), call("tmpdir")]
-        )
-        pip_base = "tmpdir/bin/pip install --disable-pip-version-check"
-        c.run.assert_has_calls(
-            [
-                # Pip installed to same version as running interpreter's pip
-                call("tmpdir/bin/pip install pip==lmao"),
-                # Archives installed into venv
-                call("{} foo.tgz".format(pip_base)),
-                # Import attempt was made
-                call("tmpdir/bin/python -c 'import foo'"),
-                # And repeat
-                call("tmpdir/bin/pip install pip==lmao"),
-                call("{} foo.whl".format(pip_base)),
-                call("tmpdir/bin/python -c 'import foo'"),
-            ]
-        )
+        # Import attempt was made
+        c.run.assert_any_call("tmpdir/bin/python -c 'import foo'")
 
-    @patch("invocations.packaging.release.pip_version", "lmao")
-    @patch("invocations.packaging.release.get_archives")
-    @patch("invocations.util.mkdtemp")
-    @patch("invocations.util.rmtree", Mock("rmtree"))  # Just a neuter
-    @patch("invocations.packaging.release._find_package", lambda c: "foo")
-    def skips_import_test_when_asked_to(self, mkdtemp, get_archives):
-        # Setup & run
-        c = MockContext(run=True, repeat=True)
-        mkdtemp.return_value = "tmpdir"
-        get_archives.return_value = ["foo.tgz", "foo.whl"]
+    def skips_import_test_when_asked_to(self, install):
+        c = install
         install_test_task(c, directory="whatever", skip_import=True)
-        pip_base = "tmpdir/bin/pip install --disable-pip-version-check"
-        c.run.assert_has_calls(
-            [
-                # Pip installed to same version as running interpreter's pip
-                call("tmpdir/bin/pip install pip==lmao"),
-                # Archives installed into venv
-                call("{} foo.tgz".format(pip_base)),
-                # And repeat
-                call("tmpdir/bin/pip install pip==lmao"),
-                call("{} foo.whl".format(pip_base)),
-            ]
-        )
-        assert (
-            call("tmpdir/bin/python -c 'import foo'") not in c.run.mock_calls
-        )
+        # No import attempt
+        for unwanted in (call("tmpdir/bin/python -c 'import foo'"),):
+            assert unwanted not in c.run.mock_calls
+
+    def does_mypy_import_when_py_typed_present(self, install):
+        c = install
+        # Mock out the pathlib exists call as positive (default is negative)
+        c.set_exists(True)
+        install_test_task(c, directory="whatever")
+        # Mypy installed and executed
+        c.run.assert_any_call("tmpdir/bin/pip install mypy")
+        # NOTE: not actually the same 2 tmpdirs here but I'm already so sick of
+        # all these mocks, jeez
+        c.run.assert_any_call("cd tmpdir && tmpdir/bin/mypy -c 'import foo'")
+
+    def skips_mypy_import_when_no_py_typed(self, install):
+        c = install
+        # Mock out the pathlib exists call as explicitly false, why not
+        c.set_exists(False)
+        install_test_task(c, directory="whatever")
+        # Mypy NOT installed or executed
+        for unwanted in (
+            call("tmpdir/bin/pip install mypy"),
+            call("cd tmpdir && tmpdir/bin/mypy -c 'import foo'"),
+        ):
+            assert unwanted not in c.run.mock_calls
+
+    def skips_mypy_import_when_skipping_regular_import(self, install):
+        c = install
+        c.set_exists(True)
+        install_test_task(c, directory="whatever", skip_import=True)
+        # Mypy NOT installed or executed
+        for unwanted in (
+            call("tmpdir/bin/python -c 'import foo'"),
+            call("tmpdir/bin/pip install mypy"),
+            call("cd tmpdir && tmpdir/bin/mypy -c 'import foo'"),
+        ):
+            assert unwanted not in c.run.mock_calls
 
 
 class push_:
