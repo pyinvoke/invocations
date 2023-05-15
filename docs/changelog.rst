@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`3.3.0 <2023-05-12>`
 - :feature:`-` Add mypy type-checking variant of the recently added import
   test, in ``packaging.release.test_install``. This helps prove packages
   exposing ``py.typed`` in their source tree are including it in their
