@@ -782,7 +782,9 @@ def test_install(c, directory, verbose=False, skip_import=False):
     Uses the `venv` module to build temporary virtualenvs.
 
     :param bool verbose: Whether to print subprocess output.
-    :param bool skip_import: If True, don't try importing the installed module.
+    :param bool skip_import:
+        If True, don't try importing the installed module or checking it for
+        type hints.
     """
     # TODO: wants contextmanager or similar for only altering a setting within
     # a given scope or block - this may pollute subsequent subroutine calls
@@ -815,7 +817,20 @@ def test_install(c, directory, verbose=False, skip_import=False):
             # specifications or imports).
             if not skip_import:
                 package = _find_package(c)
+                # Import, generally
                 c.run(f"{envbin / 'python'} -c 'import {package}'")
+                # Import, typecheck version (ie dependent package typechecking
+                # both itself and us). Assumes task is run from project root.
+                pytyped = Path(package) / "py.typed"
+                if pytyped.exists():
+                    # TODO: pin a specific mypy version?
+                    c.run(f"{envbin / 'pip'} install mypy")
+                    # Use some other dir (our cwd is probably the project root,
+                    # whose local $package dir may confuse mypy into a false
+                    # positive!)
+                    with tmpdir() as tmp2:
+                        mypy_check = f"{envbin / 'mypy'} -c 'import {package}'"
+                        c.run(f"cd {tmp2} && {mypy_check}")
 
     if verbose:
         c.config.run.hide = old_hide

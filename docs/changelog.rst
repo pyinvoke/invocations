@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :feature:`-` Add mypy type-checking variant of the recently added import
+  test, in ``packaging.release.test_install``. This helps prove packages
+  exposing ``py.typed`` in their source tree are including it in their
+  distributions correctly.
 - :release:`3.2.0 <2023-05-11>`
 - :feature:`-` Minor enhancements to the ``checks`` module:
 
