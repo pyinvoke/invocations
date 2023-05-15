@@ -1,6 +1,11 @@
 from pytest import fixture
 from invoke import MockContext
 
+# Set up icecream globally for convenience.
+from icecream import install
+
+install()
+
 
 @fixture
 def ctx():
