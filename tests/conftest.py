@@ -62,6 +62,7 @@ def install():
         c = MockContext(run=True, repeat=True)
         mkdtemp.return_value = "tmpdir"
         get_archives.return_value = ["foo.tgz", "foo.whl"]
+
         # I hate this but don't see a cleaner way to mock out a nested
         # 'exists()' w/o breaking everything else, or using a real tmpdir.
         def set_exists(value):
