@@ -8,10 +8,7 @@ from invocations.pytest import test, coverage
 ns = Collection(release, test, coverage, docs, checks.blacken, checks)
 ns.configure(
     {
-        "packaging": {
-            "wheel": True,
-            "changelog_file": "docs/changelog.rst",
-        },
+        "packaging": {"wheel": True, "changelog_file": "docs/changelog.rst"},
         "run": {
             "env": {
                 # Our ANSI color tests test against hardcoded codes appropriate
