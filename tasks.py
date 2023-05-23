@@ -9,7 +9,6 @@ ns = Collection(release, test, coverage, docs, checks.blacken, checks)
 ns.configure(
     {
         "packaging": {
-            "sign": True,
             "wheel": True,
             "changelog_file": "docs/changelog.rst",
         },
