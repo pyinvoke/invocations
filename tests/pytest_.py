@@ -57,6 +57,15 @@ class coverage_:
         coverage(c, tester=faketest)
         faketest.assert_called_once_with(c, opts=self._FLAGS.format("term"))
 
+    def can_append_additional_test_tasks(self):
+        c = MockContext(run=True, repeat=True)
+        faketest1, faketest2 = Mock(), Mock()
+        coverage(c, additional_testers=[faketest1, faketest2])
+        # Uses coverage-appending arg to pytest-cov
+        flags = self._FLAGS.format("term") + " --cov-append"
+        faketest1.assert_called_once_with(c, opts=flags)
+        faketest2.assert_called_once_with(c, opts=flags)
+
     def open_html_report(self):
         c = MockContext(run=True, repeat=True)
         coverage(c, report="html")
