@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :support:`-` Mute SyntaxWarnings from older ``semantic_version`` versions
+  (temporary measure until we can upgrade to modern versions).
 - :release:`3.3.0 <2023-05-12>`
 - :feature:`-` Add mypy type-checking variant of the recently added import
   test, in ``packaging.release.test_install``. This helps prove packages
