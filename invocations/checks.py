@@ -9,7 +9,7 @@ from invoke import task
 
 @task(name="blacken", aliases=["format"], iterable=["folders"])
 def blacken(
-    c, line_length=79, folders=None, check=False, diff=False, find_opts=None
+    c, line_length=79, folders=None, check=False, diff=False, find_opts=None, opts=None,
 ):
     r"""
     Run black on the current source tree (all ``.py`` files).
@@ -29,12 +29,16 @@ def blacken(
         command. For example, skip a vendor directory with ``"-and -not -path
         ./vendor\*"``, add ``-mtime N``, or etc. Honors the
         ``blacken.find_opts`` config option.
+    :param str opts:
+        Extra option string appended to the ``black`` call itself.
 
     .. versionadded:: 1.2
     .. versionchanged:: 1.4
         Added the ``find_opts`` argument.
     .. versionchanged:: 3.2
         Added the ``format`` alias.
+    .. versionchanged:: 3.4
+        Added the ``opts`` argument.
     """
     config = c.config.get("blacken", {})
     default_folders = ["."]
@@ -45,18 +49,23 @@ def blacken(
     configured_find_opts = config.get("find_opts", default_find_opts)
     find_opts = find_opts or configured_find_opts
 
-    black_command_line = "black -l {}".format(line_length)
+    if opts is None:
+        opts = config.get("opts", "")
+
+    args = ["black", f"-l {line_length}"]
     if check:
-        black_command_line = "{} --check".format(black_command_line)
+        args.append("--check")
     if diff:
-        black_command_line = "{} --diff".format(black_command_line)
+        args.append("--diff")
     if find_opts:
         find_opts = " {}".format(find_opts)
     else:
         find_opts = ""
+    if opts:
+        args.append(opts)
 
     cmd = "find {} -name '*.py'{} | xargs {}".format(
-        " ".join(folders), find_opts, black_command_line
+        " ".join(folders), find_opts, " ".join(args)
     )
     c.run(cmd, pty=True)
 

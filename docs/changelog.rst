@@ -2,6 +2,8 @@
 Changelog
 =========
 
+- :feature:`-` Add flag for supplying extra CLI options to the invocation of
+  ``black`` inside ``checks.blacken``.
 - :release:`3.3.0 <2023-05-12>`
 - :feature:`-` Add mypy type-checking variant of the recently added import
   test, in ``packaging.release.test_install``. This helps prove packages
