@@ -668,7 +668,7 @@ def publish(
     directory=None,
 ):
     """
-    Publish code to PyPI or index of choice. Wraps ``build`` and ``publish``.
+    Publish code to PyPI or index of choice. Wraps ``build`` and ``upload``.
 
     This uses the ``twine`` command under the hood, both its pre-upload
     ``check`` subcommand (which verifies the archives to be uploaded, including
