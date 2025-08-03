@@ -4,11 +4,12 @@ invoke>=2
 releases>=2.0.1
 pytest-cov==2.4.0
 pytest-mock==3.2.0
-watchdog==0.8.3
+# Oldest version that works on Python >3.11
+watchdog==1.0.2
 coverage==4.4.2
 icecream==2.1.3
 # Formatting
-black==19.10b0
+black==22.1.0
 # Linting
 flake8==3.6.0
 # Modern setuptools, eg automatic license file detection
