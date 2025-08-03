@@ -17,6 +17,7 @@ requirements = [
     # pure-Python packages, so it shouldn't be a huge burden for users to
     # obtain them.
     "blessings>=1.6",
+    "build>=1.3",
     "releases>=1.6",
     "semantic_version>=2.4,<2.7",
     "tabulate>=0.7.5",

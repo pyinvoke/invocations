@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from os import path
+from pathlib import Path
 import re
 import sys
 
@@ -26,7 +27,6 @@ from invocations.packaging.release import (
     prepare,
     push,
     build,
-    load_version,
     publish,
     status,
     upload,
@@ -150,51 +150,6 @@ class find_package_:
         skip()
 
 
-class load_version_:
-    def setup(self):
-        sys.path.insert(0, support_dir)
-
-    def teardown(self):
-        sys.path.remove(support_dir)
-
-    def _expect_version(self, expected, config_val=None):
-        config = {"package": "fakepackage"}
-        if config_val is not None:
-            config["version_module"] = config_val
-        c = MockContext(Config(overrides={"packaging": config}))
-        assert load_version(c) == expected
-
-    # NOTE: these all also happen to test the Python bug re: a unicode value
-    # given to `__import__(xxx, fromlist=['onoz'])`. No real point making
-    # another one.
-
-    def defaults_to_underscore_version(self):
-        self._expect_version("1.0.0")
-
-    def can_configure_which_module_holds_version_data(self):
-        self._expect_version("1.0.1", config_val="otherversion")
-
-    @patch("invocations.packaging.release.sys.modules", wraps=sys.modules)
-    def reloads_version_in_case_edited_during_run(self, modules):
-        # NOTE: mock doesn't mock/wrap dunder-attrs well (eg see python core
-        # bug #25597) so we gotta rub some more on top, esp for eg
-        # Python 3.8+ importlib which does additional setattrs and pops.
-        # (but we still wraps= in @patch as it smooths over other bits we don't
-        # care about mocking, at least under Python <3.8)
-        even_faker_package = Mock(_version=Mock(__version__="1.0.0"))
-        modules.__getitem__.return_value = even_faker_package
-        modules.get.return_value = even_faker_package
-        self._expect_version("1.0.0")
-        # Expect our own internal pops (the stdlib ones, eg under 3.8+, don't
-        # exactly match these - no 2nd arg - so we can be pretty sure this
-        # won't incorrectly pass due to them)
-        modules.pop.assert_any_call("fakepackage._version", None)
-        modules.pop.assert_any_call("fakepackage", None)
-
-    def errors_usefully_if_version_module_not_found(self):
-        skip()
-
-
 class latest_and_next_version_:
     def next_patch_of_bugfix_release(self):
         versions = _latest_and_next_version(
@@ -227,7 +182,7 @@ class latest_and_next_version_:
 # - comparison of version file contents w/ latest release in changelog
 # TODO: ... (pypi release, etc)
 
-support_dir = path.join(path.dirname(__file__), "_support")
+support_dir = Path(__file__).parent / "_support"
 
 # Sentinel for targeted __import__ mocking. Is a string so that it can be
 # expected in tests about the version file, etc.
@@ -288,24 +243,10 @@ def _mock_context(self):
             "M somefile", exited=0
         ),
     }
-    context = MockContext(config=config, run=run_results, repeat=True)
-
-    #
-    # Execute converge() inside a mock environment
-    #
-
-    # Allow targeted import mocking, leaving regular imports alone.
-    real_import = __import__
-
-    def fake_import(*args, **kwargs):
-        if args[0] is not FAKE_PACKAGE:
-            return real_import(*args, **kwargs)
-        return Mock(_version=Mock(__version__=self._version))
-
-    import_patcher = patch("builtins.__import__", side_effect=fake_import)
-
-    with import_patcher:
-        yield context
+    # Make cwd appear to be inside our support dir for eg pyproject.toml
+    with patch("invocations.packaging.release._read_pyproject_toml") as mock_pyproject:
+        mock_pyproject.return_value = dict(project=dict(version=self._version))
+        yield MockContext(config=config, run=run_results, repeat=True)
 
 
 def _mock_status(self):
@@ -570,6 +511,7 @@ Tag +{tag}
         _branch = "whatever"
         _changelog = "nah"
         _tags = ("nope",)
+        _version = "irrelevant"
 
         @raises(UndefinedReleaseType)
         def raises_exception(self):
@@ -849,7 +791,7 @@ class component_state_enums_contain_human_readable_values:
 
 
 @contextmanager
-def _expect_setuppy(flags, python="python", config=None, yield_rmtree=False):
+def _expect_pypa_build(flags, python="python", config=None, yield_rmtree=False):
     kwargs = dict(run=True)
     if config is not None:
         kwargs["config"] = config
@@ -860,53 +802,47 @@ def _expect_setuppy(flags, python="python", config=None, yield_rmtree=False):
             yield c, rmtree
         else:
             yield c
-    c.run.assert_called_once_with("{} setup.py {}".format(python, flags))
+    print(c.run.mock_calls)
+    c.run.assert_any_call(f"{python} -m build {flags}")
 
 
 class build_:
-    _sdist_flags = "sdist -d dist"
-    _wheel_flags = "build -b build bdist_wheel -d dist"
-    _both_flags = "sdist -d dist build -b build bdist_wheel -d dist"
-    _oh_dir = "sdist -d {0} build -b {1} bdist_wheel -d {0}".format(
-        path.join("dir", "dist"), path.join("dir", "build")
-    )
+    _sdist_flags = "--outdir dist --sdist"
+    _wheel_flags = "--outdir dist --wheel"
+    _both_flags = "--outdir dist --sdist --wheel"
 
     class sdist:
-        def indicates_sdist_builds(self):
-            with _expect_setuppy(self._both_flags) as c:
-                build(c, sdist=True)
-
         def on_by_default(self):
-            with _expect_setuppy(self._both_flags) as c:
+            with _expect_pypa_build(self._both_flags) as c:
                 build(c)
 
         def can_be_disabled_via_config(self):
             config = Config(dict(packaging=dict(sdist=False)))
-            with _expect_setuppy(self._wheel_flags, config=config) as c:
+            with _expect_pypa_build(self._wheel_flags, config=config) as c:
                 build(c)
 
         def kwarg_wins_over_config(self):
             config = Config(dict(packaging=dict(sdist=True)))
-            with _expect_setuppy(self._wheel_flags, config=config) as c:
+            with _expect_pypa_build(self._wheel_flags, config=config) as c:
                 build(c, sdist=False)
 
     class wheel:
         def indicates_explicit_build_and_wheel(self):
-            with _expect_setuppy(self._wheel_flags) as c:
+            with _expect_pypa_build(self._wheel_flags) as c:
                 build(c, sdist=False, wheel=True)
 
         def on_by_default(self):
-            with _expect_setuppy(self._wheel_flags) as c:
+            with _expect_pypa_build(self._wheel_flags) as c:
                 build(c, sdist=False)
 
         def can_be_disabled_via_config(self):
             config = Config(dict(packaging=dict(wheel=False)))
-            with _expect_setuppy(self._sdist_flags, config=config) as c:
+            with _expect_pypa_build(self._sdist_flags, config=config) as c:
                 build(c)
 
         def kwarg_wins_over_config(self):
             config = Config(dict(packaging=dict(wheel=True)))
-            with _expect_setuppy(self._sdist_flags, config=config) as c:
+            with _expect_pypa_build(self._sdist_flags, config=config) as c:
                 build(c, wheel=False)
 
     @raises(Exit)
@@ -914,92 +850,80 @@ class build_:
         build(MockContext(), sdist=False, wheel=False)
 
     class directory:
-        def defaults_to_blank_or_cwd(self):
-            with _expect_setuppy(self._both_flags) as c:
+        def defaults_to_cwd_dist(self):
+            with _expect_pypa_build(self._both_flags) as c:
                 build(c)
-
-        def if_given_affects_build_and_dist_dirs(self):
-            with _expect_setuppy(self._oh_dir) as c:
-                build(c, directory="dir")
 
         def may_be_given_via_config(self):
             config = Config(dict(packaging=dict(directory="dir")))
-            with _expect_setuppy(self._oh_dir, config=config) as c:
+            with _expect_pypa_build("--outdir dir --sdist --wheel", config=config) as c:
                 build(c)
 
         def kwarg_wins_over_config(self):
             config = Config(dict(packaging=dict(directory="NOTdir")))
-            with _expect_setuppy(self._oh_dir, config=config) as c:
+            with _expect_pypa_build("--outdir dir --sdist --wheel", config=config) as c:
                 build(c, directory="dir")
 
     class python:
         def defaults_to_python(self):
-            with _expect_setuppy(self._both_flags, python="python") as c:
+            with _expect_pypa_build(self._both_flags, python="python") as c:
                 build(c, python="python")
 
         def may_be_overridden(self):
-            with _expect_setuppy(self._both_flags, python="fython") as c:
+            with _expect_pypa_build(self._both_flags, python="fython") as c:
                 build(c, python="fython")
 
         def can_be_given_via_config(self):
             config = Config(dict(packaging=dict(python="python17")))
-            with _expect_setuppy(
+            with _expect_pypa_build(
                 self._both_flags, config=config, python="python17"
             ) as c:
                 build(c)
 
         def kwarg_wins_over_config(self):
             config = Config(dict(packaging=dict(python="python17")))
-            with _expect_setuppy(
+            with _expect_pypa_build(
                 self._both_flags, config=config, python="python99"
             ) as c:
                 build(c, python="python99")
 
     class clean:
         def _expect_with_rmtree(self):
-            return _expect_setuppy(self._both_flags, yield_rmtree=True)
+            return _expect_pypa_build(self._both_flags, yield_rmtree=True)
 
         def defaults_to_False_meaning_no_clean(self):
             with self._expect_with_rmtree() as (c, rmtree):
                 build(c)
             assert not rmtree.called
 
-        def True_means_clean_both_dirs(self):
+        def True_means_clean_dist_dir(self):
             with self._expect_with_rmtree() as (c, rmtree):
                 build(c, clean=True)
-            rmtree.assert_any_call("dist", ignore_errors=True)
-            rmtree.assert_any_call("build", ignore_errors=True)
+            rmtree.assert_any_call(Path("dist"), ignore_errors=True)
 
         def understands_directory_option(self):
-            with _expect_setuppy(self._oh_dir, yield_rmtree=True) as (
+            with _expect_pypa_build("--outdir custom --sdist --wheel", yield_rmtree=True) as (
                 c,
                 rmtree,
             ):
-                build(c, directory="dir", clean=True)
-            rmtree.assert_any_call(
-                path.join("dir", "build"), ignore_errors=True
-            )
-            rmtree.assert_any_call(
-                path.join("dir", "dist"), ignore_errors=True
-            )
+                build(c, directory="custom", clean=True)
+            rmtree.assert_any_call("custom", ignore_errors=True)
 
         def may_be_configured(self):
             config = Config(dict(packaging=dict(clean=True)))
-            with _expect_setuppy(
+            with _expect_pypa_build(
                 self._both_flags, yield_rmtree=True, config=config
             ) as (c, rmtree):
                 build(c)
-            rmtree.assert_any_call("dist", ignore_errors=True)
-            rmtree.assert_any_call("build", ignore_errors=True)
+            rmtree.assert_any_call(Path("dist"), ignore_errors=True)
 
         def kwarg_wins_over_config(self):
             config = Config(dict(packaging=dict(clean=True)))
-            with _expect_setuppy(
+            with _expect_pypa_build(
                 self._both_flags, yield_rmtree=True, config=config
             ) as (c, rmtree):
                 build(c, clean=False)
-            rmtree.assert_any_call("dist", ignore_errors=True)
-            rmtree.assert_any_call("build", ignore_errors=True)
+            rmtree.assert_any_call(Path("dist"), ignore_errors=True)
 
 
 class upload_:
@@ -1012,15 +936,17 @@ class upload_:
         """
 
         def mkpath(x):
-            return path.join("somedir", "dist", x)
+            return path.join("somedir", x)
 
-        with patch("invocations.packaging.release.glob") as glob:
+        with patch("invocations.packaging.release.Path") as mock_Path:
             tgz, whl = mkpath("foo.tar.gz"), mkpath("foo.whl")
+            glob = mock_Path.return_value.glob
             glob.side_effect = lambda x: [tgz if x.endswith("gz") else whl]
             # Do the thing!
             upload(c, "somedir", **(kwargs or {}))
-            glob.assert_any_call(mkpath("*.tar.gz"))
-            glob.assert_any_call(mkpath("*.whl"))
+            mock_Path.assert_any_call("somedir")
+            glob.assert_any_call("*.tar.gz")
+            glob.assert_any_call("*.whl")
         self.files = "{} {}".format(whl, tgz)
         cmd = "twine upload"
         if flags:
@@ -1053,14 +979,14 @@ class upload_:
         c = MockContext(run=True, repeat=True)
         getpass.return_value = "super sekrit"
         twine_upload = self._check_upload(
-            c, kwargs=dict(sign=True), extra="somedir/dist/*.asc"
+            c, kwargs=dict(sign=True), extra="somedir/*.asc"
         )
         calls = c.run.mock_calls
         # Looked for gpg
         assert calls[0] == call("which gpg", hide=True, warn=True)
         # Signed wheel
         flags = "--detach-sign --armor --passphrase-fd=0 --batch --pinentry-mode=loopback"  # noqa
-        template = "gpg {} somedir/dist/foo.{{}}".format(flags)
+        template = "gpg {} somedir/foo.{{}}".format(flags)
         assert calls[1][1][0] == template.format("whl")
         # Spot check: did use in_stream to submit passphrase
         assert "in_stream" in calls[1][2]
@@ -1087,7 +1013,7 @@ class publish_:
                 c, sdist=True, wheel=True, directory="tmpdir"
             )
             # Twine check
-            splat = path.join("tmpdir", "dist", "*")
+            splat = path.join("tmpdir", "*")
             mocks.twine_check.assert_called_once_with(dists=[splat])
             # Install test
             mocks.test_install.assert_called_once_with(c, directory="tmpdir")
