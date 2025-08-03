@@ -244,7 +244,9 @@ def _mock_context(self):
         ),
     }
     # Make cwd appear to be inside our support dir for eg pyproject.toml
-    with patch("invocations.packaging.release._read_pyproject_toml") as mock_pyproject:
+    with patch(
+        "invocations.packaging.release._read_pyproject_toml"
+    ) as mock_pyproject:
         mock_pyproject.return_value = dict(project=dict(version=self._version))
         yield MockContext(config=config, run=run_results, repeat=True)
 
@@ -791,7 +793,9 @@ class component_state_enums_contain_human_readable_values:
 
 
 @contextmanager
-def _expect_pypa_build(flags, python="python", config=None, yield_rmtree=False):
+def _expect_pypa_build(
+    flags, python="python", config=None, yield_rmtree=False
+):
     kwargs = dict(run=True)
     if config is not None:
         kwargs["config"] = config
@@ -856,12 +860,16 @@ class build_:
 
         def may_be_given_via_config(self):
             config = Config(dict(packaging=dict(directory="dir")))
-            with _expect_pypa_build("--outdir dir --sdist --wheel", config=config) as c:
+            with _expect_pypa_build(
+                "--outdir dir --sdist --wheel", config=config
+            ) as c:
                 build(c)
 
         def kwarg_wins_over_config(self):
             config = Config(dict(packaging=dict(directory="NOTdir")))
-            with _expect_pypa_build("--outdir dir --sdist --wheel", config=config) as c:
+            with _expect_pypa_build(
+                "--outdir dir --sdist --wheel", config=config
+            ) as c:
                 build(c, directory="dir")
 
     class python:
@@ -902,7 +910,9 @@ class build_:
             rmtree.assert_any_call(Path("dist"), ignore_errors=True)
 
         def understands_directory_option(self):
-            with _expect_pypa_build("--outdir custom --sdist --wheel", yield_rmtree=True) as (
+            with _expect_pypa_build(
+                "--outdir custom --sdist --wheel", yield_rmtree=True
+            ) as (
                 c,
                 rmtree,
             ):

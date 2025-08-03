@@ -17,6 +17,7 @@ from functools import partial
 from io import StringIO
 from pathlib import Path
 from shutil import rmtree
+from typing import Union
 
 from build._builder import _read_pyproject_toml
 from invoke.vendor.lexicon import Lexicon
@@ -813,7 +814,7 @@ def test_install(c, directory, verbose=False, skip_import=False):
         c.config.run.hide = old_hide
 
 
-def get_archives(directory: str | Path) -> list[Path]:
+def get_archives(directory: Union[str, Path]) -> list[Path]:
     """
     Obtain list of archive filenames, then ensure any wheels come first
     so their improved metadata is what PyPI sees initially (otherwise, it
