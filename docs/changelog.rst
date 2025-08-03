@@ -2,6 +2,22 @@
 Changelog
 =========
 
+- :support:`-` Update ``packaging.release.build`` to use ``pypa/build`` instead
+  of ``setup.py``.
+
+  .. warning::
+    This change is *mostly* backwards compatible (``build`` will still work on
+    ``setup.py`` oriented projects - eg we tested it briefly on ourselves as we
+    haven't yet made the jump to ``pyproject.toml``) **but** involves some
+    minor behavioral/api differences, so we've bumped our version number.
+    Specifically:
+
+      - ``--directory`` argument is now ~= ``python -m build --outdir``,
+        meaning it controls what is usually named ``dist/``; previously, this
+        option controlled a parent directory inside of which was created
+        ``dist/`` and ``build/``. There's no longer any explicit ``build/``
+        (that would be up to your project's build backend).
+
 - :support:`-` Mute SyntaxWarnings from older ``semantic_version`` versions
   (temporary measure until we can upgrade to modern versions).
 - :release:`3.3.0 <2023-05-12>`

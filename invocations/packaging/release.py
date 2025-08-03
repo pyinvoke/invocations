@@ -9,18 +9,16 @@ This module assumes:
 """
 
 import getpass
-import itertools
 import logging
 import os
 import re
-import sys
 import venv
 from functools import partial
-from glob import glob
 from io import StringIO
 from pathlib import Path
 from shutil import rmtree
 
+from build._builder import _read_pyproject_toml
 from invoke.vendor.lexicon import Lexicon
 
 from blessings import Terminal
@@ -150,7 +148,7 @@ def _converge(c):
         - ``latest_overall_release``: the absolute most recent release entry.
           Useful for determining next minor/feature release.
         - ``current_version``: the version string as found in the package's
-          ``__version__``.
+          packaging metadata.
     """
     #
     # Data/state gathering
@@ -188,8 +186,10 @@ def _converge(c):
     # Also get latest overall release, sometimes that matters (usually only
     # when latest *appropriate* release doesn't exist yet)
     overall_release = _versions_from_changelog(changelog)[-1]
-    # Obtain the project's main package & its version data
-    current_version = load_version(c)
+    # Obtain the project's defined (not installed) version number
+    pyproject = Path.cwd() / "pyproject.toml"
+    current_version = _read_pyproject_toml(pyproject)["project"]["version"]
+
     # Grab all git tags
     tags = _get_tags(c)
 
@@ -412,6 +412,14 @@ def _release_line(c):
     # TODO: major releases? or are they big enough events we don't need to
     # bother with the script? Also just hard to gauge - when is main the next
     # 1.x feature vs 2.0?
+    # TODO: yea, this is currently a slightly annoying hole, workaround is to:
+    # - be on main still
+    # - update your pyproject's version to eg 3.0.0
+    # - add the 3.0.0 release entry in your changelog (without that, this
+    # module will croak on assumptions)
+    # - commit
+    # - branch to 3.0
+    # - running eg `inv release --dry-run` should now work as expected
     branch = c.run("git rev-parse --abbrev-ref HEAD", hide=True).stdout.strip()
     type_ = Release.UNDEFINED
     if BUGFIX_RE.match(branch):
@@ -536,10 +544,7 @@ def _find_package(c):
     containing ``__init__.py``). (This search ignores a small blacklist of
     directories like ``tests/``, ``vendor/`` etc.)
     """
-    # TODO: is there a way to get this from the same place setup.py does w/o
-    # setup.py barfing (since setup() runs at import time and assumes CLI use)?
-    # TODO Python 3.7: seems like a job for the then-in-stdlib
-    # importlib.metadata?
+    # TODO: try using importlib now it's in stdlib?
     configured_value = c.get("packaging", {}).get("package", None)
     if configured_value:
         return configured_value
@@ -561,28 +566,12 @@ def _find_package(c):
     return packages[0]
 
 
-def load_version(c):
-    package_name = _find_package(c)
-    version_module = c.packaging.get("version_module", "_version")
-    # Evict from sys.modules in case we're running at the end of an in-session
-    # edit (eg within prepare()). Otherwise we'll always only see what was
-    # on-disk at first import.
-    # NOTE: must do both the top level package and the version module! Unclear
-    # why. May be due to the specific import strategy
-    # TODO 3.0: def try using the cleaner options available under Python 3 when
-    # we drop 2.
-    sys.modules.pop("{}.{}".format(package_name, version_module), None)
-    sys.modules.pop(package_name, None)
-    package = __import__(package_name, fromlist=[str(version_module)])
-    # TODO: explode nicely if it lacks a _version/etc, or a __version__
-    # TODO: make this a Version()?
-    return getattr(package, version_module).__version__
-
-
 @task
 def build(c, sdist=True, wheel=True, directory=None, python=None, clean=False):
     """
     Build sdist and/or wheel archives, optionally in a temp base directory.
+
+    Uses the `build <https://build.pypa.io/en/stable/>`_ tool from PyPA.
 
     All parameters/flags honor config settings of the same name, under the
     ``packaging`` tree. E.g. say ``.configure({'packaging': {'wheel':
@@ -596,33 +585,31 @@ def build(c, sdist=True, wheel=True, directory=None, python=None, clean=False):
         Default: ``True``.
 
     :param str directory:
-        Allows specifying a specific directory in which to perform builds and
-        dist creation. Useful when running as a subroutine from ``publish``
-        which sets up a temporary directory.
+        Allows specifying a specific directory in which to perform dist
+        creation. Useful when running as a subroutine from ``publish`` which
+        sets up a temporary directory. Defaults to the current working
+        directory + ``dist/`` (the same as ``pypa/build``'s default behavior,
+        albeit explicitly derived to support our own functionality).
 
-        Up to two subdirectories may be created within this directory: one for
-        builds (if building wheels), and one for the dist archives.
-
-        When ``None`` or another false-y value (which is the default), the
-        current working directory is used (and thus, local ``dist/`` and
-        ``build/`` subdirectories).
+    :param clean:
+        Whether to remove the dist directory before building.
 
     :param str python:
-        Which Python binary to use when invoking ``setup.py``.
+        Which Python binary to use when invoking ``-m build``.
 
         Defaults to ``"python"``.
 
         If ``wheel=True``, then this Python must have ``wheel`` installed in
         its default ``site-packages`` (or similar) location.
 
-    :param clean:
-        Whether to clean out the build and dist directories before building.
-
     .. versionchanged:: 2.0
         ``clean`` now defaults to False instead of True, cleans both dist and
         build dirs when True, and honors configuration.
     .. versionchanged:: 2.0
         ``wheel`` now defaults to True instead of False.
+    .. versionchanged:: 4.0
+        Switched to using ``pypa/build`` and made related changes to args
+        (eg, ``directory`` now only controls dist output location).
     """
     # Config hooks
     config = c.config.get("packaging", {})
@@ -637,7 +624,10 @@ def build(c, sdist=True, wheel=True, directory=None, python=None, clean=False):
     if clean is False and "clean" in config:
         clean = config["clean"]
     if directory is None:
-        directory = config.get("directory", "")
+        directory = Path(config.get("directory", Path.cwd() / "dist"))
+        if directory.is_absolute():
+            directory = directory.relative_to(Path.cwd())
+    print(f"Building into {directory}...")
     if python is None:
         python = config.get("python", "python")  # buffalo buffalo
     # Sanity
@@ -646,25 +636,19 @@ def build(c, sdist=True, wheel=True, directory=None, python=None, clean=False):
             "You said no sdists and no wheels..."
             "what DO you want to build exactly?"
         )
-    # Directory path/arg logic
-    dist_dir = os.path.join(directory, "dist")
-    dist_arg = "-d {}".format(dist_dir)
-    build_dir = os.path.join(directory, "build")
-    build_arg = "-b {}".format(build_dir)
-    # Clean
+    # Start building command
+    parts = [python, "-m build"]
+    # Set, clean directory as needed
+    parts.append(f"--outdir {directory}")
     if clean:
-        for target in (dist_dir, build_dir):
-            rmtree(target, ignore_errors=True)
-    # Build
-    parts = [python, "setup.py"]
+        rmtree(directory, ignore_errors=True)
     if sdist:
-        parts.extend(("sdist", dist_arg))
+        parts.append("--sdist")
     if wheel:
-        # Manually execute build in case we are using a custom build dir.
-        # Doesn't seem to be a way to tell bdist_wheel to do this directly.
-        parts.extend(("build", build_arg))
-        parts.extend(("bdist_wheel", dist_arg))
+        parts.append("--wheel")
     c.run(" ".join(parts))
+    print("Result:")
+    c.run(f"ls -l {directory}", echo=True, hide=False)
 
 
 def find_gpg(c):
@@ -718,8 +702,7 @@ def publish(
         upload.
 
     :param str directory:
-        Base directory within which will live the ``dist/`` and ``build/``
-        directories.
+        Used for ``build(directory=)`` and thus affects where dists go.
 
         Defaults to a temporary directory which is cleaned up after the run
         finishes.
@@ -761,7 +744,7 @@ def publish(
         # Use twine's check command on built artifacts (at present this just
         # validates long_description)
         print(c.config.run.echo_format.format(command="twine check"))
-        failure = twine_check(dists=[os.path.join(tmp, "dist", "*")])
+        failure = twine_check(dists=[os.path.join(tmp, "*")])
         if failure:
             raise Exit(1)
         # Test installation of built artifacts into virtualenvs (even during
@@ -775,9 +758,6 @@ def publish(
 def test_install(c, directory, verbose=False, skip_import=False):
     """
     Test installation of build artifacts found in ``$directory``.
-
-    Directory should either be a ``dist`` directory itself, or the parent of
-    one.
 
     Uses the `venv` module to build temporary virtualenvs.
 
@@ -795,7 +775,7 @@ def test_install(c, directory, verbose=False, skip_import=False):
     builder = venv.EnvBuilder(with_pip=True)
     archives = get_archives(directory)
     if not archives:
-        raise Exit("No archive files found in {}!".format(directory))
+        raise Exit(f"No archive files found in {directory}!")
     for archive in archives:
         with tmpdir() as tmp:
             # Make temp venv
@@ -805,13 +785,9 @@ def test_install(c, directory, verbose=False, skip_import=False):
             # venv-made envs have a bundled, older pip :(
             envbin = Path(tmp) / "bin"
             pip = envbin / "pip"
-            c.run("{} install pip=={}".format(pip, pip_version))
+            c.run(f"{pip} install pip=={pip_version}")
             # Does the package under test install cleanly?
-            c.run(
-                "{} install --disable-pip-version-check {}".format(
-                    pip, archive
-                )
-            )
+            c.run(f"{pip} install --disable-pip-version-check {archive}")
             # Can we actually import it? (Will catch certain classes of
             # import-time-but-not-install-time explosions, eg busted dependency
             # specifications or imports).
@@ -821,6 +797,7 @@ def test_install(c, directory, verbose=False, skip_import=False):
                 c.run(f"{envbin / 'python'} -c 'import {package}'")
                 # Import, typecheck version (ie dependent package typechecking
                 # both itself and us). Assumes task is run from project root.
+                # TODO: is py.typed still mandatory these days?
                 pytyped = Path(package) / "py.typed"
                 if pytyped.exists():
                     # TODO: pin a specific mypy version?
@@ -836,17 +813,14 @@ def test_install(c, directory, verbose=False, skip_import=False):
         c.config.run.hide = old_hide
 
 
-def get_archives(directory):
-    # Obtain list of archive filenames, then ensure any wheels come first
-    # so their improved metadata is what PyPI sees initially (otherwise, it
-    # only honors the sdist's lesser data).
-    dist = "" if directory.endswith("dist") else "dist"
-    return list(
-        itertools.chain.from_iterable(
-            glob(os.path.join(directory, dist, "*.{}".format(extension)))
-            for extension in ("whl", "tar.gz")
-        )
-    )
+def get_archives(directory: str | Path) -> list[Path]:
+    """
+    Obtain list of archive filenames, then ensure any wheels come first
+    so their improved metadata is what PyPI sees initially (otherwise, it
+    only honors the sdist's lesser data).
+    """
+    target = Path(directory)
+    return sorted(target.glob("*.whl")) + sorted(target.glob("*.tar.gz"))
 
 
 @task
@@ -893,16 +867,16 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
     # Upload
     parts = ["twine", "upload"]
     if index:
-        parts.append("--repository {}".format(index))
-    paths = archives.copy()
+        parts.append(f"--repository {index}")
+    paths = [str(x) for x in archives]
     if sign and not dry_run:
-        paths.append(os.path.join(directory, "dist", "*.asc"))
+        paths.append(os.path.join(directory, "*.asc"))
     parts.extend(paths)
     cmd = " ".join(parts)
     if dry_run:
-        print("Would publish via: {}".format(cmd))
+        print(f"Would publish via: {cmd}")
         print("Files that would be published:")
-        c.run("ls -l {}".format(" ".join(paths)))
+        c.run(f"ls -l {' '.join(paths)}")
     else:
         c.run(cmd)
 
