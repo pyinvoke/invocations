@@ -3,6 +3,7 @@ Changelog
 =========
 
 - :release:`4.0.0 <2025-08-03>`
+- :support:`-` Add a ``__version__`` member to the package root module.
 - :support:`-` Drop support for Python<3.9 and switch to using pyproject.toml.
 - :support:`-` Update ``packaging.release.build`` to use ``pypa/build`` instead
   of ``setup.py``.
