@@ -9,6 +9,7 @@ ns = Collection(release, test, coverage, docs, checks.blacken, checks)
 ns.configure(
     {
         "packaging": {"wheel": True, "changelog_file": "docs/changelog.rst"},
+        "blacken": {"find_opts": r"-and -not -path '*.cci_pycache*'"},
         "run": {
             "env": {
                 # Our ANSI color tests test against hardcoded codes appropriate
