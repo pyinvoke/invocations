@@ -2,6 +2,7 @@
 Changelog
 =========
 
+- :release:`4.0.2 <2025-08-04>`
 - :support`- backported` Add ``pip`` explicitly to our core dependencies so
   that envs which don't naturally include it (a thing these days!) still
   install it. We do literally import from pip as well as call out to it in
