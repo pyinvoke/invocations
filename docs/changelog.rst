@@ -2,6 +2,10 @@
 Changelog
 =========
 
+- :support`- backported` Add ``pip`` explicitly to our core dependencies so
+  that envs which don't naturally include it (a thing these days!) still
+  install it. We do literally import from pip as well as call out to it in
+  subprocesses, at least for now.
 - :release:`4.0.1 <2025-08-03>`
 - :bug:`-` Fix some Python 3.10-specific type hint syntax that snuck in.
   Apologies from our dayjob, which is on Python 3.11.
