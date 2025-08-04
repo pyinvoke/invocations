@@ -4,8 +4,7 @@ Python package release tasks.
 This module assumes:
 
 - you're using semantic versioning for your releases
-- you maintain a file called ``$package/_version.py`` containing normal version
-  conventions (``__version_info__`` tuple and ``__version__`` string).
+- you're using a modern pyproject.toml for packaging metadata
 """
 
 import getpass
@@ -352,11 +351,7 @@ def prepare(c, dry_run=False):
         c.run(cmd, pty=True, hide=False, dry=dry_run)
     # Version file!
     if actions.version == VersionFile.NEEDS_BUMP:
-        version_file = os.path.join(
-            _find_package(c),
-            c.packaging.get("version_module", "_version") + ".py",
-        )
-        cmd = "$EDITOR {}".format(version_file)
+        cmd = "$EDITOR pyproject.toml"
         c.run(cmd, pty=True, hide=False, dry=dry_run)
     if actions.tag == Tag.NEEDS_CUTTING:
         # Commit, if necessary, so the tag includes everything.
@@ -537,8 +532,6 @@ def _latest_and_next_version(state):
 def _find_package(c):
     """
     Try to find 'the' One True Package for this project.
-
-    Mostly for obtaining the ``_version`` file within it.
 
     Uses the ``packaging.package`` config setting if defined. If not defined,
     fallback is to look for a single top-level Python package (directory

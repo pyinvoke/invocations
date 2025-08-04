@@ -607,10 +607,9 @@ class prepare_:
     def opens_EDITOR_with_version_file_when_it_needs_update(self, _):
         with _mock_context(self) as c:
             _run_prepare(c)
-            path = "{}/_version.py".format(FAKE_PACKAGE)
             # TODO: real code should probs expand EDITOR explicitly so it can
             # run w/o a shell wrap / require a full env?
-            cmd = "$EDITOR {}".format(path)
+            cmd = "$EDITOR pyproject.toml"
             c.run.assert_any_call(cmd, pty=True, hide=False, dry=False)
 
     @_confirm_true
@@ -713,7 +712,7 @@ class prepare_:
                 ]
                 for pattern in (
                     r"\$EDITOR .*\.rst",
-                    r"\$EDITOR .*_version\.py",
+                    r"\$EDITOR pyproject\.toml",
                     r"git commit.*",
                     r"git tag -a.*",
                 ):
