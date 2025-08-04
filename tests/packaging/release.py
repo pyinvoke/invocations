@@ -7,7 +7,7 @@ import sys
 from invoke.vendor.lexicon import Lexicon
 from invoke import MockContext, Result, Config, Exit
 from docutils.utils import Reporter
-from unittest.mock import Mock, patch, call
+from unittest.mock import patch, call
 import pytest
 from pytest import skip
 from pytest_relaxed import trap, raises
