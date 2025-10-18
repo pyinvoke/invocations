@@ -82,3 +82,6 @@ dev = [
   # Linting
   "flake8~=7.3.0",
 ]
+
+[tool.ruff]
+line-length = 79
