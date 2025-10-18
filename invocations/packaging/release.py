@@ -640,7 +640,7 @@ def build(
     # Sanity
     if not sdist and not wheel:
         raise Exit(
-            "You said no sdists and no wheels...what DO you want to build exactly?"
+            "You said no sdists and no wheels...what DO you want to build exactly?"  # noqa
         )
     # Start building command
     parts = [python, "-m build"]
@@ -864,7 +864,7 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
         gpg_bin = find_gpg(c)
         if not gpg_bin:
             raise Exit(
-                "You need to have one of `gpg`, `gpg1` or `gpg2` installed to GPG-sign!"
+                "You need to have one of `gpg`, `gpg1` or `gpg2` installed to GPG-sign!"  # noqa
             )
         for archive in archives:
             cmd = "{} --detach-sign --armor --passphrase-fd=0 --batch --pinentry-mode=loopback {{}}".format(  # noqa
