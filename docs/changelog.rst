@@ -2,6 +2,12 @@
 Changelog
 =========
 
+- :feature:`-` Updated the ``--clean`` flag in ``packaging.release.build`` to
+  clean any ``build/`` directories in the source root, on top of the previous
+  behavior of cleaning out ``dist/``. This helps prevent wacky state bleed
+  between builds of different pyproject.toml (or etc) configurations.
+- :feature:`-` Added ``--opts`` flag to ``packaging.release.build`` for passing
+  through arbitrary flags to the underlying ``python -m build`` call.
 - :release:`4.0.2 <2025-08-04>`
 - :support`- backported` Add ``pip`` explicitly to our core dependencies so
   that envs which don't naturally include it (a thing these days!) still

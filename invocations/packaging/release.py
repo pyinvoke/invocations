@@ -561,7 +561,15 @@ def _find_package(c):
 
 
 @task
-def build(c, sdist=True, wheel=True, directory=None, python=None, clean=False):
+def build(
+    c,
+    sdist=True,
+    wheel=True,
+    directory=None,
+    python=None,
+    clean=False,
+    opts: str | None = None,
+):
     """
     Build sdist and/or wheel archives, optionally in a temp base directory.
 
@@ -596,6 +604,9 @@ def build(c, sdist=True, wheel=True, directory=None, python=None, clean=False):
         If ``wheel=True``, then this Python must have ``wheel`` installed in
         its default ``site-packages`` (or similar) location.
 
+    :param str opts:
+        If given, is passed into the ``python -m build`` command unaltered.
+
     .. versionchanged:: 2.0
         ``clean`` now defaults to False instead of True, cleans both dist and
         build dirs when True, and honors configuration.
@@ -604,6 +615,11 @@ def build(c, sdist=True, wheel=True, directory=None, python=None, clean=False):
     .. versionchanged:: 4.0
         Switched to using ``pypa/build`` and made related changes to args
         (eg, ``directory`` now only controls dist output location).
+    .. versionchanged:: 4.1
+        Added the ``opts`` argument.
+    .. versionchanged:: 4.1
+        Updated ``--clean`` to additionally remove any ``build/`` directories
+        within the source root.
     """
     # Config hooks
     config = c.config.get("packaging", {})
@@ -636,10 +652,13 @@ def build(c, sdist=True, wheel=True, directory=None, python=None, clean=False):
     parts.append(f"--outdir {directory}")
     if clean:
         rmtree(directory, ignore_errors=True)
+        rmtree(Path.cwd() / "build", ignore_errors=True)
     if sdist:
         parts.append("--sdist")
     if wheel:
         parts.append("--wheel")
+    if opts is not None:
+        parts.append(opts)
     c.run(" ".join(parts))
     print("Result:")
     c.run(f"ls -l {directory}", echo=True, hide=False)
