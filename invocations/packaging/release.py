@@ -12,31 +12,28 @@ import logging
 import os
 import re
 import venv
+from enum import Enum
 from functools import partial
 from io import StringIO
 from pathlib import Path
 from shutil import rmtree
 from typing import Union
 
-from build._builder import _read_pyproject_toml
-from invoke.vendor.lexicon import Lexicon
-
-from blessings import Terminal
-from docutils.utils import Reporter
-from enum import Enum
-from invoke import Collection, task, Exit
-from pip import __version__ as pip_version
 import readme_renderer.rst  # transitively required via twine in setup.py
+from blessings import Terminal
+from build._builder import _read_pyproject_toml
+from docutils.utils import Reporter
+from invoke import Collection, Exit, task
+from invoke.vendor.lexicon import Lexicon
+from pip import __version__ as pip_version
 from releases.util import parse_changelog
 from tabulate import tabulate
 from twine.commands.check import check as twine_check
 
-from .semantic_version_monkey import Version
-
 from ..console import confirm
 from ..environment import in_ci
 from ..util import tmpdir
-
+from .semantic_version_monkey import Version
 
 debug = logging.getLogger("invocations.packaging.release").debug
 
@@ -643,8 +640,7 @@ def build(
     # Sanity
     if not sdist and not wheel:
         raise Exit(
-            "You said no sdists and no wheels..."
-            "what DO you want to build exactly?"
+            "You said no sdists and no wheels...what DO you want to build exactly?"
         )
     # Start building command
     parts = [python, "-m build"]
@@ -868,8 +864,7 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
         gpg_bin = find_gpg(c)
         if not gpg_bin:
             raise Exit(
-                "You need to have one of `gpg`, `gpg1` or `gpg2` "
-                "installed to GPG-sign!"
+                "You need to have one of `gpg`, `gpg1` or `gpg2` installed to GPG-sign!"
             )
         for archive in archives:
             cmd = "{} --detach-sign --armor --passphrase-fd=0 --batch --pinentry-mode=loopback {{}}".format(  # noqa
