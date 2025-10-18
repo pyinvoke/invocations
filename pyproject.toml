@@ -69,7 +69,7 @@ build-backend = "setuptools.build_meta"
 dev = [
   # For testing
   "pytest-relaxed>=2",
-  "invoke>=2",
+  "invoke>=2.2.1",
   "releases>=2.0.1",
   "pytest-cov==2.4.0",
   "pytest-mock==3.2.0",
