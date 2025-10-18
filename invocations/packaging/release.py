@@ -17,7 +17,7 @@ from functools import partial
 from io import StringIO
 from pathlib import Path
 from shutil import rmtree
-from typing import Union
+from typing import Optional, Union
 
 import readme_renderer.rst  # transitively required via twine in setup.py
 from blessings import Terminal
@@ -565,7 +565,7 @@ def build(
     directory=None,
     python=None,
     clean=False,
-    opts: str | None = None,
+    opts: Optional[str] = None,
 ):
     """
     Build sdist and/or wheel archives, optionally in a temp base directory.
