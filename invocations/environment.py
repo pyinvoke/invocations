@@ -16,7 +16,7 @@ def in_ci():
     specifically whether they exist and are non-empty. The actual value is not
     currently relevant, as long as it's not the empty string.
     """
-    for sentinel in ("CIRCLECI", "TRAVIS"):
+    for sentinel in ("CIRCLECI", "TRAVIS", "YOUR_JENKINS_URL", "CI", "CI_REPOSITORY_URL"):
         if os.environ.get(sentinel, False):
             return True
     return False
