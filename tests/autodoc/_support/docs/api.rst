@@ -3,3 +3,4 @@ API
 ===
 
 .. automodule:: mytasks
+    :members:

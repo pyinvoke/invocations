@@ -1,6 +1,7 @@
 """
 Tasks for importing external code into a vendor subdirectory.
 """
+
 from os import chdir
 from pathlib import Path
 from shutil import copy, copytree, rmtree

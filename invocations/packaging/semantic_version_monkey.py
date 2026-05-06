@@ -5,7 +5,6 @@ We never like monkey-patching, but for now this is easier than either vendoring
 or distributing our own fork.
 """
 
-
 from semantic_version import Version
 
 

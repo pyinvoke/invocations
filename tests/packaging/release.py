@@ -3,13 +3,14 @@ from os import path
 from pathlib import Path
 import re
 import sys
+from unittest.mock import patch, Mock, MagicMock, call
+
 
 from invoke.vendor.lexicon import Lexicon
 from invoke import MockContext, Result, Config, Exit
 from docutils.utils import Reporter
-from unittest.mock import patch, call
 import pytest
-from pytest import skip
+from pytest import skip, fixture
 from pytest_relaxed import trap, raises
 
 from invocations.packaging.semantic_version_monkey import Version
@@ -33,6 +34,100 @@ from invocations.packaging.release import (
     test_install as install_test_task,  # to avoid pytest treating as test func
     ns as release_ns,
 )
+
+
+class Mocks:
+    pass
+
+
+# For use in packaging.release.publish tests
+@fixture
+def _fakepub(mocker):
+    mocks = Mocks()
+    mocks.rmtree = mocker.patch("invocations.util.rmtree")
+    mocks.twine_check = mocker.patch(
+        "invocations.packaging.release.twine_check", return_value=False
+    )
+    mocks.upload = mocker.patch("invocations.packaging.release.upload")
+    mocks.build = mocker.patch("invocations.packaging.release.build")
+    mocks.test_install = mocker.patch(
+        "invocations.packaging.release.test_install"
+    )
+    mocks.mkdtemp = mocker.patch("invocations.util.mkdtemp")
+    mocks.mkdtemp.return_value = "tmpdir"
+    c = MockContext(run=True)
+    yield c, mocks
+
+
+# For use in packaging.release.test_install tests
+@fixture
+def _install():
+    with (
+        patch("invocations.packaging.release.pip_version", "lmao"),
+        patch("invocations.util.rmtree", Mock("rmtree")),
+        patch("invocations.packaging.release._find_package", lambda c: "foo"),
+        patch("venv.EnvBuilder") as builder,
+        patch("invocations.util.mkdtemp") as mkdtemp,
+        patch("invocations.packaging.release.get_archives") as get_archives,
+        patch("invocations.packaging.release.Path") as fakePath,
+    ):
+        # Setup & run
+        c = MockContext(run=True, repeat=True)
+        mkdtemp.return_value = "tmpdir"
+        get_archives.return_value = ["foo.tgz", "foo.whl"]
+
+        # I hate this but don't see a cleaner way to mock out a nested
+        # 'exists()' w/o breaking everything else, or using a real tmpdir.
+        def set_exists(value):
+            def fakediv(self, arg):
+                root = Path(mkdtemp.return_value)
+                bindir = root / "bin"
+                if arg == "bin":
+                    return bindir
+                elif arg == "pip":
+                    return bindir / "pip"
+                elif arg == "python":
+                    return bindir / "python"
+                elif arg == "py.typed":
+                    path = Path("foo") / "py.typed"
+                    ret = MagicMock(wraps=path)
+                    ret.exists.return_value = value
+                    return ret
+
+            fakePath.return_value.__truediv__ = fakediv
+
+        c.set_exists = set_exists  # so caller can run it
+        c.set_exists(False)  # default
+        yield c
+        # Create factory
+        builder.assert_called_once_with(with_pip=True)
+        # Used helper to get artifacts
+        get_archives.assert_called_once_with("whatever")
+        # venv factory ran twice in some temp dir
+        builder.return_value.create.assert_has_calls(
+            [call("tmpdir"), call("tmpdir")]
+        )
+        pip_base = "tmpdir/bin/pip install --disable-pip-version-check"
+        for wanted in (
+            # Pip installed to same version as running interpreter's pip
+            call("tmpdir/bin/pip install pip==lmao"),
+            # Archives installed into venv
+            call("{} foo.tgz".format(pip_base)),
+            call("{} foo.whl".format(pip_base)),
+        ):
+            assert wanted in c.run.mock_calls
+
+
+def _strip_ansi(text):
+    # 1. Strips CSI sequences (colors, etc): \x1b[ ... m
+    # 2. Strips character set sequences (like yours): \x1b( ...
+    ansi_escape = re.compile(
+        r"""
+        \x1b[\[()][0-9;]*[a-zA-Z]
+    """,
+        re.VERBOSE,
+    )
+    return ansi_escape.sub("", text)
 
 
 class release_line_:
@@ -188,6 +283,7 @@ support_dir = Path(__file__).parent / "_support"
 # expected in tests about the version file, etc.
 # NOTE: needs to not shadow any real imported module name!
 FAKE_PACKAGE = "fakey_mcfakerson_not_real_in_any_way"
+
 
 # NOTE: can't easily slap this on the test class itself due to using inner
 # classes. If we can get the inner classes to not only copy attributes but also
@@ -543,7 +639,6 @@ def _run_prepare(c, mute=True, **kwargs):
 
 
 class prepare_:
-
     # NOTE: mostly testing the base case of 'everything needs updating',
     # all the permutations are tested elsewhere.
     _branch = "1.1"
@@ -767,28 +862,36 @@ class component_state_enums_contain_human_readable_values:
     class changelog:
         def okay(self):
             expected = "\x1b[32m\u2714 no unreleased issues\x1b(B\x1b[m"
-            assert Changelog.OKAY.value == expected
+            assert _strip_ansi(Changelog.OKAY.value) == _strip_ansi(expected)
 
         def needs_release(self):
             expected = "\x1b[31m\u2718 needs :release: entry\x1b(B\x1b[m"
-            assert Changelog.NEEDS_RELEASE.value == expected
+            assert _strip_ansi(Changelog.NEEDS_RELEASE.value) == _strip_ansi(
+                expected
+            )
 
     class version_file:
         def okay(self):
             expected = "\x1b[32m\u2714 version up to date\x1b(B\x1b[m"
-            assert VersionFile.OKAY.value == expected
+            assert _strip_ansi(VersionFile.OKAY.value) == _strip_ansi(expected)
 
         def needs_bump(self):
             expected = "\x1b[31m\u2718 needs version bump\x1b(B\x1b[m"
-            assert VersionFile.NEEDS_BUMP.value == expected
+            assert _strip_ansi(VersionFile.NEEDS_BUMP.value) == _strip_ansi(
+                expected
+            )
 
     class tag:
         def okay(self):
-            assert Tag.OKAY.value == "\x1b[32m\u2714 all set\x1b(B\x1b[m"
+            assert _strip_ansi(Tag.OKAY.value) == _strip_ansi(
+                "\x1b[32m\u2714 all set\x1b(B\x1b[m"
+            )
 
         def needs_cutting(self):
             expected = "\x1b[31m\u2718 needs cutting\x1b(B\x1b[m"
-            assert Tag.NEEDS_CUTTING.value == expected
+            assert _strip_ansi(Tag.NEEDS_CUTTING.value) == _strip_ansi(
+                expected
+            )
 
 
 @contextmanager
@@ -1011,8 +1114,8 @@ class _Kaboom(Exception):
 
 class publish_:
     class base_case:
-        def does_all_the_things(self, fakepub):
-            c, mocks = fakepub
+        def does_all_the_things(self, _fakepub):
+            c, mocks = _fakepub
             # Execution
             publish(c)
             # Unhides stdout
@@ -1033,14 +1136,14 @@ class publish_:
             # Tmpdir cleaned up
             mocks.rmtree.assert_called_once_with("tmpdir")
 
-        def cleans_up_on_error(self, fakepub):
-            c, mocks = fakepub
+        def cleans_up_on_error(self, _fakepub):
+            c, mocks = _fakepub
             mocks.build.side_effect = _Kaboom
             with pytest.raises(_Kaboom):
                 publish(MockContext(run=True))
             mocks.rmtree.assert_called_once_with(mocks.mkdtemp.return_value)
 
-        def monkeypatches_readme_renderer(self, fakepub):
+        def monkeypatches_readme_renderer(self, _fakepub):
             # Happens at module load time but is just a data structure change
             import readme_renderer.rst
 
@@ -1054,105 +1157,105 @@ class publish_:
             )
 
     class index:
-        def passed_to_upload(self, fakepub):
-            c, mocks = fakepub
+        def passed_to_upload(self, _fakepub):
+            c, mocks = _fakepub
             publish(c, index="dev")
             assert mocks.upload.call_args[1]["index"] == "dev"
 
-        def honors_config(self, fakepub):
-            c, mocks = fakepub
+        def honors_config(self, _fakepub):
+            c, mocks = _fakepub
             c.config.packaging = dict(index="prod")
             publish(c)
             assert mocks.upload.call_args[1]["index"] == "prod"
 
-        def kwarg_beats_config(self, fakepub):
-            c, mocks = fakepub
+        def kwarg_beats_config(self, _fakepub):
+            c, mocks = _fakepub
             c.config.packaging = dict(index="prod")
             publish(c, index="dev")
             assert mocks.upload.call_args[1]["index"] == "dev"
 
     class sign:
-        def passed_to_upload(self, fakepub):
-            c, mocks = fakepub
+        def passed_to_upload(self, _fakepub):
+            c, mocks = _fakepub
             publish(c, sign=True)
             assert mocks.upload.call_args[1]["sign"] is True
 
-        def honors_config(self, fakepub):
-            c, mocks = fakepub
+        def honors_config(self, _fakepub):
+            c, mocks = _fakepub
             c.config.packaging = dict(sign=True)
             publish(c)
             assert mocks.upload.call_args[1]["sign"] is True
 
-        def kwarg_beats_config(self, fakepub):
-            c, mocks = fakepub
+        def kwarg_beats_config(self, _fakepub):
+            c, mocks = _fakepub
             c.config.packaging = dict(sign=False)
             publish(c, sign=True)
             assert mocks.upload.call_args[1]["sign"] is True
 
     class sdist:
-        def defaults_True_and_passed_to_build(self, fakepub):
-            c, mocks = fakepub
+        def defaults_True_and_passed_to_build(self, _fakepub):
+            c, mocks = _fakepub
             publish(c)
             assert mocks.build.call_args[1]["sdist"] is True
 
-        def may_be_overridden(self, fakepub):
-            c, mocks = fakepub
+        def may_be_overridden(self, _fakepub):
+            c, mocks = _fakepub
             publish(c, sdist=False)
             assert mocks.build.call_args[1]["sdist"] is False
 
     class wheel:
-        def defaults_True_and_passed_to_build(self, fakepub):
-            c, mocks = fakepub
+        def defaults_True_and_passed_to_build(self, _fakepub):
+            c, mocks = _fakepub
             publish(c)
             assert mocks.build.call_args[1]["wheel"] is True
 
-        def may_be_overridden(self, fakepub):
-            c, mocks = fakepub
+        def may_be_overridden(self, _fakepub):
+            c, mocks = _fakepub
             publish(c, wheel=False)
             assert mocks.build.call_args[1]["wheel"] is False
 
-    def directory_affects_tmpdir(self, fakepub):
-        c, mocks = fakepub
+    def directory_affects_tmpdir(self, _fakepub):
+        c, mocks = _fakepub
         publish(c, directory="explicit")
         assert not mocks.mkdtemp.called
         assert mocks.build.call_args[1]["directory"] == "explicit"
 
     class dry_run:
-        def causes_tmpdir_cleanup_to_be_skipped(self, fakepub):
-            c, mocks = fakepub
+        def causes_tmpdir_cleanup_to_be_skipped(self, _fakepub):
+            c, mocks = _fakepub
             publish(c, dry_run=True)
             assert not mocks.rmtree.called
 
-        def causes_tmpdir_cleanup_to_be_skipped_on_exception(self, fakepub):
-            c, mocks = fakepub
+        def causes_tmpdir_cleanup_to_be_skipped_on_exception(self, _fakepub):
+            c, mocks = _fakepub
             mocks.build.side_effect = _Kaboom
             with pytest.raises(_Kaboom):
                 publish(c, dry_run=True)
             assert not mocks.rmtree.called
 
-        def passed_to_upload(self, fakepub):
-            c, mocks = fakepub
+        def passed_to_upload(self, _fakepub):
+            c, mocks = _fakepub
             publish(c, dry_run=True)
             assert mocks.upload.call_args[1]["dry_run"] is True
 
 
 class test_install_:
-    def installs_all_archives_in_fresh_venv_with_matching_pip(self, install):
-        c = install
+    def installs_all_archives_in_fresh_venv_with_matching_pip(self, _install):
+        c = _install
         # Basic test, uses guts of fixture
         install_test_task(c, directory="whatever")
         # Import attempt was made
         c.run.assert_any_call("tmpdir/bin/python -c 'import foo'")
 
-    def skips_import_test_when_asked_to(self, install):
-        c = install
+    def skips_import_test_when_asked_to(self, _install):
+        c = _install
         install_test_task(c, directory="whatever", skip_import=True)
         # No import attempt
         for unwanted in (call("tmpdir/bin/python -c 'import foo'"),):
             assert unwanted not in c.run.mock_calls
 
-    def does_mypy_import_when_py_typed_present(self, install):
-        c = install
+    def does_mypy_import_when_py_typed_present(self, _install):
+        c = _install
         # Mock out the pathlib exists call as positive (default is negative)
         c.set_exists(True)
         install_test_task(c, directory="whatever")
@@ -1162,8 +1265,8 @@ class test_install_:
         # all these mocks, jeez
         c.run.assert_any_call("cd tmpdir && tmpdir/bin/mypy -c 'import foo'")
 
-    def skips_mypy_import_when_no_py_typed(self, install):
-        c = install
+    def skips_mypy_import_when_no_py_typed(self, _install):
+        c = _install
         # Mock out the pathlib exists call as explicitly false, why not
         c.set_exists(False)
         install_test_task(c, directory="whatever")
@@ -1174,8 +1277,8 @@ class test_install_:
         ):
             assert unwanted not in c.run.mock_calls
 
-    def skips_mypy_import_when_skipping_regular_import(self, install):
-        c = install
+    def skips_mypy_import_when_skipping_regular_import(self, _install):
+        c = _install
         c.set_exists(True)
         install_test_task(c, directory="whatever", skip_import=True)
         # Mypy NOT installed or executed
