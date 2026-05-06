@@ -63,6 +63,6 @@ if not on_dev:
     inv_target = "http://docs.pyinvoke.org/en/latest/"
 # Put them all together, + Python core
 intersphinx_mapping = {
-    "python": ("http://docs.python.org/", None),
-    "invoke": (inv_target, None),
+    "python": ("https://docs.python.org/3/", None),
+    "invoke": ("https://docs.pyinvoke.org/en/stable/", None),
 }

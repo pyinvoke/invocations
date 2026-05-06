@@ -45,7 +45,7 @@ class TaskDocumenter(autodoc.ModuleLevelDocumenter):
     def can_document_member(cls, member, membername, isattr, parent):
         from invoke import Task
 
-        # Identify Invoke tasks by their characteristic attributes or class type
+        # Identify Invoke tasks by their characteristic attributes or type
         return (
             isinstance(member, Task)
             or hasattr(member, "body")
@@ -53,7 +53,8 @@ class TaskDocumenter(autodoc.ModuleLevelDocumenter):
         )
 
     def import_object(self, **kwargs):
-        # Import the Task instance, then store the wrapped function for inspection
+        # Import the Task instance,
+        # then store the wrapped function for inspection
         success = super().import_object(**kwargs)
         if success and hasattr(self.object, "body"):
             self.wrapped_function = self.object.body

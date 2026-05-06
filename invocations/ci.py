@@ -56,9 +56,10 @@ def sudo_run(c, command):
     """
     Run some command under CI-oriented sudo subshell/virtualenv.
 
-    :param str command:
-        Command string to run, e.g. ``inv coverage``, ``inv integration``, etc.
+    :param str command: Command string to run,
+        e.g. ``inv coverage``, ``inv integration``, etc.
         (Does not necessarily need to be an Invoke task, but...)
+
     """
     # NOTE: due to circle sudoers config, circleci user can't do "sudo -u" w/o
     # password prompt. However, 'sudo su' seems to work just as well...
