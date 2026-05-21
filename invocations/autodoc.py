@@ -26,6 +26,9 @@ To use:
 
     - As noted above, this only works for modules that are importable, like any
       other Sphinx autodoc use case.
+    - For now, add ``autodoc_use_legacy_class_based = True`` to your
+      ``conf.py`` (see `sphinx-doc/sphinx#14089
+      <https://github.com/sphinx-doc/sphinx/issues/14089>`__).
     - Unless you want to opt-in which module members get documented, use
       ``:members:`` or add ``"members": True`` to your ``conf.py``'s
       ``autodoc_default_options``.
@@ -47,6 +50,7 @@ from invoke import Task
 
 # For sane mock patching. Meh.
 from sphinx.ext import autodoc
+from sphinx.util.inspect import stringify_signature
 
 
 class TaskDocumenter(
@@ -68,7 +72,7 @@ class TaskDocumenter(
         # after which point "call tasks as raw functions" may be less common.
         # TODO: also, it may become moot-ish if we turn this all into emission
         # of custom domain objects and/or make the CLI arguments the focus
-        return autodoc.stringify_signature(inspect.signature(function))
+        return stringify_signature(inspect.signature(function))
 
     def document_members(self, all_members=False):
         # Neuter this so superclass bits don't introspect & spit out autodoc

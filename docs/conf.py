@@ -41,6 +41,7 @@ html_sidebars = {
 }
 
 # Other extension configs
+autodoc_use_legacy_class_based = True
 autodoc_default_options = {
     "members": True,
     "special-members": True,
