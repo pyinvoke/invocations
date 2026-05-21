@@ -7,4 +7,5 @@ sys.path.insert(0, dirname(__file__))
 
 master_doc = "index"
 extensions = ["invocations.autodoc"]
+autodoc_use_legacy_class_based = True
 autodoc_default_options = dict(members=True)
