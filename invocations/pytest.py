@@ -59,7 +59,6 @@ def test(
         will be given. Default: ``True``.
 
         .. versionadded:: 2.0
-
     """
     # TODO: really need better tooling around these patterns
     # TODO: especially the problem of wanting to be configurable, but
@@ -153,7 +152,6 @@ def coverage(
 
     .. versionchanged:: 2.4
         Added the ``additional_testers`` argument.
-
     """
     my_opts = "--cov --no-cov-on-fail --cov-report={}".format(report)
     if opts:

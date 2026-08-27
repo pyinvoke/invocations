@@ -2,6 +2,12 @@
 Changelog
 =========
 
+- :support:`45` Require ``pip>=26.1``, which fixes several CVEs reported
+  against older pip releases. pip 26.1 needs Python 3.10, so Python 3.9 is no
+  longer supported.
+- :support:`-` Require ``sphinx<9``. Sphinx 9 retired the class-based
+  ``Documenter`` API that ``invocations.autodoc`` extends, so tasks stop
+  showing up in ``automodule`` output when it is installed.
 - :feature:`-` Updated the ``--clean`` flag in ``packaging.release.build`` to
   clean any ``build/`` directories in the source root, on top of the previous
   behavior of cleaning out ``dist/``. This helps prevent wacky state bleed

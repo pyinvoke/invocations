@@ -60,9 +60,9 @@ inv_target = join(
     dirname(__file__), "..", "..", "invoke", "sites", "docs", "_build"
 )
 if not on_dev:
-    inv_target = "http://docs.pyinvoke.org/en/latest/"
+    inv_target = "https://docs.pyinvoke.org/en/latest/"
 # Put them all together, + Python core
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
-    "invoke": ("https://docs.pyinvoke.org/en/stable/", None),
+    "invoke": (inv_target, None),
 }

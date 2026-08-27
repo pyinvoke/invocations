@@ -287,10 +287,8 @@ def all_(c, dry_run=False):
     .. versionchanged:: 2.1
         Expanded functionality to run ``publish`` and ``push`` as well as
         ``prepare``.
-
     .. versionchanged:: 2.1
         Added the ``dry_run`` flag.
-
     """
     prepare(c, dry_run=dry_run)
     publish(c, dry_run=dry_run)
@@ -311,10 +309,8 @@ def prepare(c, dry_run=False):
 
     .. versionchanged:: 2.1
         Added the ``dry_run`` parameter.
-
     .. versionchanged:: 2.1
         Generate annotated git tags instead of lightweight ones.
-
     """
     # Print dry-run/status/actions-to-take data & grab programmatic result
     # TODO: maybe expand the enum-based stuff to have values that split up
@@ -611,21 +607,16 @@ def build(
     .. versionchanged:: 2.0
         ``clean`` now defaults to False instead of True, cleans both dist and
         build dirs when True, and honors configuration.
-
     .. versionchanged:: 2.0
         ``wheel`` now defaults to True instead of False.
-
     .. versionchanged:: 4.0
         Switched to using ``pypa/build`` and made related changes to args
         (eg, ``directory`` now only controls dist output location).
-
     .. versionchanged:: 4.1
         Added the ``opts`` argument.
-
     .. versionchanged:: 4.1
         Updated ``--clean`` to additionally remove any ``build/`` directories
         within the source root.
-
     """
     # Config hooks
     config = c.config.get("packaging", {})
@@ -724,7 +715,6 @@ def publish(
 
         Defaults to a temporary directory which is cleaned up after the run
         finishes.
-
     """
     # Don't hide by default, this step likes to be verbose most of the time.
     c.config.run.hide = False
@@ -784,7 +774,6 @@ def test_install(c, directory, verbose=False, skip_import=False):
     :param bool skip_import:
         If True, don't try importing the installed module or checking it for
         type hints.
-
     """
     # TODO: wants contextmanager or similar for only altering a setting within
     # a given scope or block - this may pollute subsequent subroutine calls
@@ -863,7 +852,6 @@ def upload(c, directory, index=None, sign=False, dry_run=False):
 
         This also prevents cleanup of the temporary build/dist directories, so
         you can examine the build artifacts.
-
     """
     archives = get_archives(directory)
     # Sign each archive in turn
